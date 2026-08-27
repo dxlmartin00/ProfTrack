@@ -1,0 +1,198 @@
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  getDocs, 
+  deleteDoc,
+  updateDoc, 
+  query, 
+  where, 
+  serverTimestamp,
+  Timestamp,
+  arrayUnion
+} from 'firebase/firestore';
+import { db } from '../lib/firebase';
+
+export type ScheduleType = 'Lecture' | 'Laboratory' | 'Tutorial' | 'Discussion';
+
+export interface ClassSchedule {
+  dayOfWeek: number; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime: string; // "HH:mm"
+  endTime: string;   // "HH:mm"
+  type: ScheduleType; // "Lecture" or "Laboratory"
+  room?: string;     // e.g. "Room 302" or "ComLab 4"
+}
+
+export interface ClassSession {
+  id: string;
+  instructorId: string;
+  subjectCode: string;
+  subjectTitle?: string;
+  section: string;
+  year: string;
+  room?: string; // Default room if not specified per schedule
+  schedule: ClassSchedule[];
+  masterSyllabus: string[];
+}
+
+export interface SessionLog {
+  id?: string;
+  date: Date;
+  sessionType?: ScheduleType;
+  topicsCovered: string[];
+  nextActions: string;
+  engagementLevel: string; // "Low", "Medium", "High"
+}
+
+// Timeout helper to prevent hanging when offline or unconfigured
+const withTimeout = <T>(promise: Promise<T>, timeoutMs = 1800): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => 
+      setTimeout(() => reject(new Error('Database operation timed out, using local offline persistence')), timeoutMs)
+    )
+  ]);
+};
+
+export const saveFCMToken = async (userId: string, token: string): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await withTimeout(setDoc(userRef, {
+      fcmTokens: arrayUnion(token)
+    }, { merge: true }));
+  } catch (err) {
+    console.warn('FCM token save notice (offline mode):', err);
+  }
+};
+
+export const addClass = async (classData: Omit<ClassSession, 'id'>): Promise<string> => {
+  const newClassRef = doc(collection(db, 'classes'));
+  try {
+    await withTimeout(setDoc(newClassRef, classData));
+    return newClassRef.id;
+  } catch (err) {
+    console.warn('Cloud sync deferred (offline local mode):', err);
+    return newClassRef.id;
+  }
+};
+
+export const updateClass = async (classId: string, classData: Partial<Omit<ClassSession, 'id'>>): Promise<void> => {
+  try {
+    const classRef = doc(db, 'classes', classId);
+    await withTimeout(updateDoc(classRef, classData));
+  } catch (err) {
+    console.warn('Cloud update deferred (offline local mode):', err);
+  }
+};
+
+export const deleteClass = async (classId: string): Promise<void> => {
+  try {
+    const classRef = doc(db, 'classes', classId);
+    await withTimeout(deleteDoc(classRef));
+  } catch (err) {
+    console.warn('Cloud delete deferred (offline local mode):', err);
+  }
+};
+
+export const getAllClasses = async (instructorId: string): Promise<ClassSession[]> => {
+  try {
+    const classesRef = collection(db, 'classes');
+    const q = query(classesRef, where('instructorId', '==', instructorId));
+    const snapshot = await withTimeout(getDocs(q));
+    
+    const classes: ClassSession[] = [];
+    snapshot.forEach(docSnap => {
+      classes.push({ id: docSnap.id, ...(docSnap.data() as Omit<ClassSession, 'id'>) });
+    });
+    return classes;
+  } catch (err) {
+    console.warn('Failed to fetch classes from cloud, relying on local cache:', err);
+    return [];
+  }
+};
+
+export const getTodayClasses = async (instructorId: string): Promise<ClassSession[]> => {
+  const today = new Date().getDay(); // 0-6
+  try {
+    const classesRef = collection(db, 'classes');
+    const q = query(classesRef, where('instructorId', '==', instructorId));
+    const snapshot = await withTimeout(getDocs(q));
+    
+    const todayClasses: ClassSession[] = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data() as Omit<ClassSession, 'id'>;
+      const hasToday = data.schedule.some(s => s.dayOfWeek === today);
+      if (hasToday) {
+        todayClasses.push({ id: docSnap.id, ...data });
+      }
+    });
+    return todayClasses;
+  } catch (err) {
+    console.warn('Failed to fetch today classes from cloud, relying on local cache:', err);
+    return [];
+  }
+};
+
+export const submitSessionLog = async (classId: string, log: Omit<SessionLog, 'date'>): Promise<string> => {
+  const logRef = doc(collection(db, `classes/${classId}/session_logs`));
+  try {
+    await withTimeout(setDoc(logRef, {
+      ...log,
+      date: serverTimestamp()
+    }));
+    return logRef.id;
+  } catch (err) {
+    console.warn('Session log cloud sync deferred (offline local mode):', err);
+    return logRef.id;
+  }
+};
+
+export const deleteSessionLog = async (classId: string, logId: string): Promise<void> => {
+  try {
+    const logRef = doc(db, `classes/${classId}/session_logs`, logId);
+    await withTimeout(deleteDoc(logRef));
+  } catch (err) {
+    console.warn('Cloud delete log deferred (offline local mode):', err);
+  }
+};
+
+export const getMonthlyLogs = async (instructorId: string, year: number, month: number) => {
+  const startDate = new Date(year, month, 1);
+  const endDate = new Date(year, month + 1, 0);
+  const logs: (SessionLog & { classInfo: ClassSession })[] = [];
+
+  try {
+    const classesRef = collection(db, 'classes');
+    const q = query(classesRef, where('instructorId', '==', instructorId));
+    const classSnapshot = await withTimeout(getDocs(q));
+    
+    for (const docSnap of classSnapshot.docs) {
+      const classData = { id: docSnap.id, ...docSnap.data() } as ClassSession;
+      
+      const logsRef = collection(db, `classes/${classData.id}/session_logs`);
+      const logsQuery = query(
+        logsRef, 
+        where('date', '>=', startDate),
+        where('date', '<=', endDate)
+      );
+      const logsSnap = await withTimeout(getDocs(logsQuery));
+      
+      logsSnap.forEach(logSnap => {
+        const data = logSnap.data();
+        logs.push({
+          id: logSnap.id,
+          date: (data.date as Timestamp).toDate(),
+          sessionType: data.sessionType || 'Lecture',
+          topicsCovered: data.topicsCovered || [],
+          nextActions: data.nextActions || '',
+          engagementLevel: data.engagementLevel || 'Medium',
+          classInfo: classData
+        });
+      });
+    }
+  } catch (err) {
+    console.warn('Cloud monthly logs fetch notice:', err);
+  }
+  
+  return logs;
+};
