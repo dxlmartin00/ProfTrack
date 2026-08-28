@@ -157,13 +157,13 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
   const activeNowTopicStatus = activeNowSession ? getCourseTopicStatus(activeNowSession.classInfo) : null;
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full px-3.5 py-5 sm:px-6 sm:py-8">
+    <div className="flex flex-col gap-5 sm:gap-6 max-w-5xl mx-auto w-full min-w-0 px-3.5 py-4 sm:px-6 sm:py-8 box-border">
       
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 pb-5">
-        <div className="space-y-1">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 pb-5 w-full min-w-0">
+        <div className="space-y-1 min-w-0">
           <div className="flex items-center justify-between sm:justify-start gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 truncate">
               Timetable & Syllabus
             </h1>
             <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-800 shrink-0">
@@ -171,26 +171,26 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             </span>
           </div>
           <p className="text-xs sm:text-sm font-medium text-zinc-600 flex items-center gap-1.5">
-            <CalendarDays className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
-            <span>{todayStr}</span>
+            <CalendarDays className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
+            <span className="truncate">{todayStr}</span>
           </p>
         </div>
 
         {/* Responsive Action Buttons */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto min-w-0">
           <button
             type="button"
             onClick={onAddClassClick}
             className="col-span-2 sm:col-auto inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer order-first sm:order-last"
           >
-            <Plus className="w-4 h-4 mr-1.5" aria-hidden="true" />
+            <Plus className="w-4 h-4 mr-1.5 shrink-0" aria-hidden="true" />
             Add Course
           </button>
 
           <button
             type="button"
             onClick={onOpenTransfer}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer min-w-0"
             title="Transfer data between Laptop & Phone"
           >
             <Smartphone className="w-4 h-4 mr-1.5 text-zinc-700 shrink-0" aria-hidden="true" />
@@ -200,7 +200,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
           <button
             type="button"
             onClick={onOpenReports}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer min-w-0"
           >
             <FileDown className="w-4 h-4 mr-1.5 text-zinc-600 shrink-0" aria-hidden="true" />
             <span className="truncate">Export Report</span>
@@ -210,15 +210,15 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
       {/* Live Class Notification Banner */}
       {activeNowSession && (
-        <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 p-4 sm:p-5 shadow-2xs flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-start gap-3">
-              <span className="relative flex h-3 w-3 mt-1" aria-hidden="true">
+        <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 p-4 sm:p-5 shadow-2xs flex flex-col gap-3 w-full min-w-0 box-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full min-w-0">
+            <div className="flex items-start gap-3 min-w-0 flex-1">
+              <span className="relative flex h-3 w-3 mt-1 shrink-0" aria-hidden="true">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
               </span>
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">
                     Current Active Class
                   </span>
@@ -226,7 +226,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                     {formatTime(activeNowSession.schedule.startTime)} – {formatTime(activeNowSession.schedule.endTime)}
                   </span>
                 </div>
-                <p className="text-base font-bold text-zinc-950 mt-0.5">
+                <p className="text-base font-bold text-zinc-950 mt-0.5 break-words">
                   {activeNowSession.classInfo.subjectCode} — {activeNowSession.classInfo.subjectTitle || activeNowSession.classInfo.section}
                   {activeNowSession.schedule.room && ` (${activeNowSession.schedule.room})`}
                 </p>
@@ -236,26 +236,26 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             <button
               type="button"
               onClick={() => onClassClick(activeNowSession.classInfo, activeNowSession.schedule)}
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-2xs hover:bg-emerald-800 transition-colors shrink-0 cursor-pointer"
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-2xs hover:bg-emerald-800 transition-colors shrink-0 cursor-pointer w-full sm:w-auto"
             >
-              <CheckCircle2 className="w-4 h-4 mr-2" aria-hidden="true" />
+              <CheckCircle2 className="w-4 h-4 mr-2 shrink-0" aria-hidden="true" />
               Log Class Progress
             </button>
           </div>
 
           {/* Unfinished Cut-off Callout in Live Banner */}
           {activeNowTopicStatus?.inProgressTopic && (
-            <div className="bg-white/95 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-amber-950">
+            <div className="bg-white/95 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-amber-950 w-full min-w-0 box-border">
               <div className="mt-0.5 p-1 rounded bg-amber-100 text-amber-800 shrink-0">
                 <Hourglass className="h-3.5 w-3.5" />
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-0.5 min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-bold text-amber-900">Resume from cut-off:</span>
-                  <span className="font-semibold text-zinc-950">{activeNowTopicStatus.inProgressTopic.topic}</span>
+                  <span className="font-bold text-amber-900 shrink-0">Resume from cut-off:</span>
+                  <span className="font-semibold text-zinc-950 break-words">{activeNowTopicStatus.inProgressTopic.topic}</span>
                 </div>
                 {activeNowTopicStatus.inProgressTopic.note && (
-                  <p className="text-[11px] font-medium text-amber-900">
+                  <p className="text-[11px] font-medium text-amber-900 break-words">
                     Cut-off point: "{activeNowTopicStatus.inProgressTopic.note}"
                   </p>
                 )}
@@ -266,11 +266,11 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full min-w-0">
         <div 
           role="tablist" 
           aria-label="Timetable Schedule Filter"
-          className="grid grid-cols-2 sm:inline-flex h-11 items-center justify-center rounded-lg bg-zinc-200/80 p-1 text-zinc-700 w-full sm:w-auto"
+          className="grid grid-cols-2 sm:inline-flex h-11 items-center justify-center rounded-lg bg-zinc-200/80 p-1 text-zinc-700 w-full sm:w-auto min-w-0 box-border"
         >
           <button
             role="tab"
@@ -301,7 +301,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
         </div>
 
         {activeTab === 'all' && (
-          <div className="relative w-full sm:w-80">
+          <div className="relative w-full sm:w-80 min-w-0">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden="true" />
             <input
               type="text"
@@ -315,10 +315,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
       </div>
 
       {/* Main Tab Content */}
-      <div>
+      <div className="w-full min-w-0">
         {activeTab === 'today' ? (
           todaySessions.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-8 sm:p-12 text-center">
+            <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-8 sm:p-12 text-center w-full box-border">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 mb-3.5">
                 <BookOpen className="h-6 w-6" aria-hidden="true" />
               </div>
@@ -330,7 +330,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                   ? 'Your timetable is completely clean. Get started by adding your semester courses or uploading your syllabus (.docx).'
                   : 'You do not have any lecture or laboratory sessions assigned for today.'}
               </p>
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-3 flex-wrap">
                 <button
                   type="button"
                   onClick={onAddClassClick}
@@ -351,7 +351,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
               </div>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 gap-4 w-full min-w-0">
               {todaySessions.map(({ classInfo: cls, schedule: sch }, idx) => {
                 const status = getStatus(sch.startTime, sch.endTime);
                 const isLab = sch.type === 'Laboratory';
@@ -363,31 +363,31 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                   <div
                     key={`${cls.id}_${idx}`}
                     onClick={() => onClassClick(cls, sch)}
-                    className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer flex flex-col gap-3 group"
+                    className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer flex flex-col gap-3 group w-full min-w-0 box-border overflow-hidden"
                   >
                     {/* Header Row: Subject Code, Type Badge, Section, Room */}
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-start justify-between gap-2 w-full min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0 flex-1">
                         <span className="text-base sm:text-lg font-bold tracking-tight text-zinc-950">
                           {cls.subjectCode}
                         </span>
 
-                        <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold ${
+                        <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold shrink-0 ${
                           isLab 
                             ? 'border-purple-300 bg-purple-100 text-purple-900' 
                             : 'border-zinc-300 bg-zinc-100 text-zinc-900'
                         }`}>
-                          {isLab ? <FlaskConical className="w-3.5 h-3.5 text-purple-700" aria-hidden="true" /> : <GraduationCap className="w-3.5 h-3.5 text-zinc-700" aria-hidden="true" />}
+                          {isLab ? <FlaskConical className="w-3.5 h-3.5 text-purple-700 shrink-0" aria-hidden="true" /> : <GraduationCap className="w-3.5 h-3.5 text-zinc-700 shrink-0" aria-hidden="true" />}
                           {sch.type || 'Lecture'}
                         </span>
 
-                        <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
+                        <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700 shrink-0">
                           {cls.section}
                         </span>
                       </div>
 
                       {displayRoom && (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 bg-zinc-50 border border-zinc-200/80 px-2 py-0.5 rounded">
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 bg-zinc-50 border border-zinc-200/80 px-2 py-0.5 rounded shrink-0">
                           <MapPin className="w-3 h-3 text-zinc-500 shrink-0" aria-hidden="true" />
                           {displayRoom}
                         </span>
@@ -396,53 +396,53 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
                     {/* Subject Title */}
                     {cls.subjectTitle && (
-                      <p className="text-sm text-zinc-700 font-medium leading-snug">
+                      <p className="text-sm text-zinc-700 font-medium leading-snug break-words">
                         {cls.subjectTitle}
                       </p>
                     )}
 
-                    {/* Unfinished / In-Progress Topic Badge (Cleaned UI) */}
+                    {/* Unfinished / In-Progress Topic Badge */}
                     {topicStatus.inProgressTopic ? (
-                      <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2.5 flex items-start gap-2.5 text-xs text-amber-950">
+                      <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2.5 flex items-start gap-2.5 text-xs text-amber-950 w-full min-w-0 box-border">
                         <div className="mt-0.5 p-1 rounded bg-amber-200/80 text-amber-800 shrink-0">
                           <Hourglass className="h-3.5 w-3.5" />
                         </div>
                         <div className="space-y-1 min-w-0 flex-1">
-                          <div>
+                          <div className="min-w-0">
                             <span className="font-bold text-amber-900 uppercase text-[10px] tracking-wider block">
                               Unfinished Lesson:
                             </span>
-                            <p className="font-semibold text-zinc-950 text-xs leading-snug">
+                            <p className="font-semibold text-zinc-950 text-xs leading-snug break-words">
                               {topicStatus.inProgressTopic.topic}
                             </p>
                           </div>
                           {topicStatus.inProgressTopic.note && (
-                            <p className="text-[11px] font-medium text-amber-900 bg-white/90 px-2 py-0.5 rounded border border-amber-200 inline-block">
+                            <p className="text-[11px] font-medium text-amber-900 bg-white/90 px-2 py-0.5 rounded border border-amber-200 inline-block break-words max-w-full">
                               📍 Cut-off: "{topicStatus.inProgressTopic.note}"
                             </p>
                           )}
                         </div>
                       </div>
                     ) : topicStatus.lastDiscussedTopic ? (
-                      <div className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium">
-                        <span className="text-zinc-500 font-normal">Last discussed:</span>
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium min-w-0">
+                        <span className="text-zinc-500 font-normal shrink-0">Last discussed:</span>
                         <span className="font-semibold text-zinc-900 truncate">{topicStatus.lastDiscussedTopic}</span>
                       </div>
                     ) : null}
 
                     {/* Mini syllabus progress bar */}
-                    <div className="flex items-center gap-2.5 text-xs font-semibold text-zinc-600">
-                      <div className="w-24 sm:w-28 bg-zinc-200 h-1.5 rounded-full overflow-hidden">
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-zinc-600 w-full min-w-0">
+                      <div className="w-24 sm:w-28 bg-zinc-200 h-1.5 rounded-full overflow-hidden shrink-0">
                         <div className="bg-zinc-900 h-full rounded-full transition-all" style={{ width: `${stats.percent}%` }} />
                       </div>
-                      <span className="text-[11px] sm:text-xs text-zinc-600 font-medium">
+                      <span className="text-[11px] sm:text-xs text-zinc-600 font-medium truncate">
                         {stats.completed}/{stats.total} Topics Covered ({stats.percent}%)
                       </span>
                     </div>
 
                     {/* Card Footer: Time, Status Badge & Action */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-t border-zinc-100 pt-3 mt-0.5">
-                      <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-900">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-t border-zinc-100 pt-3 mt-0.5 w-full min-w-0">
+                      <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-900 flex-wrap min-w-0">
                         <Clock className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
                         <span>{formatTime(sch.startTime)} – {formatTime(sch.endTime)}</span>
                         <span className="text-zinc-400 font-normal">•</span>
@@ -472,7 +472,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
           )
         ) : (
           filteredAllClasses.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-12 text-center">
+            <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-12 text-center w-full box-border">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 mb-3.5">
                 <BookOpen className="h-6 w-6" aria-hidden="true" />
               </div>
@@ -490,7 +490,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
               </button>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2 w-full min-w-0">
               {filteredAllClasses.map((cls) => {
                 const stats = getCourseSyllabusStats(cls);
                 const topicStatus = getCourseTopicStatus(cls);
@@ -499,12 +499,12 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                   <div
                     key={cls.id}
                     onClick={() => onManageCourse(cls)}
-                    className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer flex flex-col justify-between group"
+                    className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer flex flex-col justify-between group w-full min-w-0 box-border overflow-hidden"
                   >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2">
+                    <div className="space-y-3 min-w-0">
+                      <div className="flex items-start justify-between gap-2 min-w-0">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap min-w-0">
                             <span className="text-base font-bold tracking-tight text-zinc-950">
                               {cls.subjectCode}
                             </span>
@@ -518,7 +518,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                         </div>
 
                         {cls.room && (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 shrink-0">
                             <MapPin className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
                             {cls.room}
                           </span>
@@ -526,20 +526,20 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       </div>
 
                       {cls.subjectTitle && (
-                        <p className="text-sm font-medium text-zinc-900 line-clamp-1">
+                        <p className="text-sm font-medium text-zinc-900 line-clamp-1 break-words">
                           {cls.subjectTitle}
                         </p>
                       )}
 
                       {/* Unfinished / In-Progress Topic Badge in All Courses */}
                       {topicStatus.inProgressTopic ? (
-                        <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2 flex items-start gap-2 text-xs text-amber-950">
+                        <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2 flex items-start gap-2 text-xs text-amber-950 w-full min-w-0 box-border">
                           <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0 mt-0.5" />
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <span className="font-bold text-amber-900 text-[10px] uppercase block">Unfinished:</span>
                             <span className="font-semibold text-zinc-950 truncate block">{topicStatus.inProgressTopic.topic}</span>
                             {topicStatus.inProgressTopic.note && (
-                              <span className="text-[11px] text-amber-900 font-medium">Cut-off: "{topicStatus.inProgressTopic.note}"</span>
+                              <span className="text-[11px] text-amber-900 font-medium block truncate">Cut-off: "{topicStatus.inProgressTopic.note}"</span>
                             )}
                           </div>
                         </div>
@@ -550,7 +550,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       ) : null}
 
                       {/* Real Syllabus Accomplishment Progress Bar */}
-                      <div className="space-y-1 bg-zinc-50 p-2.5 rounded-lg border border-zinc-200/80">
+                      <div className="space-y-1 bg-zinc-50 p-2.5 rounded-lg border border-zinc-200/80 w-full min-w-0">
                         <div className="flex items-center justify-between text-xs font-semibold">
                           <span className="text-zinc-600">Syllabus Progress</span>
                           <span className="font-mono text-zinc-950 font-bold">{stats.completed}/{stats.total} ({stats.percent}%)</span>
@@ -564,12 +564,12 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-600">
-                      <span className="flex items-center gap-1">
+                    <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-600 w-full min-w-0">
+                      <span className="flex items-center gap-1 shrink-0">
                         <Layers className="w-3.5 h-3.5 text-zinc-500" />
                         {cls.masterSyllabus.length} Topics
                       </span>
-                      <span className="font-semibold text-zinc-900 group-hover:text-zinc-950">
+                      <span className="font-semibold text-zinc-900 group-hover:text-zinc-950 shrink-0">
                         View Syllabus Details →
                       </span>
                     </div>
