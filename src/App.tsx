@@ -328,9 +328,9 @@ function App() {
         ...(loggedData.partialTopics || [])
       ]);
 
-      // If user unchecked a topic to fix a misclick, clean older logs for this course
+      // If user unchecked a topic to fix a misclick, clean older logs strictly for this specific course
       const cleanedPrevLogs = logs.map(l => {
-        if (l.classInfo.id === selectedClassForLog.id || l.classInfo.subjectCode === selectedClassForLog.subjectCode) {
+        if (l.classInfo.id === selectedClassForLog.id) {
           return {
             ...l,
             topicsCovered: l.topicsCovered.filter(t => activeSet.has(t))
@@ -535,7 +535,7 @@ function App() {
       {inspectedCourse && (
         <CourseDetailModal
           classSession={inspectedCourse}
-          courseLogs={logs.filter(l => l.classInfo.id === inspectedCourse.id || l.classInfo.subjectCode === inspectedCourse.subjectCode)}
+          courseLogs={logs.filter(l => l.classInfo.id === inspectedCourse.id)}
           onClose={() => setInspectedCourse(null)}
           onEdit={(cls) => {
             setEditingCourse(cls);
@@ -587,7 +587,7 @@ function App() {
         <PostClassUpdateModal
           classSession={selectedClassForLog}
           activeSchedule={selectedScheduleForLog}
-          pastLogs={logs.filter(l => l.classInfo.id === selectedClassForLog.id || l.classInfo.subjectCode === selectedClassForLog.subjectCode)}
+          pastLogs={logs.filter(l => l.classInfo.id === selectedClassForLog.id)}
           onClose={() => {
             setSelectedClassForLog(null);
             setSelectedScheduleForLog(undefined);

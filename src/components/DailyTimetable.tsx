@@ -87,7 +87,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
   // Helper to get syllabus accomplishment % for a class
   const getCourseSyllabusStats = (cls: ClassSession) => {
-    const courseLogs = logs.filter(l => l.classInfo.id === cls.id || l.classInfo.subjectCode === cls.subjectCode);
+    const courseLogs = logs.filter(l => l.classInfo.id === cls.id);
     const coveredSet = new Set<string>();
     courseLogs.forEach(l => l.topicsCovered.forEach(t => coveredSet.add(t)));
 

@@ -51,7 +51,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
     const cutoffs = new Map<string, string>();
 
     const courseLogs = pastLogs.filter(
-      l => l.classInfo.id === classSession.id || l.classInfo.subjectCode === classSession.subjectCode
+      l => l.classInfo.id === classSession.id
     );
 
     // Read chronological logs
