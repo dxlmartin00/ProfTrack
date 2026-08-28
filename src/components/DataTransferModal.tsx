@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import type { FC, ChangeEvent } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import qrcode from 'qrcode-generator';
 import { compressPayload, decompressPayload } from '../utils/codec';
 import type { ClassSession, SessionLog } from '../services/db';
 import { 
@@ -45,12 +45,12 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
     window.location.hostname.startsWith('192.168.')
   );
 
-  // Target domain for mobile QR code scan (If on localhost, use the production deployed app URL so phone can open it!)
+  // Target domain for mobile QR code scan (If on localhost, default to the production web app so phone can open it!)
   const [targetDomain, setTargetDomain] = useState(() => {
     if (isLocalhost) {
       return 'https://proftrack-pwa.vercel.app';
     }
-    return window.location.origin;
+    return window.location.origin || 'https://proftrack-pwa.vercel.app';
   });
 
   const [showDomainEdit, setShowDomainEdit] = useState(false);
@@ -90,6 +90,20 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
       return window.location.href;
     }
   }, [compactJsonString, targetDomain]);
+
+  // Generate pure SVG string from qrcode-generator
+  const qrSvgMarkup = useMemo(() => {
+    try {
+      if (!qrTransferUrl) return null;
+      const qr = qrcode(0, 'M');
+      qr.addData(qrTransferUrl);
+      qr.make();
+      return qr.createSvgTag({ scalable: true });
+    } catch (err) {
+      console.warn('QR code generation fallback:', err);
+      return null;
+    }
+  }, [qrTransferUrl]);
 
   // Download .json file
   const handleDownloadBackup = () => {
@@ -314,17 +328,15 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                   </p>
                 </div>
 
-                <div className="bg-white p-3.5 rounded-xl border border-zinc-300 shadow-sm">
-                  {qrTransferUrl ? (
-                    <QRCodeSVG 
-                      value={qrTransferUrl}
-                      size={200}
-                      level="L"
-                      includeMargin={true}
+                <div className="bg-white p-3.5 rounded-xl border border-zinc-300 shadow-sm flex items-center justify-center min-h-[220px]">
+                  {qrSvgMarkup ? (
+                    <div 
+                      className="w-52 h-52 [&>svg]:w-full [&>svg]:h-full"
+                      dangerouslySetInnerHTML={{ __html: qrSvgMarkup }}
                     />
                   ) : (
-                    <div className="h-48 w-48 flex items-center justify-center text-xs text-zinc-400">
-                      QR unavailable
+                    <div className="h-48 w-48 flex items-center justify-center text-xs text-zinc-500 font-medium">
+                      Ready to copy link or code below
                     </div>
                   )}
                 </div>
