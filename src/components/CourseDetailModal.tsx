@@ -14,7 +14,8 @@ import {
   Calendar,
   Layers,
   Hourglass,
-  Sparkles
+  Sparkles,
+  FileText
 } from 'lucide-react';
 
 interface CourseDetailModalProps {
@@ -24,6 +25,7 @@ interface CourseDetailModalProps {
   onEdit: (cls: ClassSession) => void;
   onDelete: (classId: string) => void;
   onLogNewSession: (cls: ClassSession) => void;
+  onOpenSyllabusUpload?: (courseId: string) => void;
 }
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -34,7 +36,8 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
   onClose,
   onEdit,
   onDelete,
-  onLogNewSession
+  onLogNewSession,
+  onOpenSyllabusUpload
 }) => {
   const [activeTab, setActiveTab] = useState<'syllabus' | 'history'>('syllabus');
 
@@ -246,7 +249,24 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
         {/* Content area */}
         <div className="p-5 space-y-3 overflow-y-auto flex-1 bg-white">
           {activeTab === 'syllabus' ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between pb-1">
+                <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                  Course Outline & Master Syllabus
+                </span>
+                {onOpenSyllabusUpload && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenSyllabusUpload(classSession.id)}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-800 bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                    title="Upload syllabus from Microsoft Word (.docx)"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-zinc-700" />
+                    Upload Word Syllabus (.docx)
+                  </button>
+                )}
+              </div>
+
               {classSession.masterSyllabus.map((topic, index) => {
                 const isCovered = completedSet.has(topic);
                 const isPartial = partialNotesMap.has(topic);

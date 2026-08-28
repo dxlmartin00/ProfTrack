@@ -7,6 +7,7 @@ import { ReportModal } from './components/ReportModal';
 import { DataTransferModal } from './components/DataTransferModal';
 import { ProfileModal, getInitials } from './components/ProfileModal';
 import { ScheduleUploadModal } from './components/ScheduleUploadModal';
+import { SyllabusUploadModal } from './components/SyllabusUploadModal';
 import type { ClassSession, ClassSchedule, SessionLog, ScheduleType, InstructorProfile } from './services/db';
 import { 
   addClass as dbAddClass, 
@@ -27,7 +28,8 @@ import {
   GraduationCap,
   RotateCcw,
   Smartphone,
-  CheckCircle2
+  CheckCircle2,
+  Camera
 } from 'lucide-react';
 
 export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
@@ -324,6 +326,8 @@ export function App() {
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isScanModalOpen, setIsScanModalOpen] = useState(false);
+  const [isSyllabusModalOpen, setIsSyllabusModalOpen] = useState(false);
+  const [activeSyllabusCourseId, setActiveSyllabusCourseId] = useState<string | undefined>(undefined);
   const [qrNotification, setQrNotification] = useState<string | null>(null);
 
   // Network & Push states
@@ -461,6 +465,16 @@ export function App() {
     setTimeout(() => setQrNotification(null), 5000);
   };
 
+  // Update Syllabus for a specific course (via Word .docx upload or manual edit)
+  const handleUpdateCourseSyllabus = (courseId: string, topics: string[]) => {
+    setClasses(prev => prev.map(c => c.id === courseId ? { ...c, masterSyllabus: topics } : c));
+    if (inspectedCourse?.id === courseId) {
+      setInspectedCourse(prev => prev ? { ...prev, masterSyllabus: topics } : null);
+    }
+    setQrNotification(`Successfully updated syllabus with ${topics.length} topics!`);
+    setTimeout(() => setQrNotification(null), 4000);
+  };
+
   // Session Log Success Handler (Optimistic, Persistent, Misclick-Aware)
   const handleLogSuccess = (loggedData: {
     sessionType?: ScheduleType;
@@ -579,9 +593,10 @@ export function App() {
               <button
                 type="button"
                 onClick={() => setIsScanModalOpen(true)}
-                className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer"
+                className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer flex items-center gap-1.5"
               >
-                Scan Schedule Image
+                <Camera className="h-3.5 w-3.5 text-zinc-700" />
+                Scan Image
               </button>
               <button
                 type="button"
@@ -749,6 +764,20 @@ export function App() {
             setSelectedClassForLog(cls);
             setSelectedScheduleForLog(cls.schedule[0]);
           }}
+          onOpenSyllabusUpload={(courseId) => {
+            setActiveSyllabusCourseId(courseId);
+            setIsSyllabusModalOpen(true);
+          }}
+        />
+      )}
+
+      {/* Word Document (.docx) Syllabus Upload Modal */}
+      {isSyllabusModalOpen && (
+        <SyllabusUploadModal
+          courses={classes}
+          initialCourseId={activeSyllabusCourseId}
+          onClose={() => setIsSyllabusModalOpen(false)}
+          onUpdateSyllabus={handleUpdateCourseSyllabus}
         />
       )}
 

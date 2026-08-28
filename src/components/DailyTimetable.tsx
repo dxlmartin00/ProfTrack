@@ -16,7 +16,7 @@ import {
   BookOpen,
   Smartphone,
   Hourglass,
-  Sparkles
+  Camera
 } from 'lucide-react';
 
 interface DailyTimetableProps {
@@ -194,10 +194,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             <button
               type="button"
               onClick={onOpenScanModal}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-900 bg-zinc-900 px-3 text-xs sm:text-sm font-semibold text-white shadow-2xs hover:bg-zinc-800 transition-colors cursor-pointer min-w-0"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer min-w-0"
               title="Upload or scan faculty loading screenshot"
             >
-              <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-300 shrink-0" aria-hidden="true" />
+              <Camera className="w-4 h-4 mr-1.5 text-zinc-700 shrink-0" aria-hidden="true" />
               <span className="truncate">Scan Image</span>
             </button>
           )}

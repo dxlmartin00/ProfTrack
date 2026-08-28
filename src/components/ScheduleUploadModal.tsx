@@ -4,7 +4,7 @@ import type { ClassSession, ClassSchedule } from '../services/db';
 import { 
   X, 
   UploadCloud, 
-  Sparkles, 
+  Camera, 
   Check
 } from 'lucide-react';
 
@@ -353,7 +353,7 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
         <div className="flex items-center justify-between border-b border-zinc-200 p-5 shrink-0 bg-white">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-950 text-white shrink-0">
-              <Sparkles className="h-5 w-5" />
+              <Camera className="h-5 w-5" />
             </div>
             <div>
               <h2 id="upload-modal-title" className="text-base sm:text-lg font-bold text-zinc-950 tracking-tight">
@@ -413,7 +413,7 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
               </div>
 
               <div className="inline-flex items-center gap-1.5 text-xs text-zinc-600 font-medium bg-white px-3 py-1 rounded-full border border-zinc-200">
-                <Sparkles className="w-3.5 h-3.5 text-zinc-900" />
+                <Camera className="w-3.5 h-3.5 text-zinc-700" />
                 Auto-detects MH (Mon/Thu), TF (Tue/Fri), W, rooms & section codes (e.g. CS314D → 3D)
               </div>
             </div>
