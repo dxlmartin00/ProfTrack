@@ -441,25 +441,25 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                     </div>
 
                     {/* Card Footer: Time, Status Badge & Action */}
-                    <div className="flex items-center justify-between gap-3 border-t border-zinc-100 pt-3 mt-0.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-t border-zinc-100 pt-3 mt-0.5">
                       <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-900">
                         <Clock className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
                         <span>{formatTime(sch.startTime)} – {formatTime(sch.endTime)}</span>
-                        <span className="text-zinc-400 font-normal hidden sm:inline">•</span>
-                        <span className="text-xs text-zinc-500 font-normal hidden sm:inline">
+                        <span className="text-zinc-400 font-normal">•</span>
+                        <span className="text-xs text-zinc-500 font-medium">
                           {sch.type || 'Lecture'} Slot
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${status.badgeClass}`}>
+                      <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 w-full sm:w-auto">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${status.badgeClass} shrink-0`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} aria-hidden="true" />
                           {status.label}
                         </span>
 
                         <button
                           type="button"
-                          className="inline-flex h-8 sm:h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 sm:px-3.5 text-xs font-bold text-zinc-800 shadow-2xs group-hover:bg-zinc-950 group-hover:text-white group-hover:border-zinc-950 transition-colors"
+                          className="inline-flex h-8 sm:h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 sm:px-3.5 text-xs font-bold text-zinc-800 shadow-2xs group-hover:bg-zinc-950 group-hover:text-white group-hover:border-zinc-950 transition-colors shrink-0 cursor-pointer"
                         >
                           Log Session
                         </button>
