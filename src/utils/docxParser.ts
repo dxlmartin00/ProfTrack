@@ -18,9 +18,41 @@ export const cleanTopicString = (text: string): string => {
 };
 
 /**
+ * Checks if a line is part of an administrative signature block, approval footer, or metadata
+ */
+export const isSignatureOrAdminBlock = (text: string): boolean => {
+  if (!text) return false;
+  
+  // Underlines, date placeholders, blank lines
+  if (/_{3,}|Date\s*:\s*_{0,}/i.test(text)) return true;
+
+  // Administrative / Sign-off headings
+  if (/^(CONTENTS NOTED BY|PREPARED BY|REVIEWED BY|APPROVED BY|RECOMMENDING APPROVAL|VERIFIED BY|SUBMITTED BY|NOTED BY|CONCURRED BY)/i.test(text)) {
+    return true;
+  }
+
+  // Academic titles, roles, positions
+  if (/\b(Program Coordinator|Department Chair|Chair,?\s*DCS|Dean|Campus Director|Vice President|Instructor|Faculty|Professor|Director)\b/i.test(text)) {
+    return true;
+  }
+
+  // Common faculty name patterns with academic degrees
+  if (/,\s*(MSCS|MIT|MSIT|Ph\.?D|DIT|Ed\.?D|PECE|CPA|RN|LPT|MAEd|MBA|MS|BSCS|BSIT)\b/i.test(text)) {
+    return true;
+  }
+
+  // Document control or revision headers/footers
+  if (/FM-ACAD|Rev\.\d+|Page\s+\d+\s+of\s+\d+/i.test(text)) {
+    return true;
+  }
+
+  return false;
+};
+
+/**
  * Post-processes topics according to academic guidelines:
  * 1. Combines Orientation and Week 1 syllabus/policies into a single Item 1.
- * 2. Ensures the final topic is always "Final Examination".
+ * 2. Stops strictly at Week 18 / Final Exam and discards signature blocks.
  * 3. Strips all "Week X" references from every topic.
  */
 export const normalizeSyllabusTopicList = (rawTopics: string[]): string[] => {
@@ -37,6 +69,12 @@ export const normalizeSyllabusTopicList = (rawTopics: string[]): string[] => {
 
   for (let i = 0; i < rawTopics.length; i++) {
     const raw = rawTopics[i];
+    
+    // Stop immediately if any signature block is encountered
+    if (isSignatureOrAdminBlock(raw)) {
+      break;
+    }
+
     const topic = cleanTopicString(raw);
     if (!topic || topic.length < 3) continue;
 
@@ -51,12 +89,21 @@ export const normalizeSyllabusTopicList = (rawTopics: string[]): string[] => {
       continue;
     }
 
-    // Ignore standalone exam entries in the middle (we append Final Exam at the end)
-    if (/^(Midterm|Final|Culminating)\s*(Exam|Examination|Assessment|Evaluation)$/i.test(topic)) {
-      if (/^Midterm/i.test(topic)) {
-        normalized.push('Midterm Examination');
+    // Midterm Examination detection
+    if (/^Midterm\s*(Exam|Examination|Assessment)?$/i.test(topic)) {
+      if (!normalized.includes('Midterm Exam')) {
+        normalized.push('Midterm Exam');
       }
       continue;
+    }
+
+    // Final Examination detection (stop here!)
+    if (/^Final\s*(Exam|Examination|Assessment)?$/i.test(topic)) {
+      if (!normalized.includes('Final Exam')) {
+        normalized.push('Final Exam');
+      }
+      // Reached the end of the 18-week learning plan
+      break;
     }
 
     if (!normalized.includes(topic)) {
@@ -64,21 +111,21 @@ export const normalizeSyllabusTopicList = (rawTopics: string[]): string[] => {
     }
   }
 
-  // Ensure orientation is first if not already present
+  // Ensure orientation is first
   if (!hasOrientation) {
     normalized.unshift('Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System');
   }
 
-  // Ensure Final Examination is the last item
-  if (!normalized.includes('Final Examination')) {
-    normalized.push('Final Examination');
+  // Ensure Final Exam is the last item
+  if (!normalized.includes('Final Exam')) {
+    normalized.push('Final Exam');
   }
 
   return normalized;
 };
 
 /**
- * Extracts clean syllabus topics from text, with support for tab-separated tables (pasted from Word/Excel)
+ * Extracts clean syllabus topics from text, with support for tab-separated tables
  */
 export const extractTopicsFromText = (rawText: string): string[] => {
   if (!rawText) return [];
@@ -86,13 +133,15 @@ export const extractTopicsFromText = (rawText: string): string[] => {
   const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const rawExtracted: string[] = [];
 
-  // Check if pasted content is a TSV / Table (e.g. copied from Word "Detailed Course Learning Plan")
   const isTable = lines.some(l => l.includes('\t'));
 
   if (isTable) {
     let topicColIdx = -1;
 
     for (const line of lines) {
+      // If signature block reached, stop
+      if (isSignatureOrAdminBlock(line)) break;
+
       const columns = line.split('\t').map(c => c.trim());
       
       // Look for the "TOPICS" header column
@@ -106,6 +155,8 @@ export const extractTopicsFromText = (rawText: string): string[] => {
 
       if (topicColIdx !== -1 && columns[topicColIdx]) {
         const cellContent = columns[topicColIdx];
+        if (isSignatureOrAdminBlock(cellContent)) break;
+
         const subItems = cellContent.split(/\r?\n|;/).map(s => cleanTopicString(s)).filter(s => s.length > 3);
         for (const item of subItems) {
           if (!rawExtracted.includes(item)) {
@@ -122,6 +173,8 @@ export const extractTopicsFromText = (rawText: string): string[] => {
 
   // General text parsing
   for (const line of lines) {
+    if (isSignatureOrAdminBlock(line)) break;
+
     if (/^(TIME FRAME|TOPICS|LEARNING OUTCOMES|PERFORMANCE INDICATORS|INSTRUCTIONAL METHODOLOGY|LEARNING MATERIALS|ASSESSMENT)/i.test(line)) {
       continue;
     }
@@ -140,13 +193,12 @@ export const extractTopicsFromText = (rawText: string): string[] => {
 
 /**
  * Extracts topics specifically from the "TOPICS" column in a Word document's
- * "Detailed Course Learning Plan" table. Discards all text outside of the table.
+ * "Detailed Course Learning Plan" table. Discards all text and signature blocks outside or after the table.
  */
 export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
   const arrayBuffer = await file.arrayBuffer();
 
   try {
-    // 1. Convert docx to HTML to preserve table structure (DETAILED COURSE LEARNING PLAN)
     const { value: html } = await mammoth.convertToHtml({ arrayBuffer });
 
     if (typeof window !== 'undefined' && window.DOMParser) {
@@ -155,10 +207,13 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
       const tables = Array.from(doc.querySelectorAll('table'));
 
       const extractedTopics: string[] = [];
+      let reachedFinalExam = false;
 
-      tables.forEach(table => {
+      for (const table of tables) {
+        if (reachedFinalExam) break;
+
         const rows = Array.from(table.querySelectorAll('tr'));
-        if (rows.length === 0) return;
+        if (rows.length === 0) continue;
 
         let topicColIndex = -1;
 
@@ -180,19 +235,50 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
         }
 
         if (topicColIndex !== -1) {
-          rows.forEach((row) => {
+          for (const row of rows) {
+            const rowText = (row.textContent || '').trim();
+            
+            // Check if signature / noted by block reached
+            if (isSignatureOrAdminBlock(rowText)) {
+              reachedFinalExam = true;
+              break;
+            }
+
             const cells = Array.from(row.querySelectorAll('td'));
+            
+            // Check if entire row is a banner like "Week 18 - FINAL EXAM" or "MIDTERM EXAM"
+            if (/FINAL\s*EXAM/i.test(rowText)) {
+              extractedTopics.push('Final Exam');
+              reachedFinalExam = true;
+              break;
+            }
+            if (/MIDTERM\s*EXAM/i.test(rowText)) {
+              extractedTopics.push('Midterm Exam');
+              continue;
+            }
+
             if (cells.length > topicColIndex) {
               const topicCell = cells[topicColIndex];
-              
+              const cellText = (topicCell.textContent || '').trim();
+
+              if (isSignatureOrAdminBlock(cellText)) {
+                reachedFinalExam = true;
+                break;
+              }
+
               const paragraphs = Array.from(topicCell.querySelectorAll('p, li'));
               const items = paragraphs.length > 0 
                 ? paragraphs.map(p => (p.textContent || '').trim()).filter(Boolean)
-                : [(topicCell.textContent || '').trim()];
+                : [cellText];
 
-              items.forEach(item => {
+              for (const item of items) {
+                if (isSignatureOrAdminBlock(item)) {
+                  reachedFinalExam = true;
+                  break;
+                }
+
                 const subLines = item.split(/\r?\n|;/).map(s => cleanTopicString(s)).filter(s => s.length > 3);
-                subLines.forEach(cleaned => {
+                for (const cleaned of subLines) {
                   if (
                     cleaned && 
                     !/^(TOPICS?|COURSE CONTENT|LEARNING OUTCOMES|PERFORMANCE INDICATORS)$/i.test(cleaned) &&
@@ -200,15 +286,13 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
                   ) {
                     extractedTopics.push(cleaned);
                   }
-                });
-              });
+                }
+              }
             }
-          });
+          }
         }
-      });
+      }
 
-      // If we found topics strictly from inside the Detailed Course Learning Plan tables, return them!
-      // (This guarantees content outside the table is strictly ignored)
       if (extractedTopics.length > 0) {
         return normalizeSyllabusTopicList(extractedTopics);
       }
