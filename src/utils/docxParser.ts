@@ -1,11 +1,19 @@
 import mammoth from 'mammoth';
 
 /**
- * Clean and filter individual topic strings
+ * Clean and filter individual topic strings:
+ * Removes "Week X", "Week X-Y", "W1:", numbers, and bullet points.
+ * Returns ONLY the clean topic text without any week indicators.
  */
-const cleanTopicString = (text: string): string => {
+export const cleanTopicString = (text: string): string => {
+  if (!text) return '';
   return text
-    .replace(/^(\d+[\.\)\-:]|\b(Week|Module|Chapter|Unit|Topic|Lesson)\s*\d+[\.\)\-:]|[•\-\*\>])\s*/i, '')
+    // Remove "Week 1", "Week 1-2", "Week 1 to 2", "W1-W2", "W1:" prefixes
+    .replace(/^(\bWeek\s*\d+(\s*[-–—to]+\s*\d+)?\b|\bW\d+(\s*[-–—]\s*W?\d+)?\b)\s*[:\.\-–—)]?\s*/i, '')
+    // Remove module/chapter/unit prefixes
+    .replace(/^\b(Module|Chapter|Unit|Topic|Lesson)\s*\d+(\s*[-–—to]+\s*\d+)?\s*[:\.\-–—)]?\s*/i, '')
+    // Remove leading numbering or list markers (e.g., 1., 1.1, a), •, -)
+    .replace(/^(\d+(\.\d+)*[\.\)\-:]|[a-zA-Z][\.\)]|[•\-\*\>])\s*/, '')
     .trim();
 };
 
@@ -13,6 +21,7 @@ const cleanTopicString = (text: string): string => {
  * Post-processes topics according to academic guidelines:
  * 1. Combines Orientation and Week 1 syllabus/policies into a single Item 1.
  * 2. Ensures the final topic is always "Final Examination".
+ * 3. Strips all "Week X" references from every topic.
  */
 export const normalizeSyllabusTopicList = (rawTopics: string[]): string[] => {
   if (!rawTopics || rawTopics.length === 0) {
@@ -27,23 +36,26 @@ export const normalizeSyllabusTopicList = (rawTopics: string[]): string[] => {
   let hasOrientation = false;
 
   for (let i = 0; i < rawTopics.length; i++) {
-    const topic = rawTopics[i].trim();
-    if (!topic) continue;
+    const raw = rawTopics[i];
+    const topic = cleanTopicString(raw);
+    if (!topic || topic.length < 3) continue;
 
     // Check for Vision/Mission/Orientation/Institutional Outcomes/Week 1 Policies
-    const isOrientationOrWeek1 = /^(NEMSU|University|College)?\s*(Vision|Mission|Core Values|Quality Policy|Hymn|Institutional Outcomes|Program Outcomes|Course Outcomes|Course Syllabus|Course Policies|Grading System|Orientation)/i.test(topic);
+    const isOrientationOrWeek1 = /^(NEMSU|University|College)?\s*(Vision|Mission|Core Values|Quality Policy|Hymn|Institutional Outcomes|Program Outcomes|Course Outcomes|Course Syllabus|Course References|Course Requirements|Course Policies|Grading System|Orientation)/i.test(topic);
 
     if (isOrientationOrWeek1) {
       if (!hasOrientation) {
         normalized.push('Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System');
         hasOrientation = true;
       }
-      // Skip duplicate subsequent orientation sub-items to keep it as 1 single item
       continue;
     }
 
-    // Ignore if line is just "Final Exam" in the middle, we add it at the end
-    if (/^Final (Exam|Examination|Assessment|Evaluation)$/i.test(topic)) {
+    // Ignore standalone exam entries in the middle (we append Final Exam at the end)
+    if (/^(Midterm|Final|Culminating)\s*(Exam|Examination|Assessment|Evaluation)$/i.test(topic)) {
+      if (/^Midterm/i.test(topic)) {
+        normalized.push('Midterm Examination');
+      }
       continue;
     }
 
@@ -52,13 +64,15 @@ export const normalizeSyllabusTopicList = (rawTopics: string[]): string[] => {
     }
   }
 
-  // Ensure orientation is first if missing
+  // Ensure orientation is first if not already present
   if (!hasOrientation) {
     normalized.unshift('Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System');
   }
 
   // Ensure Final Examination is the last item
-  normalized.push('Final Examination');
+  if (!normalized.includes('Final Examination')) {
+    normalized.push('Final Examination');
+  }
 
   return normalized;
 };
@@ -126,7 +140,7 @@ export const extractTopicsFromText = (rawText: string): string[] => {
 
 /**
  * Extracts topics specifically from the "TOPICS" column in a Word document's
- * "Detailed Course Learning Plan" table.
+ * "Detailed Course Learning Plan" table. Discards all text outside of the table.
  */
 export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
   const arrayBuffer = await file.arrayBuffer();
@@ -138,7 +152,7 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
     if (typeof window !== 'undefined' && window.DOMParser) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
-      const tables = doc.querySelectorAll('table');
+      const tables = Array.from(doc.querySelectorAll('table'));
 
       const extractedTopics: string[] = [];
 
@@ -148,7 +162,7 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
 
         let topicColIndex = -1;
 
-        // Inspect header row to locate the "TOPICS" column
+        // Inspect header rows to locate the "TOPICS" column
         for (let r = 0; r < Math.min(rows.length, 3); r++) {
           const cells = Array.from(rows[r].querySelectorAll('th, td'));
           cells.forEach((cell, idx) => {
@@ -160,7 +174,7 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
           if (topicColIndex !== -1) break;
         }
 
-        // Default to column 1 if table has 4+ columns (OBE layout: Timeframe, Topics, LOs, PIs...)
+        // Fallback: If table has 4+ columns (OBE layout: Timeframe, Topics, LOs, PIs...), topic is column 1
         if (topicColIndex === -1 && rows[0]?.querySelectorAll('th, td').length >= 4) {
           topicColIndex = 1;
         }
@@ -193,12 +207,14 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
         }
       });
 
+      // If we found topics strictly from inside the Detailed Course Learning Plan tables, return them!
+      // (This guarantees content outside the table is strictly ignored)
       if (extractedTopics.length > 0) {
         return normalizeSyllabusTopicList(extractedTopics);
       }
     }
 
-    // 2. Fallback to raw text extraction
+    // 2. Fallback to raw text extraction only if no HTML table was parsed
     const { value: rawText } = await mammoth.extractRawText({ arrayBuffer });
     return extractTopicsFromText(rawText);
 
