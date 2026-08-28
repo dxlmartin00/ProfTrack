@@ -14,7 +14,8 @@ import {
   FileDown,
   CheckCircle2,
   BookOpen,
-  Smartphone
+  Smartphone,
+  Hourglass
 } from 'lucide-react';
 
 interface DailyTimetableProps {
@@ -26,8 +27,6 @@ interface DailyTimetableProps {
   onOpenReports: () => void;
   onOpenTransfer: () => void;
 }
-
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const DailyTimetable: FC<DailyTimetableProps> = ({ 
   classes, 
@@ -47,34 +46,38 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const todayStr = format(currentTime, 'EEEE, MMMM d, yyyy');
   const todayDayOfWeek = currentTime.getDay();
+  const todayStr = format(currentTime, 'EEEE, MMMM d, yyyy');
 
-  const formatTime = (time: string) => {
+  const formatTime = (timeStr: string) => {
     try {
-      const date = parse(time, 'HH:mm', new Date());
-      return format(date, 'h:mm a');
+      const parsed = parse(timeStr, 'HH:mm', new Date());
+      return format(parsed, 'h:mm a');
     } catch {
-      return time;
+      return timeStr;
     }
   };
 
   const getStatus = (startTime: string, endTime: string) => {
-    const currentString = format(currentTime, 'HH:mm');
-    if (currentString < startTime) {
+    const now = currentTime;
+    const todayDateStr = format(now, 'yyyy-MM-dd');
+    const start = parse(`${todayDateStr} ${startTime}`, 'yyyy-MM-dd HH:mm', new Date());
+    const end = parse(`${todayDateStr} ${endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+
+    if (now >= start && now <= end) {
+      return { 
+        label: 'In Progress (Active Now)', 
+        badgeClass: 'border-emerald-300 bg-emerald-50 text-emerald-900',
+        dot: 'bg-emerald-600 animate-pulse',
+        isLive: true 
+      };
+    }
+    if (now < start) {
       return { 
         label: 'Upcoming', 
         badgeClass: 'border-zinc-300 bg-zinc-100 text-zinc-800',
         dot: 'bg-zinc-500',
         isLive: false 
-      };
-    }
-    if (currentString >= startTime && currentString <= endTime) {
-      return { 
-        label: 'In Progress', 
-        badgeClass: 'border-emerald-400 bg-emerald-100 text-emerald-900',
-        dot: 'bg-emerald-600 animate-pulse',
-        isLive: true 
       };
     }
     return { 
@@ -96,6 +99,34 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
     const percent = Math.round((completed / total) * 100);
 
     return { completed, total: cls.masterSyllabus.length, percent };
+  };
+
+  // Helper to get unfinished/in-progress and last discussed topics for a class
+  const getCourseTopicStatus = (cls: ClassSession) => {
+    const courseLogs = logs.filter(l => l.classInfo.id === cls.id);
+    
+    let inProgressTopic: { topic: string; note?: string } | null = null;
+    let lastDiscussedTopic: string | null = null;
+
+    for (const log of courseLogs) {
+      for (const topic of log.topicsCovered) {
+        if (log.nextActions?.includes(`[In Progress: ${topic}`)) {
+          const match = log.nextActions.match(new RegExp(`\\[In Progress: ${topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: - ([^\\]]+))?\\]`));
+          inProgressTopic = { topic, note: match ? match[1] : undefined };
+          break;
+        }
+      }
+      if (inProgressTopic) break;
+    }
+
+    if (courseLogs.length > 0) {
+      const latestLog = courseLogs[0];
+      if (latestLog.topicsCovered.length > 0) {
+        lastDiscussedTopic = latestLog.topicsCovered[latestLog.topicsCovered.length - 1];
+      }
+    }
+
+    return { inProgressTopic, lastDiscussedTopic };
   };
 
   // Build today's sessions
@@ -122,6 +153,8 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
     const status = getStatus(s.schedule.startTime, s.schedule.endTime);
     return status.isLive;
   });
+
+  const activeNowTopicStatus = activeNowSession ? getCourseTopicStatus(activeNowSession.classInfo) : null;
 
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full px-3.5 py-5 sm:px-6 sm:py-8">
@@ -177,36 +210,54 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
       {/* Live Class Notification Banner */}
       {activeNowSession && (
-        <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <span className="relative flex h-3 w-3 mt-1" aria-hidden="true">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
-            </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">
-                  Current Active Class
-                </span>
-                <span className="font-mono text-xs font-semibold text-emerald-800">
-                  {formatTime(activeNowSession.schedule.startTime)} – {formatTime(activeNowSession.schedule.endTime)}
-                </span>
+        <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 p-4 sm:p-5 shadow-2xs flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <span className="relative flex h-3 w-3 mt-1" aria-hidden="true">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-600"></span>
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">
+                    Current Active Class
+                  </span>
+                  <span className="font-mono text-xs font-semibold text-emerald-800">
+                    {formatTime(activeNowSession.schedule.startTime)} – {formatTime(activeNowSession.schedule.endTime)}
+                  </span>
+                </div>
+                <p className="text-base font-bold text-zinc-950 mt-0.5">
+                  {activeNowSession.classInfo.subjectCode} — {activeNowSession.classInfo.subjectTitle || activeNowSession.classInfo.section}
+                  {activeNowSession.schedule.room && ` (${activeNowSession.schedule.room})`}
+                </p>
               </div>
-              <p className="text-base font-bold text-zinc-950 mt-0.5">
-                {activeNowSession.classInfo.subjectCode} — {activeNowSession.classInfo.subjectTitle || activeNowSession.classInfo.section}
-                {activeNowSession.schedule.room && ` (${activeNowSession.schedule.room})`}
-              </p>
             </div>
+
+            <button
+              type="button"
+              onClick={() => onClassClick(activeNowSession.classInfo, activeNowSession.schedule)}
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-2xs hover:bg-emerald-800 transition-colors shrink-0 cursor-pointer"
+            >
+              <CheckCircle2 className="w-4 h-4 mr-2" aria-hidden="true" />
+              Log Class Progress
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => onClassClick(activeNowSession.classInfo, activeNowSession.schedule)}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white shadow-2xs hover:bg-emerald-800 transition-colors shrink-0 cursor-pointer"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-2" aria-hidden="true" />
-            Log Class Progress
-          </button>
+          {/* Unfinished Cut-off Callout in Live Banner */}
+          {activeNowTopicStatus?.inProgressTopic && (
+            <div className="bg-white/90 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2 text-xs text-amber-950 font-medium">
+              <Hourglass className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-amber-900">Resume teaching from cut-off: </span>
+                <span className="font-semibold text-zinc-950">{activeNowTopicStatus.inProgressTopic.topic}</span>
+                {activeNowTopicStatus.inProgressTopic.note && (
+                  <span className="block text-amber-800 text-[11px] font-semibold mt-0.5">
+                    Cut-off note: "{activeNowTopicStatus.inProgressTopic.note}"
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -250,21 +301,20 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" aria-hidden="true" />
             <input
               type="text"
-              aria-label="Search courses by code, title, or section"
-              placeholder="Search courses or sections..."
+              placeholder="Search by code, title, or section..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-zinc-300 bg-white pl-10 pr-3 py-2 text-sm text-zinc-900 shadow-2xs placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950"
+              className="flex h-10 w-full rounded-lg border border-zinc-300 bg-white pl-10 pr-4 py-2 text-xs sm:text-sm text-zinc-900 shadow-2xs placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950"
             />
           </div>
         )}
       </div>
 
-      {/* Main Stream Area */}
+      {/* Main Tab Content */}
       <div>
         {activeTab === 'today' ? (
           todaySessions.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-12 text-center">
+            <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-8 sm:p-12 text-center">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-600 mb-3.5">
                 <BookOpen className="h-6 w-6" aria-hidden="true" />
               </div>
@@ -303,6 +353,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                 const isLab = sch.type === 'Laboratory';
                 const displayRoom = sch.room || cls.room;
                 const stats = getCourseSyllabusStats(cls);
+                const topicStatus = getCourseTopicStatus(cls);
 
                 return (
                   <div
@@ -310,7 +361,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                     onClick={() => onClassClick(cls, sch)}
                     className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
                   >
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex-1">
                       <div className="flex items-center gap-2.5 flex-wrap">
                         <span className="text-base font-bold tracking-tight text-zinc-950">
                           {cls.subjectCode}
@@ -342,6 +393,22 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                           {cls.subjectTitle}
                         </p>
                       )}
+
+                      {/* Unfinished / In-Progress Topic Badge */}
+                      {topicStatus.inProgressTopic ? (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-300 text-xs font-semibold text-amber-900">
+                          <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0" />
+                          <span>
+                            Unfinished: <strong className="text-amber-950">{topicStatus.inProgressTopic.topic}</strong>
+                            {topicStatus.inProgressTopic.note ? ` (Cut-off: "${topicStatus.inProgressTopic.note}")` : ''}
+                          </span>
+                        </div>
+                      ) : topicStatus.lastDiscussedTopic ? (
+                        <div className="text-xs text-zinc-600 font-medium flex items-center gap-1.5">
+                          <span className="text-zinc-500">Last discussed:</span>
+                          <span className="font-semibold text-zinc-900 truncate max-w-sm">{topicStatus.lastDiscussedTopic}</span>
+                        </div>
+                      ) : null}
 
                       {/* Mini syllabus progress bar */}
                       <div className="flex items-center gap-3 pt-1 text-xs font-semibold text-zinc-600">
@@ -405,6 +472,8 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             <div className="grid gap-4 sm:grid-cols-2">
               {filteredAllClasses.map((cls) => {
                 const stats = getCourseSyllabusStats(cls);
+                const topicStatus = getCourseTopicStatus(cls);
+
                 return (
                   <div
                     key={cls.id}
@@ -441,6 +510,21 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                         </p>
                       )}
 
+                      {/* Unfinished / In-Progress Topic Badge in All Courses */}
+                      {topicStatus.inProgressTopic ? (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-300 text-xs font-semibold text-amber-900 w-full">
+                          <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0" />
+                          <span className="truncate">
+                            Unfinished: <strong className="text-amber-950">{topicStatus.inProgressTopic.topic}</strong>
+                            {topicStatus.inProgressTopic.note ? ` (${topicStatus.inProgressTopic.note})` : ''}
+                          </span>
+                        </div>
+                      ) : topicStatus.lastDiscussedTopic ? (
+                        <p className="text-xs text-zinc-600 font-medium truncate">
+                          <span className="text-zinc-500">Last discussed:</span> {topicStatus.lastDiscussedTopic}
+                        </p>
+                      ) : null}
+
                       {/* Real Syllabus Accomplishment Progress Bar */}
                       <div className="space-y-1 bg-zinc-50 p-2.5 rounded-lg border border-zinc-200/80">
                         <div className="flex items-center justify-between text-xs font-semibold">
@@ -448,43 +532,21 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                           <span className="font-mono text-zinc-950 font-bold">{stats.completed}/{stats.total} ({stats.percent}%)</span>
                         </div>
                         <div className="w-full bg-zinc-200 h-2 rounded-full overflow-hidden">
-                          <div className="bg-zinc-950 h-full rounded-full transition-all duration-300" style={{ width: `${stats.percent}%` }} />
+                          <div 
+                            className="bg-zinc-950 h-full rounded-full transition-all duration-300"
+                            style={{ width: `${stats.percent}%` }}
+                          />
                         </div>
-                      </div>
-
-                      {/* Schedule Slots list */}
-                      <div className="space-y-1.5 pt-1">
-                        {cls.schedule.map((sch, i) => {
-                          const isLab = sch.type === 'Laboratory';
-                          return (
-                            <div key={i} className="flex items-center justify-between text-xs text-zinc-700 bg-zinc-50 px-3 py-1.5 rounded-lg border border-zinc-200/80">
-                              <div className="flex items-center gap-2">
-                                <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-bold uppercase ${
-                                  isLab ? 'bg-purple-100 text-purple-900 border border-purple-300' : 'bg-zinc-200 text-zinc-900'
-                                }`}>
-                                  {sch.type || 'Lecture'}
-                                </span>
-                                <span className="font-semibold text-zinc-950">{DAY_NAMES[sch.dayOfWeek]}:</span>
-                                <span className="font-mono text-zinc-800">{formatTime(sch.startTime)} – {formatTime(sch.endTime)}</span>
-                              </div>
-                              {sch.room && (
-                                <span className="text-xs font-medium text-zinc-500">
-                                  {sch.room}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3.5 mt-3.5 border-t border-zinc-100 text-xs font-medium text-zinc-600">
-                      <span className="flex items-center gap-1.5">
-                        <Layers className="w-4 h-4 text-zinc-500" aria-hidden="true" />
-                        {cls.masterSyllabus.length} Syllabus Topics
+                    <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-600">
+                      <span className="flex items-center gap-1">
+                        <Layers className="w-3.5 h-3.5 text-zinc-500" />
+                        {cls.masterSyllabus.length} Topics
                       </span>
-                      <span className="font-bold text-zinc-950 group-hover:underline">
-                        Manage & Inspect Course →
+                      <span className="font-semibold text-zinc-900 group-hover:text-zinc-950">
+                        View Syllabus Details →
                       </span>
                     </div>
                   </div>
@@ -494,6 +556,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
           )
         )}
       </div>
+
     </div>
   );
 };

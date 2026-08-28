@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { FC } from 'react';
 import type { ClassSession, SessionLog } from '../services/db';
 import { format } from 'date-fns';
@@ -12,7 +12,9 @@ import {
   FlaskConical, 
   Check, 
   Calendar,
-  Layers
+  Layers,
+  Hourglass,
+  Sparkles
 } from 'lucide-react';
 
 interface CourseDetailModalProps {
@@ -36,15 +38,55 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'syllabus' | 'history'>('syllabus');
 
-  // Compute completed topics across all logs
-  const coveredTopicsSet = new Set<string>();
-  courseLogs.forEach((log) => {
-    log.topicsCovered.forEach((t) => coveredTopicsSet.add(t));
-  });
+  // Compute completed and partial topics across all logs for this specific course
+  const { completedSet, partialNotesMap, latestInProgressTopic, lastDiscussedTopic } = useMemo<{
+    completedSet: Set<string>;
+    partialNotesMap: Map<string, string>;
+    latestInProgressTopic: { topic: string; note?: string } | null;
+    lastDiscussedTopic: string | null;
+  }>(() => {
+    const completed = new Set<string>();
+    const partials = new Map<string, string>();
+    let inProgressItem: { topic: string; note?: string } | null = null;
+    let lastTopic: string | null = null;
+
+    courseLogs.forEach((log) => {
+      log.topicsCovered.forEach((topic) => {
+        const match = log.nextActions?.match(new RegExp(`\\[In Progress: ${topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: - ([^\\]]+))?\\]`));
+        if (match) {
+          partials.set(topic, match[1] || 'In progress');
+          if (!inProgressItem) {
+            inProgressItem = { topic, note: match[1] };
+          }
+        } else if (log.nextActions?.includes(`[In Progress: ${topic}]`)) {
+          partials.set(topic, 'In progress');
+          if (!inProgressItem) {
+            inProgressItem = { topic };
+          }
+        } else {
+          completed.add(topic);
+          partials.delete(topic);
+        }
+      });
+    });
+
+    if (courseLogs.length > 0 && courseLogs[0].topicsCovered.length > 0) {
+      lastTopic = courseLogs[0].topicsCovered[courseLogs[0].topicsCovered.length - 1];
+    }
+
+    return {
+      completedSet: completed,
+      partialNotesMap: partials,
+      latestInProgressTopic: inProgressItem,
+      lastDiscussedTopic: lastTopic
+    };
+  }, [courseLogs]);
 
   const totalTopics = classSession.masterSyllabus.length || 1;
-  const completedCount = classSession.masterSyllabus.filter((t) => coveredTopicsSet.has(t)).length;
+  const completedCount = classSession.masterSyllabus.filter((t) => completedSet.has(t)).length;
   const progressPercent = Math.round((completedCount / totalTopics) * 100);
+
+  const suggestedNextTopic = classSession.masterSyllabus.find(t => !completedSet.has(t) && !partialNotesMap.has(t));
 
   const handleDelete = () => {
     if (window.confirm(`Are you sure you want to delete ${classSession.subjectCode} (${classSession.section})? This cannot be undone.`)) {
@@ -89,7 +131,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={() => onEdit(classSession)}
               aria-label="Edit course details"
-              className="rounded-lg p-2 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-colors"
+              className="rounded-lg p-2 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-colors cursor-pointer"
               title="Edit Course Details"
             >
               <Edit3 className="h-4 w-4" aria-hidden="true" />
@@ -98,7 +140,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={handleDelete}
               aria-label="Delete course"
-              className="rounded-lg p-2 text-zinc-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+              className="rounded-lg p-2 text-zinc-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
               title="Delete Course"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -107,7 +149,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close dialog"
-              className="rounded-lg p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors ml-1"
+              className="rounded-lg p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors ml-1 cursor-pointer"
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -132,6 +174,27 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               />
             </div>
           </div>
+
+          {/* Unfinished / In Progress Current Status Callout */}
+          {latestInProgressTopic ? (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 flex items-start gap-2.5 text-xs text-amber-950 font-medium">
+              <Hourglass className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-amber-900">Last discussed (Unfinished / In Progress): </span>
+                <span className="font-semibold text-zinc-950">{latestInProgressTopic.topic}</span>
+                {latestInProgressTopic.note && (
+                  <span className="block text-amber-800 text-[11px] font-semibold mt-0.5">
+                    Cut-off point: "{latestInProgressTopic.note}" — to be resumed next meeting.
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : lastDiscussedTopic ? (
+            <div className="text-xs text-zinc-600 font-medium flex items-center gap-1.5 pt-0.5">
+              <span className="text-zinc-500">Last completed topic:</span>
+              <span className="font-semibold text-zinc-900">{lastDiscussedTopic}</span>
+            </div>
+          ) : null}
 
           {/* Schedule Breakdown */}
           <div className="flex flex-wrap gap-2 pt-1">
@@ -159,7 +222,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('syllabus')}
-            className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
+            className={`pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
               activeTab === 'syllabus'
                 ? 'border-zinc-950 text-zinc-950'
                 : 'border-transparent text-zinc-500 hover:text-zinc-900'
@@ -170,7 +233,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('history')}
-            className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
+            className={`pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
               activeTab === 'history'
                 ? 'border-zinc-950 text-zinc-950'
                 : 'border-transparent text-zinc-500 hover:text-zinc-900'
@@ -185,30 +248,70 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
           {activeTab === 'syllabus' ? (
             <div className="space-y-2">
               {classSession.masterSyllabus.map((topic, index) => {
-                const isCovered = coveredTopicsSet.has(topic);
+                const isCovered = completedSet.has(topic);
+                const isPartial = partialNotesMap.has(topic);
+                const partialNote = partialNotesMap.get(topic);
+                const isNext = topic === suggestedNextTopic;
+
                 return (
                   <div
                     key={index}
                     className={`flex items-start gap-3 rounded-lg border p-3.5 transition-all ${
                       isCovered
                         ? 'border-emerald-300 bg-emerald-50/50 text-zinc-950'
+                        : isPartial
+                        ? 'border-amber-300 bg-amber-50/70 text-zinc-950'
+                        : isNext
+                        ? 'border-zinc-400 bg-zinc-50'
                         : 'border-zinc-200 bg-zinc-50/50 text-zinc-700'
                     }`}
                   >
                     <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
                       isCovered
                         ? 'bg-emerald-600 border-emerald-600 text-white'
+                        : isPartial
+                        ? 'bg-amber-600 border-amber-600 text-white'
                         : 'border-zinc-300 bg-white text-zinc-400'
                     }`}>
-                      {isCovered ? <Check className="h-3.5 w-3.5 stroke-[3]" aria-hidden="true" /> : <span className="text-2xs font-mono font-bold">{index + 1}</span>}
+                      {isCovered ? (
+                        <Check className="h-3.5 w-3.5 stroke-[3]" aria-hidden="true" />
+                      ) : isPartial ? (
+                        <Hourglass className="h-3 w-3" />
+                      ) : (
+                        <span className="text-2xs font-mono font-bold">{index + 1}</span>
+                      )}
                     </div>
+                    
                     <div className="flex-1">
-                      <p className={`text-sm font-medium leading-normal ${isCovered ? 'text-zinc-950 font-semibold' : 'text-zinc-700'}`}>
-                        {topic}
-                      </p>
-                      {isCovered && (
-                        <p className="text-xs text-emerald-800 font-semibold mt-0.5">
-                          ✓ Completed in class sessions
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className={`text-sm leading-normal ${isCovered ? 'text-zinc-950 font-semibold' : 'text-zinc-800 font-medium'}`}>
+                          {topic}
+                        </p>
+
+                        {isCovered && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                            ✓ Completed
+                          </span>
+                        )}
+
+                        {isPartial && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                            <Hourglass className="h-3 w-3 text-amber-700" />
+                            In Progress (Unfinished)
+                          </span>
+                        )}
+
+                        {isNext && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-900 bg-zinc-200 px-2 py-0.5 rounded-full border border-zinc-300">
+                            <Sparkles className="h-3 w-3 text-zinc-700" />
+                            Next Up
+                          </span>
+                        )}
+                      </div>
+
+                      {isPartial && partialNote && partialNote !== 'In progress' && (
+                        <p className="text-xs text-amber-900 font-semibold mt-1 bg-white/80 p-2 rounded border border-amber-200">
+                          📌 Cut-off note: "{partialNote}"
                         </p>
                       )}
                     </div>
@@ -228,7 +331,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                 {courseLogs.map((log, index) => (
                   <div
                     key={log.id || index}
-                    className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 space-y-2"
+                    className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 space-y-2.5"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -250,18 +353,29 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
 
                     {log.topicsCovered.length > 0 && (
                       <div className="space-y-1">
-                        <p className="text-xs font-bold text-zinc-700">Covered Topics:</p>
-                        <ul className="text-xs text-zinc-800 space-y-0.5 pl-3 list-disc">
-                          {log.topicsCovered.map((t, idx) => (
-                            <li key={idx}>{t}</li>
-                          ))}
-                        </ul>
+                        <p className="text-xs font-bold text-zinc-700">Topics Discussed in this Session:</p>
+                        <div className="space-y-1">
+                          {log.topicsCovered.map((t, idx) => {
+                            const isPart = log.nextActions?.includes(`[In Progress: ${t}`);
+                            return (
+                              <div key={idx} className="flex items-center gap-2 text-xs text-zinc-900">
+                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 shrink-0" />
+                                <span>{t}</span>
+                                {isPart && (
+                                  <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300">
+                                    Partially Covered
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 
                     {log.nextActions && (
-                      <p className="text-xs text-zinc-600 italic bg-white p-2 rounded border border-zinc-200">
-                        <span className="font-semibold text-zinc-700 not-italic">Notes:</span> {log.nextActions}
+                      <p className="text-xs text-zinc-700 bg-white p-2.5 rounded border border-zinc-200">
+                        <span className="font-bold text-zinc-900">Notes & Cut-offs:</span> {log.nextActions}
                       </p>
                     )}
                   </div>
@@ -280,16 +394,14 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
           >
             Close
           </button>
+          
           <button
             type="button"
-            onClick={() => {
-              onClose();
-              onLogNewSession(classSession);
-            }}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
+            onClick={() => onLogNewSession(classSession)}
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
           >
-            <PlusCircle className="h-4 w-4 mr-1.5" aria-hidden="true" />
-            Log Session Now
+            <PlusCircle className="w-4 h-4 mr-2" aria-hidden="true" />
+            Log Session for this Class
           </button>
         </div>
 
