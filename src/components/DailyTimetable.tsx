@@ -407,17 +407,17 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                         <div className="mt-0.5 p-1 rounded bg-amber-200/80 text-amber-800 shrink-0">
                           <Hourglass className="h-3.5 w-3.5" />
                         </div>
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-amber-900 uppercase text-[10px] tracking-wider">
-                              Unfinished:
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div>
+                            <span className="font-bold text-amber-900 uppercase text-[10px] tracking-wider block">
+                              Unfinished Lesson:
                             </span>
-                            <span className="font-semibold text-zinc-950 truncate">
+                            <p className="font-semibold text-zinc-950 text-xs leading-snug">
                               {topicStatus.inProgressTopic.topic}
-                            </span>
+                            </p>
                           </div>
                           {topicStatus.inProgressTopic.note && (
-                            <p className="text-[11px] font-medium text-amber-900 bg-white/80 px-2 py-0.5 rounded border border-amber-200/80 inline-block mt-0.5">
+                            <p className="text-[11px] font-medium text-amber-900 bg-white/90 px-2 py-0.5 rounded border border-amber-200 inline-block">
                               📍 Cut-off: "{topicStatus.inProgressTopic.note}"
                             </p>
                           )}

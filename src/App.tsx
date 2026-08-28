@@ -469,21 +469,30 @@ function App() {
               <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
 
-            {/* Reset sample data button */}
+            {/* Refresh / Reload App Button */}
             <button
               type="button"
-              onClick={handleResetDemoData}
+              onClick={() => {
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistrations().then(regs => {
+                    regs.forEach(r => r.update());
+                  });
+                }
+                window.location.reload();
+              }}
               className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-600 hover:text-zinc-950 transition-colors cursor-pointer shrink-0"
-              title="Clear Schedule or Load Demo"
-              aria-label="Clear Schedule or Load Demo"
+              title="Refresh / Check for Updates"
+              aria-label="Refresh / Check for Updates"
             >
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
 
             {/* Instructor avatar badge */}
             <div 
-              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 text-xs font-bold text-zinc-800 shrink-0"
-              aria-label="Instructor profile"
+              onClick={handleResetDemoData}
+              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 text-xs font-bold text-zinc-800 shrink-0 cursor-pointer hover:bg-zinc-200 transition-colors"
+              aria-label="Instructor profile (Click to manage demo data)"
+              title="Instructor profile (Click to manage demo data)"
             >
               PD
             </div>
