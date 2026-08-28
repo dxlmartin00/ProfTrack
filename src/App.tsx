@@ -31,9 +31,169 @@ import {
 
 const todayDay = new Date().getDay();
 
-const INITIAL_MOCK_CLASSES: ClassSession[] = [
+export const SEMESTER_COURSES: ClassSession[] = [
   {
-    id: 'c1',
+    id: 'course_ege1',
+    instructorId: 'inst1',
+    subjectCode: 'EGE 1',
+    subjectTitle: 'Living in the IT Era',
+    section: 'BSBA-BE 2D',
+    year: '2nd Year',
+    room: 'GF003/CL',
+    schedule: [
+      { 
+        dayOfWeek: todayDay, 
+        startTime: '07:30', 
+        endTime: '09:00', 
+        type: 'Lecture',
+        room: 'GF003/CL' 
+      },
+      { 
+        dayOfWeek: (todayDay + 2) % 7 === 0 ? 1 : (todayDay + 2) % 7, 
+        startTime: '07:30', 
+        endTime: '09:00', 
+        type: 'Lecture',
+        room: 'GF003/CL' 
+      }
+    ],
+    masterSyllabus: [
+      'Introduction to Living in the IT Era IT and its role in society',
+      'The Evolution of Information and Communications Technology',
+      'Computer Systems, Hardware, and Architecture',
+      'Software Applications and Operating Systems',
+      'The Internet, World Wide Web, and Cloud Computing',
+      'Data Privacy, Security, and Cybersecurity Fundamentals',
+      'Digital Ethics, Netiquette, and Intellectual Property',
+      'Social Media Impact and Digital Footprints',
+      'E-Commerce, Digital Economy, and Online Transactions',
+      'Emerging Technologies (AI, IoT, Blockchain, and Robotics)',
+      'IT in Business, Education, and Healthcare Systems',
+      'Green Computing and Environmental Sustainability',
+      'Data Analytics and Information Visualization',
+      'Mobile Computing and Wireless Technologies',
+      'Web Development Fundamentals and Digital Presence',
+      'Digital Media, Graphics, and Content Creation',
+      'IT Project Life Cycle and Basic Troubleshooting',
+      'Future Trends in Information Technology and Society'
+    ]
+  },
+  {
+    id: 'course_cs315',
+    instructorId: 'inst1',
+    subjectCode: 'CS315',
+    subjectTitle: 'Application Development and Emerging Technologies',
+    section: 'BSCS-3D',
+    year: '3rd Year',
+    room: '127/IL2',
+    schedule: [
+      { 
+        dayOfWeek: todayDay, 
+        startTime: '10:00', 
+        endTime: '11:00', 
+        type: 'Lecture',
+        room: '127/IL2' 
+      },
+      { 
+        dayOfWeek: todayDay, 
+        startTime: '11:00', 
+        endTime: '12:30', 
+        type: 'Laboratory',
+        room: '127/IL2' 
+      }
+    ],
+    masterSyllabus: [
+      'Introduction to Application Development & Emerging Technologies',
+      'Full-Stack Architecture & Microservices Fundamentals',
+      'Cross-Platform Mobile Development with React Native / Flutter',
+      'Cloud-Native Deployments, Containers, and Docker',
+      'Serverless Computing & Cloud Functions',
+      'Progressive Web Applications (PWA) and Offline-First Storage',
+      'RESTful & GraphQL API Design, Integration, and Security',
+      'Real-Time Systems & WebSocket Communication',
+      'Artificial Intelligence Integration & Large Language Models APIs',
+      'Edge Computing & Internet of Things (IoT) Device Connectors',
+      'DevOps, Continuous Integration & Continuous Delivery (CI/CD)',
+      'Authentication, OAuth 2.0, and JWT Token Management',
+      'Data Persistence with Relational & NoSQL Cloud Databases',
+      'Automated Testing, Code Quality & CI Pipeline Actions',
+      'Application Monitoring, Performance Metrics & Telemetry',
+      'Mobile App Packaging, Code Signing & Store Deployment',
+      'Cybersecurity Best Practices & OWASP Vulnerability Mitigation',
+      'Capstone Presentation of Full-Stack Emerging Tech Solution'
+    ]
+  },
+  {
+    id: 'course_cs314',
+    instructorId: 'inst1',
+    subjectCode: 'CS314',
+    subjectTitle: 'System Fundamentals',
+    section: 'BSCS-3D',
+    year: '3rd Year',
+    room: 'CL2',
+    schedule: [
+      { 
+        dayOfWeek: todayDay, 
+        startTime: '14:30', 
+        endTime: '16:00', 
+        type: 'Laboratory',
+        room: 'CL2' 
+      }
+    ],
+    masterSyllabus: [
+      'Introduction to Systems Architecture & Computing Foundations',
+      'Explain ethical issues and compare SDLC models',
+      'Operating System Concepts: Processes, Threads & Concurrency',
+      'Memory Management: Virtual Memory, Paging & Segmentation',
+      'File Systems, Storage Architecture & I/O Subsystems',
+      'Computer Networking Essentials: TCP/IP & Network Topologies',
+      'Distributed Systems & Client-Server Architectures',
+      'Database Foundations & Data Storage Engines',
+      'System Security: Cryptography, Access Control & Firewalls',
+      'Virtualization, Hypervisors & Cloud Virtual Machines',
+      'System Performance Evaluation & Benchmarking Tools',
+      'Kernel Architecture, System Calls & Device Drivers',
+      'System Administration, Shell Scripting & Automation',
+      'Backup Strategies, Disaster Recovery & High Availability',
+      'Modern System Monitoring, Log Aggregation & Diagnostics',
+      'Parallel Computing & Multiprocessing Systems',
+      'Embedded & Real-Time Operating Systems Fundamentals',
+      'Final Comprehensive Systems Architecture Evaluation'
+    ]
+  },
+  {
+    id: 'course_it302',
+    instructorId: 'inst1',
+    subjectCode: 'IT302',
+    subjectTitle: 'Web Systems and Technologies 2 (Advanced Full-Stack)',
+    section: 'BSIT 3-A',
+    year: '3rd Year',
+    room: 'ComLab 4',
+    schedule: [
+      { 
+        dayOfWeek: todayDay, 
+        startTime: '13:00', 
+        endTime: '14:30', 
+        type: 'Laboratory',
+        room: 'ComLab 4' 
+      },
+      { 
+        dayOfWeek: (todayDay + 3) % 7 === 0 ? 1 : (todayDay + 3) % 7, 
+        startTime: '13:00', 
+        endTime: '15:00', 
+        type: 'Lecture',
+        room: 'Room 305' 
+      }
+    ],
+    masterSyllabus: [
+      'Modern Web Architecture & RESTful APIs',
+      'State Management & Reactive UI Components',
+      'Database Modeling & Object-Relational Mapping',
+      'Authentication, Authorization & OAuth 2.0',
+      'Cloud Deployment & Automated CI/CD Pipelines'
+    ]
+  },
+  {
+    id: 'course_ge104',
     instructorId: 'inst1',
     subjectCode: 'GE104',
     subjectTitle: 'Mathematics in the Modern World (General Education)',
@@ -65,57 +225,109 @@ const INITIAL_MOCK_CLASSES: ClassSession[] = [
     ]
   },
   {
-    id: 'c2',
+    id: 'course_cs101',
     instructorId: 'inst1',
-    subjectCode: 'IT302',
-    subjectTitle: 'Web Systems and Technologies 2 (Advanced Full-Stack)',
-    section: 'BSIT 3-A',
-    year: '3rd Year',
-    room: 'ComLab 4',
+    subjectCode: 'CS101',
+    subjectTitle: 'Introduction to Computing',
+    section: 'BSCS 1-A',
+    year: '1st Year',
+    room: 'Room 301',
     schedule: [
       { 
-        dayOfWeek: todayDay, 
-        startTime: '13:00', 
-        endTime: '16:00', 
-        type: 'Laboratory',
-        room: 'ComLab 4' 
-      },
-      { 
-        dayOfWeek: (todayDay + 3) % 7, 
-        startTime: '13:00', 
-        endTime: '15:00', 
+        dayOfWeek: (todayDay + 1) % 7 === 0 ? 1 : (todayDay + 1) % 7, 
+        startTime: '08:00', 
+        endTime: '10:00', 
         type: 'Lecture',
-        room: 'Room 305' 
+        room: 'Room 301' 
       }
     ],
     masterSyllabus: [
-      'Modern Web Architecture & RESTful APIs',
-      'State Management & Reactive UI Components',
-      'Database Modeling & Object-Relational Mapping',
-      'Authentication, Authorization & OAuth 2.0',
-      'Cloud Deployment & Automated CI/CD Pipelines'
+      'History of Computing & Digital Transformations',
+      'Algorithm Design & Pseudocode Foundations',
+      'Binary Logic & Number Systems',
+      'Basics of Programming Languages',
+      'Computing Ethics and Society'
+    ]
+  },
+  {
+    id: 'course_it201',
+    instructorId: 'inst1',
+    subjectCode: 'IT201',
+    subjectTitle: 'Data Structures and Algorithms',
+    section: 'BSIT 2-B',
+    year: '2nd Year',
+    room: 'ComLab 2',
+    schedule: [
+      { 
+        dayOfWeek: (todayDay + 4) % 7 === 0 ? 1 : (todayDay + 4) % 7, 
+        startTime: '10:30', 
+        endTime: '13:30', 
+        type: 'Laboratory',
+        room: 'ComLab 2' 
+      }
+    ],
+    masterSyllabus: [
+      'Arrays, Linked Lists, and Memory Allocation',
+      'Stacks, Queues, and Priority Structures',
+      'Trees, Binary Search Trees & AVL Balancing',
+      'Graphs, Breadth-First & Depth-First Search',
+      'Sorting Algorithms & Big-O Complexity Analysis'
+    ]
+  },
+  {
+    id: 'course_cs322',
+    instructorId: 'inst1',
+    subjectCode: 'CS322',
+    subjectTitle: 'Information Assurance and Security',
+    section: 'BSCS 3-B',
+    year: '3rd Year',
+    room: 'Room 405',
+    schedule: [
+      { 
+        dayOfWeek: (todayDay + 3) % 7 === 0 ? 1 : (todayDay + 3) % 7, 
+        startTime: '16:00', 
+        endTime: '17:30', 
+        type: 'Lecture',
+        room: 'Room 405' 
+      }
+    ],
+    masterSyllabus: [
+      'Security Principles: Confidentiality, Integrity, Availability',
+      'Symmetric & Asymmetric Cryptography',
+      'Threat Modeling & Vulnerability Assessments',
+      'Network Security Protocols & Firewalls',
+      'Incident Response & Forensic Basics'
     ]
   }
 ];
 
-const INITIAL_MOCK_LOGS: (SessionLog & { classInfo: ClassSession })[] = [
+export const INITIAL_SEMESTER_LOGS: (SessionLog & { classInfo: ClassSession })[] = [
   {
-    id: 'log1',
-    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    id: 'log_cs315_recent',
+    date: new Date(),
     sessionType: 'Lecture',
-    topicsCovered: ['Mathematics in our World (Patterns in Nature)'],
-    nextActions: 'Assigned homework on Fibonacci sequences and nature patterns.',
+    topicsCovered: ['Introduction to Application Development & Emerging Technologies'],
+    nextActions: '[In Progress: Introduction to Application Development & Emerging Technologies - Stopped at Slide #20] Completed section 1.',
     engagementLevel: 'High',
-    classInfo: INITIAL_MOCK_CLASSES[0]
+    classInfo: SEMESTER_COURSES[1]
   },
   {
-    id: 'log2',
-    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    sessionType: 'Laboratory',
-    topicsCovered: ['Modern Web Architecture & RESTful APIs'],
-    nextActions: 'Completed hands-on exercise 1. Ready for state management.',
+    id: 'log_ege1_recent',
+    date: new Date(Date.now() - 24 * 60 * 60 * 1000),
+    sessionType: 'Lecture',
+    topicsCovered: ['Introduction to Living in the IT Era IT and its role in society'],
+    nextActions: 'Completed topic 1 orientation. Next meeting start ICT Evolution.',
     engagementLevel: 'High',
-    classInfo: INITIAL_MOCK_CLASSES[1]
+    classInfo: SEMESTER_COURSES[0]
+  },
+  {
+    id: 'log_cs314_recent',
+    date: new Date(Date.now() - 48 * 60 * 60 * 1000),
+    sessionType: 'Laboratory',
+    topicsCovered: ['Explain ethical issues and compare SDLC models'],
+    nextActions: 'Submitted lab activity 1 on SDLC workflows.',
+    engagementLevel: 'High',
+    classInfo: SEMESTER_COURSES[2]
   }
 ];
 
@@ -135,32 +347,39 @@ export function App() {
     return DEFAULT_INSTRUCTOR_PROFILE;
   });
 
-  // Load cached classes or initial mocks
+  // Load cached classes or recover semester courses
   const [classes, setClasses] = useState<ClassSession[]>(() => {
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (cached) return JSON.parse(cached);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
     } catch {
       // Fallback
     }
-    return INITIAL_MOCK_CLASSES;
+    return SEMESTER_COURSES;
   });
 
-  // Load cached session logs
+  // Load cached session logs or recover semester logs
   const [logs, setLogs] = useState<(SessionLog & { classInfo: ClassSession })[]>(() => {
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_LOGS_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
-        return parsed.map((item: any) => ({
-          ...item,
-          date: new Date(item.date),
-        }));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((item: any) => ({
+            ...item,
+            date: new Date(item.date),
+          }));
+        }
       }
     } catch {
       // Fallback
     }
-    return INITIAL_MOCK_LOGS;
+    return INITIAL_SEMESTER_LOGS;
   });
 
   // Modal States
@@ -222,7 +441,6 @@ export function App() {
 
   // Deep-link & QR Code URL hash init (Run once on mount)
   useEffect(() => {
-    // 1. Process QR Code Import from URL Hash (#import=...)
     const hash = window.location.hash;
     if (hash.startsWith('#import=')) {
       try {
@@ -253,7 +471,6 @@ export function App() {
       } catch (err) {
         console.error('Failed to parse QR code URL payload:', err);
       } finally {
-        // Clean URL hash without reload
         window.history.replaceState(null, '', window.location.pathname);
       }
     }
@@ -376,20 +593,20 @@ export function App() {
     }
   };
 
-  // Toggle clean state vs sample demo dataset
+  // Reset or Restore default courses
   const handleResetDemoData = () => {
     if (classes.length > 0) {
-      if (window.confirm('Clear all courses and start with a completely clean schedule?')) {
-        setClasses([]);
-        setLogs([]);
-        localStorage.removeItem(LOCAL_STORAGE_KEY);
-        localStorage.removeItem(LOCAL_STORAGE_LOGS_KEY);
+      if (window.confirm('Reset schedule back to all 8 semester courses?')) {
+        setClasses(SEMESTER_COURSES);
+        setLogs(INITIAL_SEMESTER_LOGS);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(SEMESTER_COURSES));
+        localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(INITIAL_SEMESTER_LOGS));
       }
     } else {
-      if (window.confirm('Load sample demonstration courses and syllabus?')) {
-        setClasses(INITIAL_MOCK_CLASSES);
-        setLogs(INITIAL_MOCK_LOGS);
-      }
+      setClasses(SEMESTER_COURSES);
+      setLogs(INITIAL_SEMESTER_LOGS);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(SEMESTER_COURSES));
+      localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(INITIAL_SEMESTER_LOGS));
     }
   };
 
@@ -444,7 +661,7 @@ export function App() {
                   ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
                   : 'border-amber-300 bg-amber-50 text-amber-900'
               }`}
-              title={isOnline ? 'Network Connected • Cloud Sync Active' : 'Offline Mode • Local IndexedDB Active'}
+              title={isOnline ? 'Network Connected • Local Mode Active' : 'Offline Mode • Local Cache Active'}
             >
               {isOnline ? <Wifi className="h-3.5 w-3.5 text-emerald-700" /> : <WifiOff className="h-3.5 w-3.5 text-amber-700" />}
               <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
