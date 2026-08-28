@@ -44,6 +44,24 @@ export interface SessionLog {
   engagementLevel: string; // "Low", "Medium", "High"
 }
 
+export interface InstructorProfile {
+  fullName: string;
+  position: string;
+  department: string;
+  institution: string;
+  email?: string;
+  employeeId?: string;
+}
+
+export const DEFAULT_INSTRUCTOR_PROFILE: InstructorProfile = {
+  fullName: 'Prof. Dan Martin',
+  position: 'Assistant Professor I',
+  department: 'College of Computer Studies',
+  institution: 'University of Makati',
+  email: 'dan.martin@university.edu.ph',
+  employeeId: 'EMP-2026-089'
+};
+
 // Timeout helper to prevent hanging when offline or unconfigured
 const withTimeout = <T>(promise: Promise<T>, timeoutMs = 1800): Promise<T> => {
   return Promise.race([

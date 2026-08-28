@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import type { SessionLog, ClassSession } from '../services/db';
+import type { SessionLog, ClassSession, InstructorProfile } from '../services/db';
 import { generateMonthlyReport } from '../utils/generatePdf';
 import { X, Download, FileText } from 'lucide-react';
 import { format } from 'date-fns';
@@ -8,10 +8,11 @@ import { format } from 'date-fns';
 interface ReportModalProps {
   logs: (SessionLog & { classInfo: ClassSession })[];
   classes: ClassSession[];
+  profile?: InstructorProfile;
   onClose: () => void;
 }
 
-export const ReportModal: FC<ReportModalProps> = ({ logs, classes, onClose }) => {
+export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onClose }) => {
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -42,7 +43,7 @@ export const ReportModal: FC<ReportModalProps> = ({ logs, classes, onClose }) =>
   const handleExport = () => {
     setIsGenerating(true);
     try {
-      generateMonthlyReport(logs, selectedYear, selectedMonth);
+      generateMonthlyReport(logs, selectedYear, selectedMonth, profile);
     } catch (err) {
       console.error('Failed to export PDF:', err);
       alert('Error generating PDF report.');

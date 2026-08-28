@@ -5,12 +5,14 @@ import { AddClassModal } from './components/AddClassModal';
 import { CourseDetailModal } from './components/CourseDetailModal';
 import { ReportModal } from './components/ReportModal';
 import { DataTransferModal } from './components/DataTransferModal';
-import type { ClassSession, ClassSchedule, SessionLog, ScheduleType } from './services/db';
+import { ProfileModal, getInitials } from './components/ProfileModal';
+import type { ClassSession, ClassSchedule, SessionLog, ScheduleType, InstructorProfile } from './services/db';
 import { 
   addClass as dbAddClass, 
   updateClass as dbUpdateClass, 
   deleteClass as dbDeleteClass, 
-  submitSessionLog 
+  submitSessionLog,
+  DEFAULT_INSTRUCTOR_PROFILE
 } from './services/db';
 import { 
   requestNotificationPermission, 
@@ -48,7 +50,7 @@ const INITIAL_MOCK_CLASSES: ClassSession[] = [
         room: 'Room 204' 
       },
       { 
-        dayOfWeek: (todayDay + 3) % 7, 
+        dayOfWeek: (todayDay + 2) % 7 === 0 ? 1 : (todayDay + 2) % 7, 
         startTime: '09:00', 
         endTime: '10:30', 
         type: 'Lecture',
@@ -56,114 +58,101 @@ const INITIAL_MOCK_CLASSES: ClassSession[] = [
       }
     ],
     masterSyllabus: [
-      'Mathematics in our World: Patterns and Numbers in Nature',
-      'Mathematical Language, Symbols, and Syntax',
-      'Problem Solving and Reasoning Strategies',
-      'Data Management & Statistical Analysis',
-      'Mathematics of Graphs & Network Optimization'
+      'Mathematics in our World (Patterns in Nature)',
+      'Mathematical Language and Symbols',
+      'Problem Solving and Reasoning',
+      'Data Management & Statistical Tools',
+      'Apportionment and Voting Theory'
     ]
   },
   {
     id: 'c2',
     instructorId: 'inst1',
-    subjectCode: 'CS101',
-    subjectTitle: 'Computer Programming & Systems (Lecture & Lab)',
-    section: 'BSCS 1-A',
-    year: '1st Year',
-    room: 'Main Campus',
+    subjectCode: 'IT302',
+    subjectTitle: 'Web Systems and Technologies 2 (Advanced Full-Stack)',
+    section: 'BSIT 3-A',
+    year: '3rd Year',
+    room: 'ComLab 4',
     schedule: [
       { 
-        dayOfWeek: todayDay === 0 || todayDay === 6 ? 1 : todayDay, 
-        startTime: '11:00', 
-        endTime: '12:00', 
-        type: 'Lecture',
-        room: 'Lecture Hall 101' 
-      },
-      { 
-        dayOfWeek: (todayDay + 2) % 7, 
+        dayOfWeek: todayDay, 
         startTime: '13:00', 
         endTime: '16:00', 
         type: 'Laboratory',
-        room: 'Computer Lab 3' 
-      }
-    ],
-    masterSyllabus: [
-      'Course Overview & Computational Thinking',
-      'Asymptotic Notation & Big-O Complexity',
-      'Arrays, Memory Layouts & Pointers',
-      'Laboratory Experiment 1: Algorithm Benchmarking',
-      'Stacks, Queues, and Recursion',
-      'Laboratory Experiment 2: Dynamic Linked Structures'
-    ]
-  },
-  {
-    id: 'c3',
-    instructorId: 'inst1',
-    subjectCode: 'ETHICS',
-    subjectTitle: 'Ethics & Moral Reasoning (General Education)',
-    section: 'BAP 2-A',
-    year: '2nd Year',
-    room: 'Auditorium B',
-    schedule: [
+        room: 'ComLab 4' 
+      },
       { 
-        dayOfWeek: (todayDay + 1) % 7, 
+        dayOfWeek: (todayDay + 3) % 7, 
         startTime: '13:00', 
-        endTime: '16:00', 
+        endTime: '15:00', 
         type: 'Lecture',
-        room: 'Auditorium B' 
+        room: 'Room 305' 
       }
     ],
     masterSyllabus: [
-      'Fundamental Concepts: Moral vs. Non-Moral Standards',
-      'The Moral Agent: Culture and Moral Behavior',
-      'The Act: Feelings and Rationality in Decision-Making',
-      'Ethical Frameworks: Utilitarianism, Deontology, Virtue Ethics'
+      'Modern Web Architecture & RESTful APIs',
+      'State Management & Reactive UI Components',
+      'Database Modeling & Object-Relational Mapping',
+      'Authentication, Authorization & OAuth 2.0',
+      'Cloud Deployment & Automated CI/CD Pipelines'
     ]
   }
 ];
 
-const INITIAL_MOCK_LOGS = [
+const INITIAL_MOCK_LOGS: (SessionLog & { classInfo: ClassSession })[] = [
   {
-    id: 'l1',
-    date: new Date(),
-    sessionType: 'Lecture' as ScheduleType,
-    topicsCovered: ['Mathematics in our World: Patterns and Numbers in Nature'],
-    nextActions: 'Prepare Chapter 1 diagnostic problem set for next meeting',
+    id: 'log1',
+    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    sessionType: 'Lecture',
+    topicsCovered: ['Mathematics in our World (Patterns in Nature)'],
+    nextActions: 'Assigned homework on Fibonacci sequences and nature patterns.',
     engagementLevel: 'High',
     classInfo: INITIAL_MOCK_CLASSES[0]
   },
   {
-    id: 'l2',
-    date: new Date(Date.now() - 86400000 * 2),
-    sessionType: 'Lecture' as ScheduleType,
-    topicsCovered: ['Course Overview & Computational Thinking'],
-    nextActions: 'Ensure all students have installed the lab compiler toolchain',
-    engagementLevel: 'Medium',
+    id: 'log2',
+    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    sessionType: 'Laboratory',
+    topicsCovered: ['Modern Web Architecture & RESTful APIs'],
+    nextActions: 'Completed hands-on exercise 1. Ready for state management.',
+    engagementLevel: 'High',
     classInfo: INITIAL_MOCK_CLASSES[1]
   }
 ];
 
-const LOCAL_STORAGE_KEY = 'proftrack_classes_prod_v1';
-const LOCAL_STORAGE_LOGS_KEY = 'proftrack_logs_prod_v1';
+const LOCAL_STORAGE_KEY = 'proftrack_classes_cache';
+const LOCAL_STORAGE_LOGS_KEY = 'proftrack_session_logs';
+const LOCAL_STORAGE_PROFILE_KEY = 'proftrack_instructor_profile';
 
-function App() {
-  const [classes, setClasses] = useState<ClassSession[]>(() => {
+export function App() {
+  // Load cached profile or default
+  const [profile, setProfile] = useState<InstructorProfile>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
+      const saved = localStorage.getItem(LOCAL_STORAGE_PROFILE_KEY);
+      if (saved) return JSON.parse(saved);
     } catch {
       // Fallback
     }
-    return [];
+    return DEFAULT_INSTRUCTOR_PROFILE;
   });
 
+  // Load cached classes or initial mocks
+  const [classes, setClasses] = useState<ClassSession[]>(() => {
+    try {
+      const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (cached) return JSON.parse(cached);
+    } catch {
+      // Fallback
+    }
+    return INITIAL_MOCK_CLASSES;
+  });
+
+  // Load cached session logs
   const [logs, setLogs] = useState<(SessionLog & { classInfo: ClassSession })[]>(() => {
     try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_LOGS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const cached = localStorage.getItem(LOCAL_STORAGE_LOGS_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
         return parsed.map((item: any) => ({
           ...item,
           date: new Date(item.date),
@@ -172,7 +161,7 @@ function App() {
     } catch {
       // Fallback
     }
-    return [];
+    return INITIAL_MOCK_LOGS;
   });
 
   // Modal States
@@ -183,6 +172,7 @@ function App() {
   const [isAddClassOpen, setIsAddClassOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [qrNotification, setQrNotification] = useState<string | null>(null);
 
   // Network & Push states
@@ -221,6 +211,16 @@ function App() {
     }
   }, [logs]);
 
+  // Save profile helper
+  const handleSaveProfile = (newProfile: InstructorProfile) => {
+    setProfile(newProfile);
+    try {
+      localStorage.setItem(LOCAL_STORAGE_PROFILE_KEY, JSON.stringify(newProfile));
+    } catch (e) {
+      console.error('Failed to save profile to storage', e);
+    }
+  };
+
   // PWA Service Worker & Deep-link / QR Code URL hash init
   useEffect(() => {
     registerServiceWorker();
@@ -238,13 +238,18 @@ function App() {
             ...item,
             date: new Date(item.date),
           }));
+          const importedProfile: InstructorProfile = parsed.profile || parsed.p;
 
           if (importedClasses.length > 0 || importedLogs.length > 0) {
             setClasses(importedClasses);
             setLogs(importedLogs);
+            if (importedProfile) {
+              setProfile(importedProfile);
+              localStorage.setItem(LOCAL_STORAGE_PROFILE_KEY, JSON.stringify(importedProfile));
+            }
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(importedClasses));
             localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(importedLogs));
-            setQrNotification(`Successfully restored ${importedClasses.length} courses and ${importedLogs.length} session logs from QR Code!`);
+            setQrNotification(`Successfully restored ${importedClasses.length} courses, logs, and profile!`);
             setTimeout(() => setQrNotification(null), 6000);
           }
         }
@@ -363,10 +368,14 @@ function App() {
   // Restore imported data from phone or backup file
   const handleImportData = (
     importedClasses: ClassSession[], 
-    importedLogs: (SessionLog & { classInfo: ClassSession })[]
+    importedLogs: (SessionLog & { classInfo: ClassSession })[],
+    importedProfile?: InstructorProfile
   ) => {
     setClasses(importedClasses);
     setLogs(importedLogs);
+    if (importedProfile) {
+      handleSaveProfile(importedProfile);
+    }
   };
 
   // Web Push Permission & Test Trigger
@@ -398,9 +407,11 @@ function App() {
     }
   };
 
+  const userInitials = getInitials(profile.fullName);
+
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 flex flex-col font-sans">
-           {/* Top Navbar */}
+      {/* Top Navbar */}
       <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur-xs">
         <div className="max-w-5xl mx-auto flex h-14 sm:h-16 items-center justify-between px-3.5 sm:px-6">
           <div className="flex items-center gap-4 sm:gap-6">
@@ -408,13 +419,12 @@ function App() {
               <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-zinc-950 text-white shadow-2xs shrink-0">
                 <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
-              <span className="font-bold text-sm sm:text-base tracking-tight text-zinc-950">ProfTrack</span>
-              <span className="hidden sm:inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700 font-mono">
-                PWA
+              <span className="font-bold text-sm sm:text-base tracking-tight text-zinc-950">
+                ProfTrack
               </span>
             </div>
 
-            <nav className="hidden md:flex items-center gap-4 text-sm font-medium" aria-label="Main Navigation">
+            <nav className="hidden md:flex items-center gap-5 text-sm">
               <button
                 type="button"
                 onClick={() => {}}
@@ -487,15 +497,26 @@ function App() {
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
 
-            {/* Instructor avatar badge */}
-            <div 
-              onClick={handleResetDemoData}
-              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-zinc-300 bg-zinc-100 text-xs font-bold text-zinc-800 shrink-0 cursor-pointer hover:bg-zinc-200 transition-colors"
-              aria-label="Instructor profile (Click to manage demo data)"
-              title="Instructor profile (Click to manage demo data)"
+            {/* Instructor Profile Avatar Badge */}
+            <button
+              type="button"
+              onClick={() => setIsProfileOpen(true)}
+              className="flex items-center gap-2 rounded-full border border-zinc-300 bg-white p-0.5 sm:pr-2.5 sm:pl-0.5 text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 transition-colors cursor-pointer shrink-0 shadow-2xs group"
+              aria-label={`Profile: ${profile.fullName} (${profile.position})`}
+              title="View & Edit Instructor Profile"
             >
-              PD
-            </div>
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-zinc-950 text-white text-xs font-bold shrink-0">
+                {userInitials}
+              </div>
+              <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
+                <span className="text-xs font-bold text-zinc-950 group-hover:text-zinc-800 truncate max-w-[130px]">
+                  {profile.fullName}
+                </span>
+                <span className="text-[10px] text-zinc-500 font-medium truncate max-w-[130px]">
+                  {profile.position}
+                </span>
+              </div>
+            </button>
           </div>
         </div>
       </header>
@@ -540,6 +561,17 @@ function App() {
         />
       </main>
 
+      {/* Instructor Profile Modal */}
+      {isProfileOpen && (
+        <ProfileModal
+          profile={profile}
+          onClose={() => setIsProfileOpen(false)}
+          onSaveProfile={handleSaveProfile}
+          onResetData={handleResetDemoData}
+          hasCourses={classes.length > 0}
+        />
+      )}
+
       {/* Course Detail & Syllabus Inspector Modal */}
       {inspectedCourse && (
         <CourseDetailModal
@@ -577,6 +609,7 @@ function App() {
         <ReportModal
           logs={logs}
           classes={classes}
+          profile={profile}
           onClose={() => setIsReportOpen(false)}
         />
       )}
@@ -586,6 +619,7 @@ function App() {
         <DataTransferModal
           classes={classes}
           logs={logs}
+          profile={profile}
           onClose={() => setIsTransferModalOpen(false)}
           onImportData={handleImportData}
         />

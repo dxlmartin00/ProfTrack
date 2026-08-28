@@ -1,12 +1,13 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
-import type { SessionLog, ClassSession } from '../services/db';
+import type { SessionLog, ClassSession, InstructorProfile } from '../services/db';
 
 export const generateMonthlyReport = (
   logs: (SessionLog & { classInfo: ClassSession })[], 
   year: number, 
-  month: number
+  month: number,
+  profile?: InstructorProfile
 ) => {
   const doc = new jsPDF();
   const monthName = format(new Date(year, month, 1), 'MMMM yyyy');
@@ -21,18 +22,32 @@ export const generateMonthlyReport = (
   const totalSessions = periodLogs.length;
   const totalTopics = periodLogs.reduce((acc, l) => acc + l.topicsCovered.length, 0);
 
-  // Document Title Header
-  doc.setFontSize(18);
+  // Header Banner / Title
+  doc.setFontSize(16);
   doc.setTextColor(15, 23, 42); // slate-900
   doc.setFont('helvetica', 'bold');
-  doc.text(`Faculty Accomplishment Report`, 14, 20);
+  doc.text(`FACULTY ACCOMPLISHMENT REPORT`, 14, 18);
   
-  doc.setFontSize(10);
-  doc.setTextColor(71, 85, 105); // slate-600
+  doc.setFontSize(9.5);
+  doc.setTextColor(51, 65, 85); // slate-700
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Instructor: `, 14, 25);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Academic Period: ${monthName}`, 14, 27);
-  doc.text(`Total Sessions Logged: ${totalSessions}  •  Total Topics Completed: ${totalTopics}`, 14, 33);
-  doc.text(`Generated: ${format(new Date(), 'MMM dd, yyyy • h:mm a')}`, 14, 39);
+  doc.text(`${profile?.fullName || 'Faculty Member'}  (${profile?.position || 'Instructor'})`, 34, 25);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Department: `, 14, 30);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${profile?.department || 'College'} • ${profile?.institution || 'University'}`, 36, 30);
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Period: `, 14, 35);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${monthName}  •  ${totalSessions} Sessions Logged  •  ${totalTopics} Topics Completed`, 28, 35);
+
+  doc.setFontSize(8);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Report Generated: ${format(new Date(), 'MMM dd, yyyy • h:mm a')}${profile?.employeeId ? ` • ID: ${profile.employeeId}` : ''}`, 14, 40);
 
   // Table Data Preparation
   const tableData = periodLogs
@@ -47,7 +62,7 @@ export const generateMonthlyReport = (
     ]);
 
   autoTable(doc, {
-    startY: 46,
+    startY: 45,
     head: [['Date', 'Course & Section', 'Type', 'Topics & Syllabus Accomplished', 'Student Engagement', 'Reminders & Next Steps']],
     body: tableData.length > 0 ? tableData : [['—', 'No session logs recorded for this period.', '—', '—', '—', '—']],
     theme: 'grid',
@@ -55,20 +70,20 @@ export const generateMonthlyReport = (
       fillColor: [24, 24, 27], // zinc-900
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 9
+      fontSize: 8.5
     },
     styles: { 
-      fontSize: 8.5, 
-      cellPadding: 4,
+      fontSize: 8, 
+      cellPadding: 3.5,
       valign: 'top',
       textColor: [30, 41, 59],
       lineColor: [226, 232, 240],
       lineWidth: 0.2
     },
     columnStyles: {
-      0: { cellWidth: 26 },
+      0: { cellWidth: 25 },
       1: { cellWidth: 32 },
-      2: { cellWidth: 22 },
+      2: { cellWidth: 20 },
       3: { cellWidth: 'auto' },
       4: { cellWidth: 24 },
       5: { cellWidth: 36 }
@@ -76,12 +91,12 @@ export const generateMonthlyReport = (
     didDrawPage: function (data) {
       // Footer
       const str = `Page ${doc.internal.pages.length - 1}`;
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
       doc.setTextColor(148, 163, 184);
       const pageSize = doc.internal.pageSize;
       const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-      doc.text(str, data.settings.margin.left, pageHeight - 10);
-      doc.text('Generated via ProfTrack • Offline-First Instructor PWA', pageSize.width - 90, pageHeight - 10);
+      doc.text(str, data.settings.margin.left, pageHeight - 8);
+      doc.text(`Prepared by: ${profile?.fullName || 'Faculty Member'}  •  ProfTrack PWA`, pageSize.width - 95, pageHeight - 8);
     }
   });
 

@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from 'react';
 import type { FC, ChangeEvent } from 'react';
 import qrcode from 'qrcode-generator';
 import { compressPayload, decompressPayload } from '../utils/codec';
-import type { ClassSession, SessionLog } from '../services/db';
+import type { ClassSession, SessionLog, InstructorProfile } from '../services/db';
 import { 
   X, 
   Download, 
@@ -21,13 +21,19 @@ import {
 interface DataTransferModalProps {
   classes: ClassSession[];
   logs: (SessionLog & { classInfo: ClassSession })[];
+  profile?: InstructorProfile;
   onClose: () => void;
-  onImportData: (importedClasses: ClassSession[], importedLogs: (SessionLog & { classInfo: ClassSession })[]) => void;
+  onImportData: (
+    importedClasses: ClassSession[], 
+    importedLogs: (SessionLog & { classInfo: ClassSession })[],
+    importedProfile?: InstructorProfile
+  ) => void;
 }
 
 export const DataTransferModal: FC<DataTransferModalProps> = ({
   classes,
   logs,
+  profile,
   onClose,
   onImportData,
 }) => {
@@ -61,7 +67,8 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
     exportedAt: new Date().toISOString(),
     classes,
     logs,
-  }), [classes, logs]);
+    profile,
+  }), [classes, logs, profile]);
 
   const backupJsonString = useMemo(() => {
     try {
@@ -145,10 +152,12 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
           date: new Date(item.date),
         }));
 
-        onImportData(importedClasses, validLogs);
+        const importedProfile = parsed.profile || parsed.p;
+
+        onImportData(importedClasses, validLogs, importedProfile);
         setImportStatus({
           success: true,
-          message: `Successfully imported ${importedClasses.length} courses and ${validLogs.length} session logs!`
+          message: `Successfully imported ${importedClasses.length} courses, ${validLogs.length} session logs, and instructor profile!`
         });
       } catch (err: any) {
         setImportStatus({
@@ -199,11 +208,12 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
             ...item,
             date: new Date(item.date),
           }));
+          const importedProfile = decompressed.profile || decompressed.p;
 
-          onImportData(importedClasses, validLogs);
+          onImportData(importedClasses, validLogs, importedProfile);
           setImportStatus({
             success: true,
-            message: `Successfully restored ${importedClasses.length} courses and ${validLogs.length} session logs!`
+            message: `Successfully restored ${importedClasses.length} courses and instructor profile!`
           });
           setManualCodeInput('');
           return;
@@ -211,20 +221,18 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
       }
 
       const parsed = JSON.parse(inputStr);
-      const importedClasses = parsed.classes || parsed.c;
-      if (!importedClasses || !Array.isArray(importedClasses)) {
-        throw new Error('Invalid sync code format: missing classes array.');
-      }
+      const importedClasses = parsed.classes || parsed.c || [];
       const rawLogs = parsed.logs || parsed.l || [];
       const validLogs = rawLogs.map((item: any) => ({
         ...item,
         date: new Date(item.date),
       }));
+      const importedProfile = parsed.profile || parsed.p;
 
-      onImportData(importedClasses, validLogs);
+      onImportData(importedClasses, validLogs, importedProfile);
       setImportStatus({
         success: true,
-        message: `Successfully restored ${importedClasses.length} courses and ${validLogs.length} session logs!`
+        message: `Successfully imported ${importedClasses.length} courses and profile!`
       });
       setManualCodeInput('');
     } catch (err: any) {
