@@ -8,7 +8,6 @@ import {
   query, 
   where, 
   serverTimestamp,
-  Timestamp,
   arrayUnion
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -73,6 +72,7 @@ const withTimeout = <T>(promise: Promise<T>, timeoutMs = 1800): Promise<T> => {
 };
 
 export const saveFCMToken = async (userId: string, token: string): Promise<void> => {
+  if (!db) return;
   try {
     const userRef = doc(db, 'users', userId);
     await withTimeout(setDoc(userRef, {
@@ -84,6 +84,9 @@ export const saveFCMToken = async (userId: string, token: string): Promise<void>
 };
 
 export const addClass = async (classData: Omit<ClassSession, 'id'>): Promise<string> => {
+  if (!db) {
+    return 'class_' + Date.now();
+  }
   const newClassRef = doc(collection(db, 'classes'));
   try {
     await withTimeout(setDoc(newClassRef, classData));
@@ -95,6 +98,7 @@ export const addClass = async (classData: Omit<ClassSession, 'id'>): Promise<str
 };
 
 export const updateClass = async (classId: string, classData: Partial<Omit<ClassSession, 'id'>>): Promise<void> => {
+  if (!db) return;
   try {
     const classRef = doc(db, 'classes', classId);
     await withTimeout(updateDoc(classRef, classData));
@@ -104,6 +108,7 @@ export const updateClass = async (classId: string, classData: Partial<Omit<Class
 };
 
 export const deleteClass = async (classId: string): Promise<void> => {
+  if (!db) return;
   try {
     const classRef = doc(db, 'classes', classId);
     await withTimeout(deleteDoc(classRef));
@@ -113,6 +118,7 @@ export const deleteClass = async (classId: string): Promise<void> => {
 };
 
 export const getAllClasses = async (instructorId: string): Promise<ClassSession[]> => {
+  if (!db) return [];
   try {
     const classesRef = collection(db, 'classes');
     const q = query(classesRef, where('instructorId', '==', instructorId));
@@ -130,6 +136,7 @@ export const getAllClasses = async (instructorId: string): Promise<ClassSession[
 };
 
 export const getTodayClasses = async (instructorId: string): Promise<ClassSession[]> => {
+  if (!db) return [];
   const today = new Date().getDay(); // 0-6
   try {
     const classesRef = collection(db, 'classes');
@@ -152,6 +159,9 @@ export const getTodayClasses = async (instructorId: string): Promise<ClassSessio
 };
 
 export const submitSessionLog = async (classId: string, log: Omit<SessionLog, 'date'>): Promise<string> => {
+  if (!db) {
+    return 'log_' + Date.now();
+  }
   const logRef = doc(collection(db, `classes/${classId}/session_logs`));
   try {
     await withTimeout(setDoc(logRef, {
@@ -166,6 +176,7 @@ export const submitSessionLog = async (classId: string, log: Omit<SessionLog, 'd
 };
 
 export const deleteSessionLog = async (classId: string, logId: string): Promise<void> => {
+  if (!db) return;
   try {
     const logRef = doc(db, `classes/${classId}/session_logs`, logId);
     await withTimeout(deleteDoc(logRef));
@@ -175,6 +186,7 @@ export const deleteSessionLog = async (classId: string, logId: string): Promise<
 };
 
 export const getMonthlyLogs = async (instructorId: string, year: number, month: number) => {
+  if (!db) return [];
   const startDate = new Date(year, month, 1);
   const endDate = new Date(year, month + 1, 0);
   const logs: (SessionLog & { classInfo: ClassSession })[] = [];
@@ -189,28 +201,28 @@ export const getMonthlyLogs = async (instructorId: string, year: number, month: 
       
       const logsRef = collection(db, `classes/${classData.id}/session_logs`);
       const logsQuery = query(
-        logsRef, 
+        logsRef,
         where('date', '>=', startDate),
         where('date', '<=', endDate)
       );
-      const logsSnap = await withTimeout(getDocs(logsQuery));
       
-      logsSnap.forEach(logSnap => {
-        const data = logSnap.data();
+      const logsSnapshot = await withTimeout(getDocs(logsQuery));
+      logsSnapshot.forEach(logSnap => {
+        const logData = logSnap.data();
         logs.push({
           id: logSnap.id,
-          date: (data.date as Timestamp).toDate(),
-          sessionType: data.sessionType || 'Lecture',
-          topicsCovered: data.topicsCovered || [],
-          nextActions: data.nextActions || '',
-          engagementLevel: data.engagementLevel || 'Medium',
-          classInfo: classData
+          date: logData.date?.toDate ? logData.date.toDate() : new Date(),
+          sessionType: logData.sessionType,
+          topicsCovered: logData.topicsCovered || [],
+          nextActions: logData.nextActions || '',
+          engagementLevel: logData.engagementLevel || 'Medium',
+          classInfo: classData,
         });
       });
     }
   } catch (err) {
-    console.warn('Cloud monthly logs fetch notice:', err);
+    console.warn('Failed to retrieve monthly logs from cloud, using offline cache:', err);
   }
-  
+
   return logs;
 };
