@@ -13,7 +13,8 @@ import {
   CalendarDays,
   FileDown,
   CheckCircle2,
-  BookOpen
+  BookOpen,
+  Smartphone
 } from 'lucide-react';
 
 interface DailyTimetableProps {
@@ -23,6 +24,7 @@ interface DailyTimetableProps {
   onManageCourse: (cls: ClassSession) => void;
   onAddClassClick: () => void;
   onOpenReports: () => void;
+  onOpenTransfer: () => void;
 }
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -33,7 +35,8 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
   onClassClick, 
   onManageCourse,
   onAddClassClick,
-  onOpenReports 
+  onOpenReports,
+  onOpenTransfer
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<'today' | 'all'>('today');
@@ -121,42 +124,53 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
   });
 
   return (
-    <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full px-4 py-8 sm:px-6">
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto w-full px-3.5 py-5 sm:px-6 sm:py-8">
       
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 pb-6">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 pb-5">
+        <div className="space-y-1">
+          <div className="flex items-center justify-between sm:justify-start gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950">
               Timetable & Syllabus
             </h1>
-            <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-800">
+            <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-800 shrink-0">
               Current Semester
             </span>
           </div>
-          <p className="text-sm font-medium text-zinc-600 flex items-center gap-1.5">
-            <CalendarDays className="w-4 h-4 text-zinc-500" aria-hidden="true" />
+          <p className="text-xs sm:text-sm font-medium text-zinc-600 flex items-center gap-1.5">
+            <CalendarDays className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
             <span>{todayStr}</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onOpenReports}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer"
-          >
-            <FileDown className="w-4 h-4 mr-2 text-zinc-600" aria-hidden="true" />
-            Export Report
-          </button>
-          
+        {/* Responsive Action Buttons */}
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={onAddClassClick}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="col-span-2 sm:col-auto inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer order-first sm:order-last"
           >
             <Plus className="w-4 h-4 mr-1.5" aria-hidden="true" />
             Add Course
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenTransfer}
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer"
+            title="Transfer data between Laptop & Phone"
+          >
+            <Smartphone className="w-4 h-4 mr-1.5 text-zinc-700 shrink-0" aria-hidden="true" />
+            <span className="truncate">Transfer to Phone</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenReports}
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer"
+          >
+            <FileDown className="w-4 h-4 mr-1.5 text-zinc-600 shrink-0" aria-hidden="true" />
+            <span className="truncate">Export Report</span>
           </button>
         </div>
       </div>
@@ -197,18 +211,18 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div 
           role="tablist" 
           aria-label="Timetable Schedule Filter"
-          className="inline-flex h-11 items-center justify-center rounded-lg bg-zinc-200/80 p-1 text-zinc-700 w-full sm:w-auto"
+          className="grid grid-cols-2 sm:inline-flex h-11 items-center justify-center rounded-lg bg-zinc-200/80 p-1 text-zinc-700 w-full sm:w-auto"
         >
           <button
             role="tab"
             aria-selected={activeTab === 'today'}
             type="button"
             onClick={() => setActiveTab('today')}
-            className={`inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-4 text-sm font-semibold transition-all ${
+            className={`inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-3 sm:px-4 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'today'
                 ? 'bg-white text-zinc-950 shadow-2xs'
                 : 'text-zinc-700 hover:text-zinc-950'
@@ -221,7 +235,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             aria-selected={activeTab === 'all'}
             type="button"
             onClick={() => setActiveTab('all')}
-            className={`inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-4 text-sm font-semibold transition-all ${
+            className={`inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-3 sm:px-4 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'all'
                 ? 'bg-white text-zinc-950 shadow-2xs'
                 : 'text-zinc-700 hover:text-zinc-950'
