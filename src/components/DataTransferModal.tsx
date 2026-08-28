@@ -14,7 +14,8 @@ import {
   FileJson,
   AlertCircle,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 
 interface DataTransferModalProps {
@@ -36,6 +37,23 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
   const [manualCodeInput, setManualCodeInput] = useState('');
   const [importStatus, setImportStatus] = useState<{ success: boolean; message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Check if running on localhost vs production domain
+  const isLocalhost = typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.')
+  );
+
+  // Target domain for mobile QR code scan (If on localhost, use the production deployed app URL so phone can open it!)
+  const [targetDomain, setTargetDomain] = useState(() => {
+    if (isLocalhost) {
+      return 'https://proftrack-pwa.vercel.app';
+    }
+    return window.location.origin;
+  });
+
+  const [showDomainEdit, setShowDomainEdit] = useState(false);
 
   // Bundle data into clean JSON
   const backupPayload = useMemo(() => ({
@@ -65,14 +83,13 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
   const qrTransferUrl = useMemo(() => {
     try {
       const compressed = compressPayload(compactJsonString);
-      const origin = window.location.origin || '';
-      const pathname = window.location.pathname || '/';
-      return `${origin}${pathname}#import=${compressed}`;
+      const base = targetDomain.trim().replace(/\/+$/, '');
+      return `${base}/#import=${compressed}`;
     } catch (err) {
       console.error('Failed to generate QR URL:', err);
       return window.location.href;
     }
-  }, [compactJsonString]);
+  }, [compactJsonString, targetDomain]);
 
   // Download .json file
   const handleDownloadBackup = () => {
@@ -213,7 +230,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
           <div className="space-y-1">
             <h2 id="transfer-data-title" className="text-xl font-bold tracking-tight text-zinc-950 flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-zinc-900" />
-              Transfer Data to Phone / Laptop
+              Transfer Data (Laptop ⇄ Phone)
             </h2>
             <p className="text-sm text-zinc-600">
               Move your private timetable, syllabus, and logs between devices.
@@ -248,7 +265,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
             className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 text-center transition-colors cursor-pointer ${
               activeTab === 'export'
                 ? 'border-zinc-950 text-zinc-950'
-                : 'border-transparent text-zinc-500 hover:text-zinc-950'
+                : 'border-transparent text-zinc-500 hover:text-zinc-900'
             }`}
           >
             2. Export File
@@ -290,10 +307,10 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
               <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 flex flex-col items-center justify-center space-y-3.5">
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-zinc-950">
-                    Scan with Phone Camera
+                    Scan with Your Phone Camera
                   </h3>
                   <p className="text-xs text-zinc-600 max-w-xs">
-                    Point your camera at this QR code. Tap the link popup to instantly load all your data on your phone.
+                    Point your mobile phone camera at this QR code. Tap the link popup to instantly load all {classes.length} course(s) and {logs.length} log(s) on your phone.
                   </p>
                 </div>
 
@@ -311,6 +328,39 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                     </div>
                   )}
                 </div>
+
+                {/* Target App Domain for Localhost */}
+                {isLocalhost && (
+                  <div className="w-full text-left bg-zinc-100 p-2.5 rounded-lg border border-zinc-200 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-700">
+                      <span className="flex items-center gap-1">
+                        <Globe className="h-3 w-3 text-zinc-500" />
+                        Target Web App:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowDomainEdit(!showDomainEdit)}
+                        className="text-zinc-950 underline font-bold cursor-pointer"
+                      >
+                        {showDomainEdit ? 'Done' : 'Change Domain'}
+                      </button>
+                    </div>
+
+                    {showDomainEdit ? (
+                      <input
+                        type="text"
+                        value={targetDomain}
+                        onChange={(e) => setTargetDomain(e.target.value)}
+                        placeholder="https://proftrack-pwa.vercel.app"
+                        className="w-full h-7 rounded border border-zinc-300 bg-white px-2 text-xs font-mono text-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950"
+                      />
+                    ) : (
+                      <p className="text-xs font-mono text-zinc-600 truncate">
+                        {targetDomain}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="w-full pt-1 flex flex-col sm:flex-row gap-2">
                   <button
