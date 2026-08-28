@@ -1,7 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import type { FC, ChangeEvent } from 'react';
 import qrcode from 'qrcode-generator';
-import { compressPayload, decompressPayload } from '../utils/codec';
+import { compressPayload, decompressPayload, packTransferPayload, unpackTransferPayload } from '../utils/codec';
 import type { ClassSession, SessionLog, InstructorProfile } from '../services/db';
 import { 
   X, 
@@ -61,9 +61,9 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
 
   const [showDomainEdit, setShowDomainEdit] = useState(false);
 
-  // Bundle data into clean JSON
+  // Bundle data into human-readable JSON for file export
   const backupPayload = useMemo(() => ({
-    v: '1.0',
+    v: '2.0',
     exportedAt: new Date().toISOString(),
     classes,
     logs,
@@ -78,37 +78,47 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
     }
   }, [backupPayload]);
 
-  const compactJsonString = useMemo(() => {
+  // Ultra-compact transit string for QR sync
+  const compactTransitString = useMemo(() => {
     try {
-      return JSON.stringify(backupPayload);
+      return packTransferPayload(classes, logs, profile);
     } catch {
-      return '{}';
+      return JSON.stringify(backupPayload);
     }
-  }, [backupPayload]);
+  }, [classes, logs, profile, backupPayload]);
 
   // Generate deep-link QR URL with compressed payload
   const qrTransferUrl = useMemo(() => {
     try {
-      const compressed = compressPayload(compactJsonString);
+      const compressed = compressPayload(compactTransitString);
       const base = targetDomain.trim().replace(/\/+$/, '');
       return `${base}/#import=${compressed}`;
     } catch (err) {
       console.error('Failed to generate QR URL:', err);
       return window.location.href;
     }
-  }, [compactJsonString, targetDomain]);
+  }, [compactTransitString, targetDomain]);
 
-  // Generate pure SVG string from qrcode-generator
+  // Generate pure scalable SVG string from qrcode-generator
   const qrSvgMarkup = useMemo(() => {
     try {
       if (!qrTransferUrl) return null;
-      const qr = qrcode(0, 'M');
+      // Error correction 'L' has highest capacity and scans ultra-fast
+      const qr = qrcode(0, 'L');
       qr.addData(qrTransferUrl);
       qr.make();
-      return qr.createSvgTag({ scalable: true });
+      return qr.createSvgTag({ scalable: true, margin: 2 });
     } catch (err) {
-      console.warn('QR code generation fallback:', err);
-      return null;
+      console.warn('QR code auto-type fallback, trying type 40:', err);
+      try {
+        const qr = qrcode(40, 'L');
+        qr.addData(qrTransferUrl);
+        qr.make();
+        return qr.createSvgTag({ scalable: true, margin: 2 });
+      } catch (e) {
+        console.error('QR code generation failed:', e);
+        return null;
+      }
     }
   }, [qrTransferUrl]);
 
@@ -141,23 +151,16 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
         const text = event.target?.result as string;
         const parsed = JSON.parse(text);
         
-        const importedClasses = parsed.classes || parsed.c;
-        if (!importedClasses || !Array.isArray(importedClasses)) {
-          throw new Error('Invalid backup file format: missing classes array.');
+        const { classes: importedClasses, logs: validLogs, profile: importedProfile } = unpackTransferPayload(parsed);
+
+        if (!importedClasses || importedClasses.length === 0) {
+          throw new Error('Invalid backup file format: missing classes.');
         }
-
-        const rawLogs = parsed.logs || parsed.l || [];
-        const validLogs = rawLogs.map((item: any) => ({
-          ...item,
-          date: new Date(item.date),
-        }));
-
-        const importedProfile = parsed.profile || parsed.p;
 
         onImportData(importedClasses, validLogs, importedProfile);
         setImportStatus({
           success: true,
-          message: `Successfully imported ${importedClasses.length} courses, ${validLogs.length} session logs, and instructor profile!`
+          message: `Successfully imported ${importedClasses.length} courses, ${validLogs.length} session logs, and profile!`
         });
       } catch (err: any) {
         setImportStatus({
@@ -172,7 +175,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
   // Copy sync code
   const handleCopySyncCode = () => {
     try {
-      navigator.clipboard.writeText(compactJsonString);
+      navigator.clipboard.writeText(compactTransitString);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     } catch {
@@ -202,18 +205,12 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
         const encoded = inputStr.split('#import=')[1];
         const decompressed = decompressPayload(encoded);
         if (decompressed) {
-          const importedClasses = decompressed.classes || decompressed.c || [];
-          const rawLogs = decompressed.logs || decompressed.l || [];
-          const validLogs = rawLogs.map((item: any) => ({
-            ...item,
-            date: new Date(item.date),
-          }));
-          const importedProfile = decompressed.profile || decompressed.p;
+          const { classes: importedClasses, logs: validLogs, profile: importedProfile } = unpackTransferPayload(decompressed);
 
           onImportData(importedClasses, validLogs, importedProfile);
           setImportStatus({
             success: true,
-            message: `Successfully restored ${importedClasses.length} courses and instructor profile!`
+            message: `Successfully restored ${importedClasses.length} courses and profile!`
           });
           setManualCodeInput('');
           return;
@@ -221,13 +218,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
       }
 
       const parsed = JSON.parse(inputStr);
-      const importedClasses = parsed.classes || parsed.c || [];
-      const rawLogs = parsed.logs || parsed.l || [];
-      const validLogs = rawLogs.map((item: any) => ({
-        ...item,
-        date: new Date(item.date),
-      }));
-      const importedProfile = parsed.profile || parsed.p;
+      const { classes: importedClasses, logs: validLogs, profile: importedProfile } = unpackTransferPayload(parsed);
 
       onImportData(importedClasses, validLogs, importedProfile);
       setImportStatus({
@@ -336,15 +327,15 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                   </p>
                 </div>
 
-                <div className="bg-white p-3.5 rounded-xl border border-zinc-300 shadow-sm flex items-center justify-center min-h-[220px]">
+                <div className="bg-white p-4 rounded-xl border border-zinc-300 shadow-sm flex items-center justify-center min-h-[220px]">
                   {qrSvgMarkup ? (
                     <div 
-                      className="w-52 h-52 [&>svg]:w-full [&>svg]:h-full"
+                      className="w-56 h-56 [&>svg]:w-full [&>svg]:h-full [&>svg]:block"
                       dangerouslySetInnerHTML={{ __html: qrSvgMarkup }}
                     />
                   ) : (
                     <div className="h-48 w-48 flex items-center justify-center text-xs text-zinc-500 font-medium">
-                      Ready to copy link or code below
+                      Loading QR Code...
                     </div>
                   )}
                 </div>
@@ -382,76 +373,103 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                   </div>
                 )}
 
-                <div className="w-full pt-1 flex flex-col sm:flex-row gap-2">
+                {/* Quick Link Buttons */}
+                <div className="w-full space-y-2 pt-1">
                   <button
                     type="button"
                     onClick={handleCopyDirectLink}
-                    className="flex-1 inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs font-bold text-zinc-800 shadow-2xs hover:bg-zinc-50 transition-colors cursor-pointer"
+                    className="w-full inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-100 transition-colors cursor-pointer"
                   >
-                    {copiedLink ? <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-600" /> : <ExternalLink className="h-3.5 w-3.5 mr-1.5" />}
-                    {copiedLink ? 'Link Copied!' : 'Copy 1-Click Link'}
+                    {copiedLink ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+                        Direct Link Copied!
+                      </>
+                    ) : (
+                      <>
+                        <ExternalLink className="h-3.5 w-3.5 mr-1.5 text-zinc-600" />
+                        Copy 1-Click Link
+                      </>
+                    )}
                   </button>
 
                   <button
                     type="button"
                     onClick={handleCopySyncCode}
-                    className="flex-1 inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs font-bold text-zinc-800 shadow-2xs hover:bg-zinc-50 transition-colors cursor-pointer"
+                    className="w-full inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-100 transition-colors cursor-pointer"
                   >
-                    {copiedCode ? <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 mr-1.5" />}
-                    {copiedCode ? 'Code Copied!' : 'Copy Sync Code'}
+                    {copiedCode ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 mr-1.5 text-emerald-600" />
+                        Sync Code Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5 mr-1.5 text-zinc-600" />
+                        Copy Sync Code
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 2: EXPORT */}
+          {/* TAB 2: EXPORT JSON FILE */}
           {activeTab === 'export' && (
             <div className="space-y-4">
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-950 text-white shrink-0">
-                    <Download className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-zinc-950">Download Backup File (.json)</h3>
-                    <p className="text-xs text-zinc-600">
-                      Contains {classes.length} course(s) and {logs.length} logged session(s).
-                    </p>
-                  </div>
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 space-y-3">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-zinc-950 flex items-center gap-1.5">
+                    <Download className="h-4 w-4 text-zinc-900" />
+                    Download Offline Backup (.json)
+                  </h3>
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    Save a full offline backup file containing all your classes, syllabi, topic logs, and instructor profile. You can keep this on your USB or send it to another device.
+                  </p>
                 </div>
 
-                <p className="text-xs text-zinc-600 leading-relaxed">
-                  Download your data file and send it to your phone via Messenger, Telegram, AirDrop, Google Drive, or Email.
-                </p>
+                <div className="bg-white p-3 rounded-lg border border-zinc-200 text-xs space-y-1.5 text-zinc-600">
+                  <div className="flex justify-between">
+                    <span>Courses Included:</span>
+                    <span className="font-bold text-zinc-900">{classes.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Class Logs:</span>
+                    <span className="font-bold text-zinc-900">{logs.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Instructor Profile:</span>
+                    <span className="font-bold text-zinc-900">{profile?.fullName || 'Configured'}</span>
+                  </div>
+                </div>
 
                 <button
                   type="button"
                   onClick={handleDownloadBackup}
-                  disabled={classes.length === 0}
-                  className="w-full inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="w-full inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
-                  <FileJson className="h-4 w-4 mr-2" />
+                  <Download className="h-4 w-4 mr-1.5" />
                   Download Backup File (.json)
                 </button>
               </div>
             </div>
           )}
 
-          {/* TAB 3: IMPORT */}
+          {/* TAB 3: IMPORT DATA */}
           {activeTab === 'import' && (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-950 text-white shrink-0">
-                    <Upload className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-zinc-950">Import Backup File (.json)</h3>
-                    <p className="text-xs text-zinc-600">
-                      Restore your timetable and syllabus on this device.
-                    </p>
-                  </div>
+            <div className="space-y-5">
+              
+              {/* Option A: Upload JSON File */}
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 space-y-3">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-zinc-950 flex items-center gap-1.5">
+                    <FileJson className="h-4 w-4 text-zinc-900" />
+                    Option A: Upload Backup File (.json)
+                  </h3>
+                  <p className="text-xs text-zinc-600">
+                    Select a previously downloaded <code className="font-mono bg-zinc-200 px-1 py-0.5 rounded text-[11px]">.json</code> backup file.
+                  </p>
                 </div>
 
                 <input
@@ -465,54 +483,61 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
+                  className="w-full inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-xs font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-100 transition-colors cursor-pointer"
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Select & Import .json File
+                  <Upload className="h-4 w-4 mr-1.5 text-zinc-600" />
+                  Select .json File to Restore
                 </button>
               </div>
 
-              {/* Paste Sync Code */}
-              <div className="rounded-xl border border-zinc-200 bg-white p-4 space-y-2.5">
-                <label htmlFor="sync-code-input" className="text-xs font-bold text-zinc-900 uppercase tracking-wider">
-                  Or Paste Sync Code / 1-Click Link
-                </label>
+              {/* Option B: Paste Sync Code */}
+              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 space-y-3">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-zinc-950 flex items-center gap-1.5">
+                    <Copy className="h-4 w-4 text-zinc-900" />
+                    Option B: Paste Direct Link or Sync Code
+                  </h3>
+                  <p className="text-xs text-zinc-600">
+                    Paste the 1-click link or compressed JSON sync code from your other device.
+                  </p>
+                </div>
+
                 <textarea
-                  id="sync-code-input"
-                  rows={3}
-                  placeholder="Paste your copied sync code or transfer link here..."
                   value={manualCodeInput}
                   onChange={(e) => setManualCodeInput(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-300 bg-white p-2.5 text-xs font-mono text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950"
+                  placeholder="Paste #import=... link or JSON sync code here"
+                  rows={3}
+                  className="w-full rounded-lg border border-zinc-300 bg-white p-2.5 text-xs font-mono text-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950"
                 />
+
                 <button
                   type="button"
                   onClick={handleImportFromCode}
                   disabled={!manualCodeInput.trim()}
-                  className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-zinc-100 hover:bg-zinc-200 px-4 text-xs font-bold text-zinc-900 transition-colors disabled:opacity-50 cursor-pointer"
+                  className="w-full inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 px-4 text-xs font-semibold text-white shadow-sm hover:bg-zinc-800 disabled:opacity-50 transition-colors cursor-pointer"
                 >
-                  Restore from Code
+                  Restore From Code / Link
                 </button>
               </div>
+
             </div>
           )}
 
         </div>
 
         {/* Dialog Footer */}
-        <div className="flex items-center justify-between border-t border-zinc-200 p-4 shrink-0 bg-zinc-50">
-          <div className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium">
-            <Laptop className="h-4 w-4 text-zinc-500" />
+        <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 p-4 shrink-0">
+          <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+            <Laptop className="h-3.5 w-3.5" />
             <span>Laptop</span>
             <span>⇄</span>
-            <Smartphone className="h-4 w-4 text-zinc-500" />
+            <Smartphone className="h-3.5 w-3.5" />
             <span>Phone</span>
           </div>
-
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-xs font-bold text-zinc-800 shadow-2xs hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 transition-colors cursor-pointer shadow-2xs"
           >
             Close
           </button>

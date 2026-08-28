@@ -20,7 +20,7 @@ import {
   requestNotificationPermission, 
   sendLocalNotification 
 } from './services/pwa';
-import { decompressPayload } from './utils/codec';
+import { decompressPayload, unpackTransferPayload } from './utils/codec';
 import { 
   Bell, 
   Wifi, 
@@ -416,13 +416,7 @@ export function App() {
         const rawEncoded = hash.replace('#import=', '');
         const parsed = decompressPayload(rawEncoded);
         if (parsed) {
-          const importedClasses: ClassSession[] = parsed.classes || parsed.c || [];
-          const rawLogs = parsed.logs || parsed.l || [];
-          const importedLogs: (SessionLog & { classInfo: ClassSession })[] = rawLogs.map((item: any) => ({
-            ...item,
-            date: new Date(item.date),
-          }));
-          const importedProfile: InstructorProfile = parsed.profile || parsed.p;
+          const { classes: importedClasses, logs: importedLogs, profile: importedProfile } = unpackTransferPayload(parsed);
 
           if (importedClasses.length > 0 || importedLogs.length > 0) {
             setClasses(importedClasses);
