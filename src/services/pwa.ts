@@ -2,14 +2,14 @@ import { getToken } from 'firebase/messaging';
 import { messaging } from '../lib/firebase';
 import { saveFCMToken } from './db';
 
+// ProfTrack uses VitePWA's /sw.js. No competing service workers.
 export const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      console.log('Service Worker registered with scope:', registration.scope);
+      const registration = await navigator.serviceWorker.ready;
       return registration;
-    } catch (err) {
-      console.error('Service Worker registration failed:', err);
+    } catch {
+      return null;
     }
   }
   return null;
@@ -24,8 +24,6 @@ export const requestNotificationPermission = async (userId: string = 'inst1'): P
   try {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-      console.log('Notification permission granted.');
-      
       const msg = await messaging();
       if (msg) {
         try {
@@ -35,11 +33,10 @@ export const requestNotificationPermission = async (userId: string = 'inst1'): P
             serviceWorkerRegistration: registration
           });
           if (currentToken) {
-            console.log('FCM Token generated:', currentToken);
             await saveFCMToken(userId, currentToken);
           }
-        } catch (err) {
-          console.warn('FCM token retrieval notice (offline or unconfigured VAPID):', err);
+        } catch {
+          // Offline / local notice
         }
       }
       return true;
@@ -57,14 +54,14 @@ export const sendLocalNotification = (title: string, options?: NotificationOptio
     if (navigator.serviceWorker && navigator.serviceWorker.controller) {
       navigator.serviceWorker.ready.then((registration) => {
         registration.showNotification(title, {
-          icon: '/vite.svg',
-          badge: '/vite.svg',
+          icon: '/favicon.svg',
+          badge: '/favicon.svg',
           ...options
         });
       });
     } else {
       new Notification(title, {
-        icon: '/vite.svg',
+        icon: '/favicon.svg',
         ...options
       });
     }

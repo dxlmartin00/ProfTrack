@@ -16,8 +16,7 @@ import {
 } from './services/db';
 import { 
   requestNotificationPermission, 
-  sendLocalNotification, 
-  registerServiceWorker 
+  sendLocalNotification 
 } from './services/pwa';
 import { decompressPayload } from './utils/codec';
 import { 
@@ -221,10 +220,8 @@ export function App() {
     }
   };
 
-  // PWA Service Worker & Deep-link / QR Code URL hash init
+  // Deep-link & QR Code URL hash init (Run once on mount)
   useEffect(() => {
-    registerServiceWorker();
-
     // 1. Process QR Code Import from URL Hash (#import=...)
     const hash = window.location.hash;
     if (hash.startsWith('#import=')) {
@@ -260,18 +257,7 @@ export function App() {
         window.history.replaceState(null, '', window.location.pathname);
       }
     }
-
-    // 2. Process deep-link logClassId
-    const urlParams = new URLSearchParams(window.location.search);
-    const logClassId = urlParams.get('logClassId');
-    if (logClassId) {
-      const targetClass = classes.find((c) => c.id === logClassId);
-      if (targetClass) {
-        setSelectedClassForLog(targetClass);
-        setSelectedScheduleForLog(targetClass.schedule[0]);
-      }
-    }
-  }, [classes]);
+  }, []);
 
   // Create or Update Course Handler (Optimistic & Instant)
   const handleSaveCourse = (courseData: Omit<ClassSession, 'id'>, existingId?: string) => {
