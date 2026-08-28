@@ -6,6 +6,7 @@ import { CourseDetailModal } from './components/CourseDetailModal';
 import { ReportModal } from './components/ReportModal';
 import { DataTransferModal } from './components/DataTransferModal';
 import { ProfileModal, getInitials } from './components/ProfileModal';
+import { ScheduleUploadModal } from './components/ScheduleUploadModal';
 import type { ClassSession, ClassSchedule, SessionLog, ScheduleType, InstructorProfile } from './services/db';
 import { 
   addClass as dbAddClass, 
@@ -29,279 +30,210 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-const todayDay = new Date().getDay();
-
-export const SEMESTER_COURSES: ClassSession[] = [
+export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
+  // 1. CS 314 - CS Elective 1 (Section 3D)
   {
-    id: 'course_ege1',
+    id: 'course_cs314_3d',
     instructorId: 'inst1',
-    subjectCode: 'EGE 1',
-    subjectTitle: 'Living in the IT Era',
-    section: 'BSBA-BE 2D',
-    year: '2nd Year',
-    room: 'GF003/CL',
+    subjectCode: 'CS 314',
+    subjectTitle: 'CS Elective 1',
+    section: '3D',
+    year: '3rd Year',
+    room: 'CL2',
     schedule: [
-      { 
-        dayOfWeek: todayDay, 
-        startTime: '07:30', 
-        endTime: '09:00', 
-        type: 'Lecture',
-        room: 'GF003/CL' 
-      },
-      { 
-        dayOfWeek: (todayDay + 2) % 7 === 0 ? 1 : (todayDay + 2) % 7, 
-        startTime: '07:30', 
-        endTime: '09:00', 
-        type: 'Lecture',
-        room: 'GF003/CL' 
-      }
+      { dayOfWeek: 1, startTime: '13:00', endTime: '14:00', type: 'Lecture', room: 'CL2' },
+      { dayOfWeek: 4, startTime: '13:00', endTime: '14:00', type: 'Lecture', room: 'CL2' },
+      { dayOfWeek: 2, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' },
+      { dayOfWeek: 5, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
     ],
     masterSyllabus: [
-      'Introduction to Living in the IT Era IT and its role in society',
-      'The Evolution of Information and Communications Technology',
-      'Computer Systems, Hardware, and Architecture',
-      'Software Applications and Operating Systems',
-      'The Internet, World Wide Web, and Cloud Computing',
-      'Data Privacy, Security, and Cybersecurity Fundamentals',
-      'Digital Ethics, Netiquette, and Intellectual Property',
-      'Social Media Impact and Digital Footprints',
-      'E-Commerce, Digital Economy, and Online Transactions',
-      'Emerging Technologies (AI, IoT, Blockchain, and Robotics)',
-      'IT in Business, Education, and Healthcare Systems',
-      'Green Computing and Environmental Sustainability',
-      'Data Analytics and Information Visualization',
-      'Mobile Computing and Wireless Technologies',
-      'Web Development Fundamentals and Digital Presence',
-      'Digital Media, Graphics, and Content Creation',
-      'IT Project Life Cycle and Basic Troubleshooting',
-      'Future Trends in Information Technology and Society'
+      'Introduction to Systems Architecture & SDLC Models',
+      'Operating System Concepts & Concurrency Management',
+      'Memory Management: Paging & Virtual Storage Subsystems',
+      'File Systems & Secondary Storage Architecture',
+      'Computer Networking & Distributed Client-Server Systems',
+      'System Security, Cryptography & Access Control',
+      'Virtualization, Hypervisors & Cloud Virtual Machines',
+      'System Performance Benchmarking & Diagnostics Evaluation'
     ]
   },
+
+  // 2. CS 315 - Application Development & Emerging Tech (Section 3B)
   {
-    id: 'course_cs315',
+    id: 'course_cs315_3b',
     instructorId: 'inst1',
-    subjectCode: 'CS315',
-    subjectTitle: 'Application Development and Emerging Technologies',
-    section: 'BSCS-3D',
+    subjectCode: 'CS 315',
+    subjectTitle: 'Application Development & Emerging Technologies',
+    section: '3B',
     year: '3rd Year',
-    room: '127/IL2',
+    room: '128 / CL2',
     schedule: [
-      { 
-        dayOfWeek: todayDay, 
-        startTime: '10:00', 
-        endTime: '11:00', 
-        type: 'Lecture',
-        room: '127/IL2' 
-      },
-      { 
-        dayOfWeek: todayDay, 
-        startTime: '11:00', 
-        endTime: '12:30', 
-        type: 'Laboratory',
-        room: '127/IL2' 
-      }
+      { dayOfWeek: 1, startTime: '08:00', endTime: '09:00', type: 'Lecture', room: '128' },
+      { dayOfWeek: 4, startTime: '08:00', endTime: '09:00', type: 'Lecture', room: '128' },
+      { dayOfWeek: 1, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' },
+      { dayOfWeek: 4, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
     ],
     masterSyllabus: [
       'Introduction to Application Development & Emerging Technologies',
       'Full-Stack Architecture & Microservices Fundamentals',
-      'Cross-Platform Mobile Development with React Native / Flutter',
-      'Cloud-Native Deployments, Containers, and Docker',
-      'Serverless Computing & Cloud Functions',
-      'Progressive Web Applications (PWA) and Offline-First Storage',
-      'RESTful & GraphQL API Design, Integration, and Security',
-      'Real-Time Systems & WebSocket Communication',
-      'Artificial Intelligence Integration & Large Language Models APIs',
-      'Edge Computing & Internet of Things (IoT) Device Connectors',
-      'DevOps, Continuous Integration & Continuous Delivery (CI/CD)',
-      'Authentication, OAuth 2.0, and JWT Token Management',
-      'Data Persistence with Relational & NoSQL Cloud Databases',
-      'Automated Testing, Code Quality & CI Pipeline Actions',
-      'Application Monitoring, Performance Metrics & Telemetry',
-      'Mobile App Packaging, Code Signing & Store Deployment',
-      'Cybersecurity Best Practices & OWASP Vulnerability Mitigation',
-      'Capstone Presentation of Full-Stack Emerging Tech Solution'
+      'Cross-Platform Mobile Development with Flutter / React Native',
+      'Cloud-Native Deployments, Containers & Docker',
+      'Progressive Web Applications (PWA) & Offline-First Storage',
+      'RESTful & GraphQL API Integration & Security',
+      'Artificial Intelligence Integration & LLM APIs',
+      'Capstone Presentation of Emerging Tech Solution'
     ]
   },
+
+  // 3. CS 315 - Application Development & Emerging Tech (Section 3D)
   {
-    id: 'course_cs314',
+    id: 'course_cs315_3d',
     instructorId: 'inst1',
-    subjectCode: 'CS314',
-    subjectTitle: 'System Fundamentals',
-    section: 'BSCS-3D',
+    subjectCode: 'CS 315',
+    subjectTitle: 'Application Development & Emerging Technologies',
+    section: '3D',
     year: '3rd Year',
-    room: 'CL2',
+    room: '127 / IL2',
     schedule: [
-      { 
-        dayOfWeek: todayDay, 
-        startTime: '14:30', 
-        endTime: '16:00', 
-        type: 'Laboratory',
-        room: 'CL2' 
-      }
+      { dayOfWeek: 2, startTime: '10:00', endTime: '11:00', type: 'Lecture', room: '127' },
+      { dayOfWeek: 5, startTime: '10:00', endTime: '11:00', type: 'Lecture', room: '127' },
+      { dayOfWeek: 2, startTime: '11:00', endTime: '12:30', type: 'Laboratory', room: 'IL2' },
+      { dayOfWeek: 5, startTime: '11:00', endTime: '12:30', type: 'Laboratory', room: 'IL2' }
     ],
     masterSyllabus: [
-      'Introduction to Systems Architecture & Computing Foundations',
-      'Explain ethical issues and compare SDLC models',
-      'Operating System Concepts: Processes, Threads & Concurrency',
-      'Memory Management: Virtual Memory, Paging & Segmentation',
-      'File Systems, Storage Architecture & I/O Subsystems',
-      'Computer Networking Essentials: TCP/IP & Network Topologies',
-      'Distributed Systems & Client-Server Architectures',
-      'Database Foundations & Data Storage Engines',
-      'System Security: Cryptography, Access Control & Firewalls',
-      'Virtualization, Hypervisors & Cloud Virtual Machines',
-      'System Performance Evaluation & Benchmarking Tools',
-      'Kernel Architecture, System Calls & Device Drivers',
-      'System Administration, Shell Scripting & Automation',
-      'Backup Strategies, Disaster Recovery & High Availability',
-      'Modern System Monitoring, Log Aggregation & Diagnostics',
-      'Parallel Computing & Multiprocessing Systems',
-      'Embedded & Real-Time Operating Systems Fundamentals',
-      'Final Comprehensive Systems Architecture Evaluation'
+      'Introduction to Application Development & Emerging Technologies',
+      'Full-Stack Architecture & Microservices Fundamentals',
+      'Cross-Platform Mobile Development with Flutter / React Native',
+      'Cloud-Native Deployments, Containers & Docker',
+      'Progressive Web Applications (PWA) & Offline-First Storage',
+      'RESTful & GraphQL API Integration & Security',
+      'Artificial Intelligence Integration & LLM APIs',
+      'Capstone Presentation of Emerging Tech Solution'
     ]
   },
+
+  // 4. CS 412 - Operating Systems (Section 4A)
   {
-    id: 'course_it302',
+    id: 'course_cs412_4a',
     instructorId: 'inst1',
-    subjectCode: 'IT302',
-    subjectTitle: 'Web Systems and Technologies 2 (Advanced Full-Stack)',
-    section: 'BSIT 3-A',
-    year: '3rd Year',
-    room: 'ComLab 4',
+    subjectCode: 'CS 412',
+    subjectTitle: 'Operating Systems',
+    section: '4A',
+    year: '4th Year',
+    room: '127 / IL2',
     schedule: [
-      { 
-        dayOfWeek: todayDay, 
-        startTime: '13:00', 
-        endTime: '14:30', 
-        type: 'Laboratory',
-        room: 'ComLab 4' 
-      },
-      { 
-        dayOfWeek: (todayDay + 3) % 7 === 0 ? 1 : (todayDay + 3) % 7, 
-        startTime: '13:00', 
-        endTime: '15:00', 
-        type: 'Lecture',
-        room: 'Room 305' 
-      }
+      { dayOfWeek: 1, startTime: '11:00', endTime: '12:00', type: 'Lecture', room: '127' },
+      { dayOfWeek: 4, startTime: '11:00', endTime: '12:00', type: 'Lecture', room: '127' },
+      { dayOfWeek: 3, startTime: '13:00', endTime: '16:00', type: 'Laboratory', room: 'IL2' }
     ],
     masterSyllabus: [
-      'Modern Web Architecture & RESTful APIs',
-      'State Management & Reactive UI Components',
-      'Database Modeling & Object-Relational Mapping',
-      'Authentication, Authorization & OAuth 2.0',
-      'Cloud Deployment & Automated CI/CD Pipelines'
+      'Overview of Operating Systems & Architecture',
+      'Processes, Threads & CPU Scheduling Algorithms',
+      'Process Synchronization & Deadlock Prevention',
+      'Main Memory Management & Virtual Memory Paging',
+      'File System Storage & Secondary Subsystems',
+      'Protection, Security & Virtual Machine Concepts'
     ]
   },
+
+  // 5. CS 412 - Operating Systems (Section 4B)
   {
-    id: 'course_ge104',
+    id: 'course_cs412_4b',
     instructorId: 'inst1',
-    subjectCode: 'GE104',
-    subjectTitle: 'Mathematics in the Modern World (General Education)',
-    section: 'BSN 1-C',
-    year: '1st Year',
-    room: 'Room 204',
+    subjectCode: 'CS 412',
+    subjectTitle: 'Operating Systems',
+    section: '4B',
+    year: '4th Year',
+    room: '129 / IL2',
     schedule: [
-      { 
-        dayOfWeek: todayDay === 0 || todayDay === 6 ? 1 : todayDay, 
-        startTime: '09:00', 
-        endTime: '10:30', 
-        type: 'Lecture',
-        room: 'Room 204' 
-      },
-      { 
-        dayOfWeek: (todayDay + 2) % 7 === 0 ? 1 : (todayDay + 2) % 7, 
-        startTime: '09:00', 
-        endTime: '10:30', 
-        type: 'Lecture',
-        room: 'Room 204' 
-      }
+      { dayOfWeek: 1, startTime: '09:00', endTime: '10:00', type: 'Lecture', room: '129' },
+      { dayOfWeek: 4, startTime: '09:00', endTime: '10:00', type: 'Lecture', room: '129' },
+      { dayOfWeek: 2, startTime: '16:00', endTime: '17:30', type: 'Laboratory', room: 'IL2' },
+      { dayOfWeek: 5, startTime: '16:00', endTime: '17:30', type: 'Laboratory', room: 'IL2' }
     ],
     masterSyllabus: [
-      'Mathematics in our World (Patterns in Nature)',
-      'Mathematical Language and Symbols',
-      'Problem Solving and Reasoning',
-      'Data Management & Statistical Tools',
-      'Apportionment and Voting Theory'
+      'Overview of Operating Systems & Architecture',
+      'Processes, Threads & CPU Scheduling Algorithms',
+      'Process Synchronization & Deadlock Prevention',
+      'Main Memory Management & Virtual Memory Paging',
+      'File System Storage & Secondary Subsystems',
+      'Protection, Security & Virtual Machine Concepts'
     ]
   },
+
+  // 6. eGE 1 - Living in the IT Era (Section 2D - BE)
   {
-    id: 'course_cs101',
+    id: 'course_ege1_2d_be',
     instructorId: 'inst1',
-    subjectCode: 'CS101',
-    subjectTitle: 'Introduction to Computing',
-    section: 'BSCS 1-A',
-    year: '1st Year',
-    room: 'Room 301',
-    schedule: [
-      { 
-        dayOfWeek: (todayDay + 1) % 7 === 0 ? 1 : (todayDay + 1) % 7, 
-        startTime: '08:00', 
-        endTime: '10:00', 
-        type: 'Lecture',
-        room: 'Room 301' 
-      }
-    ],
-    masterSyllabus: [
-      'History of Computing & Digital Transformations',
-      'Algorithm Design & Pseudocode Foundations',
-      'Binary Logic & Number Systems',
-      'Basics of Programming Languages',
-      'Computing Ethics and Society'
-    ]
-  },
-  {
-    id: 'course_it201',
-    instructorId: 'inst1',
-    subjectCode: 'IT201',
-    subjectTitle: 'Data Structures and Algorithms',
-    section: 'BSIT 2-B',
+    subjectCode: 'eGE 1',
+    subjectTitle: 'Living in the IT Era',
+    section: '2D (BE)',
     year: '2nd Year',
-    room: 'ComLab 2',
+    room: 'GF003',
     schedule: [
-      { 
-        dayOfWeek: (todayDay + 4) % 7 === 0 ? 1 : (todayDay + 4) % 7, 
-        startTime: '10:30', 
-        endTime: '13:30', 
-        type: 'Laboratory',
-        room: 'ComLab 2' 
-      }
+      { dayOfWeek: 2, startTime: '07:30', endTime: '09:00', type: 'Lecture', room: 'GF003' },
+      { dayOfWeek: 5, startTime: '07:30', endTime: '09:00', type: 'Lecture', room: 'GF003' }
     ],
     masterSyllabus: [
-      'Arrays, Linked Lists, and Memory Allocation',
-      'Stacks, Queues, and Priority Structures',
-      'Trees, Binary Search Trees & AVL Balancing',
-      'Graphs, Breadth-First & Depth-First Search',
-      'Sorting Algorithms & Big-O Complexity Analysis'
+      'Introduction to Living in the IT Era & ICT in Society',
+      'Evolution of ICT & Computing Systems',
+      'Internet, World Wide Web & Cloud Platforms',
+      'Data Privacy, Security & Cybersecurity Fundamentals',
+      'Digital Ethics, Netiquette & Intellectual Property',
+      'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
+      'Future Trends in Information Technology'
     ]
   },
+
+  // 7. eGE 1 - Living in the IT Era (Section 2D - FM)
   {
-    id: 'course_cs322',
+    id: 'course_ege1_2d_fm',
     instructorId: 'inst1',
-    subjectCode: 'CS322',
-    subjectTitle: 'Information Assurance and Security',
-    section: 'BSCS 3-B',
-    year: '3rd Year',
-    room: 'Room 405',
+    subjectCode: 'eGE 1',
+    subjectTitle: 'Living in the IT Era',
+    section: '2D (FM)',
+    year: '2nd Year',
+    room: '122',
     schedule: [
-      { 
-        dayOfWeek: (todayDay + 3) % 7 === 0 ? 1 : (todayDay + 3) % 7, 
-        startTime: '16:00', 
-        endTime: '17:30', 
-        type: 'Lecture',
-        room: 'Room 405' 
-      }
+      { dayOfWeek: 1, startTime: '16:00', endTime: '17:30', type: 'Lecture', room: '122' },
+      { dayOfWeek: 4, startTime: '16:00', endTime: '17:30', type: 'Lecture', room: '122' }
     ],
     masterSyllabus: [
-      'Security Principles: Confidentiality, Integrity, Availability',
-      'Symmetric & Asymmetric Cryptography',
-      'Threat Modeling & Vulnerability Assessments',
-      'Network Security Protocols & Firewalls',
-      'Incident Response & Forensic Basics'
+      'Introduction to Living in the IT Era & ICT in Society',
+      'Evolution of ICT & Computing Systems',
+      'Internet, World Wide Web & Cloud Platforms',
+      'Data Privacy, Security & Cybersecurity Fundamentals',
+      'Digital Ethics, Netiquette & Intellectual Property',
+      'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
+      'Future Trends in Information Technology'
+    ]
+  },
+
+  // 8. eGE 1 - Living in the IT Era (Section 2H - FM)
+  {
+    id: 'course_ege1_2h_fm',
+    instructorId: 'inst1',
+    subjectCode: 'eGE 1',
+    subjectTitle: 'Living in the IT Era',
+    section: '2H (FM)',
+    year: '2nd Year',
+    room: '130',
+    schedule: [
+      { dayOfWeek: 3, startTime: '08:00', endTime: '11:00', type: 'Lecture', room: '130' }
+    ],
+    masterSyllabus: [
+      'Introduction to Living in the IT Era & ICT in Society',
+      'Evolution of ICT & Computing Systems',
+      'Internet, World Wide Web & Cloud Platforms',
+      'Data Privacy, Security & Cybersecurity Fundamentals',
+      'Digital Ethics, Netiquette & Intellectual Property',
+      'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
+      'Future Trends in Information Technology'
     ]
   }
 ];
 
-export const INITIAL_SEMESTER_LOGS: (SessionLog & { classInfo: ClassSession })[] = [
+export const INITIAL_OFFICIAL_LOGS: (SessionLog & { classInfo: ClassSession })[] = [
   {
     id: 'log_cs315_recent',
     date: new Date(),
@@ -309,25 +241,25 @@ export const INITIAL_SEMESTER_LOGS: (SessionLog & { classInfo: ClassSession })[]
     topicsCovered: ['Introduction to Application Development & Emerging Technologies'],
     nextActions: '[In Progress: Introduction to Application Development & Emerging Technologies - Stopped at Slide #20] Completed section 1.',
     engagementLevel: 'High',
-    classInfo: SEMESTER_COURSES[1]
+    classInfo: OFFICIAL_SEMESTER_COURSES[2] // CS315 3D
   },
   {
     id: 'log_ege1_recent',
     date: new Date(Date.now() - 24 * 60 * 60 * 1000),
     sessionType: 'Lecture',
-    topicsCovered: ['Introduction to Living in the IT Era IT and its role in society'],
+    topicsCovered: ['Introduction to Living in the IT Era & ICT in Society'],
     nextActions: 'Completed topic 1 orientation. Next meeting start ICT Evolution.',
     engagementLevel: 'High',
-    classInfo: SEMESTER_COURSES[0]
+    classInfo: OFFICIAL_SEMESTER_COURSES[5] // eGE 1 2D (BE)
   },
   {
     id: 'log_cs314_recent',
     date: new Date(Date.now() - 48 * 60 * 60 * 1000),
     sessionType: 'Laboratory',
-    topicsCovered: ['Explain ethical issues and compare SDLC models'],
+    topicsCovered: ['Introduction to Systems Architecture & SDLC Models'],
     nextActions: 'Submitted lab activity 1 on SDLC workflows.',
     engagementLevel: 'High',
-    classInfo: SEMESTER_COURSES[2]
+    classInfo: OFFICIAL_SEMESTER_COURSES[0] // CS 314 3D
   }
 ];
 
@@ -347,7 +279,7 @@ export function App() {
     return DEFAULT_INSTRUCTOR_PROFILE;
   });
 
-  // Load cached classes or recover semester courses
+  // Load cached classes or recover official semester courses
   const [classes, setClasses] = useState<ClassSession[]>(() => {
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -360,10 +292,10 @@ export function App() {
     } catch {
       // Fallback
     }
-    return SEMESTER_COURSES;
+    return OFFICIAL_SEMESTER_COURSES;
   });
 
-  // Load cached session logs or recover semester logs
+  // Load cached session logs or recover official semester logs
   const [logs, setLogs] = useState<(SessionLog & { classInfo: ClassSession })[]>(() => {
     try {
       const cached = localStorage.getItem(LOCAL_STORAGE_LOGS_KEY);
@@ -379,7 +311,7 @@ export function App() {
     } catch {
       // Fallback
     }
-    return INITIAL_SEMESTER_LOGS;
+    return INITIAL_OFFICIAL_LOGS;
   });
 
   // Modal States
@@ -391,6 +323,7 @@ export function App() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
   const [qrNotification, setQrNotification] = useState<string | null>(null);
 
   // Network & Push states
@@ -520,6 +453,14 @@ export function App() {
     });
   };
 
+  // Import courses parsed from Screenshot Scanner
+  const handleImportParsedCourses = (imported: ClassSession[]) => {
+    setClasses(imported);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(imported));
+    setQrNotification(`Successfully loaded ${imported.length} courses from schedule image!`);
+    setTimeout(() => setQrNotification(null), 5000);
+  };
+
   // Session Log Success Handler (Optimistic, Persistent, Misclick-Aware)
   const handleLogSuccess = (loggedData: {
     sessionType?: ScheduleType;
@@ -593,20 +534,20 @@ export function App() {
     }
   };
 
-  // Reset or Restore default courses
+  // Reset or Restore official courses
   const handleResetDemoData = () => {
     if (classes.length > 0) {
-      if (window.confirm('Reset schedule back to all 8 semester courses?')) {
-        setClasses(SEMESTER_COURSES);
-        setLogs(INITIAL_SEMESTER_LOGS);
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(SEMESTER_COURSES));
-        localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(INITIAL_SEMESTER_LOGS));
+      if (window.confirm('Reset schedule back to all 8 official semester courses?')) {
+        setClasses(OFFICIAL_SEMESTER_COURSES);
+        setLogs(INITIAL_OFFICIAL_LOGS);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(OFFICIAL_SEMESTER_COURSES));
+        localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(INITIAL_OFFICIAL_LOGS));
       }
     } else {
-      setClasses(SEMESTER_COURSES);
-      setLogs(INITIAL_SEMESTER_LOGS);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(SEMESTER_COURSES));
-      localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(INITIAL_SEMESTER_LOGS));
+      setClasses(OFFICIAL_SEMESTER_COURSES);
+      setLogs(INITIAL_OFFICIAL_LOGS);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(OFFICIAL_SEMESTER_COURSES));
+      localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(INITIAL_OFFICIAL_LOGS));
     }
   };
 
@@ -634,6 +575,13 @@ export function App() {
                 className="text-zinc-950 font-semibold transition-colors hover:text-zinc-700 cursor-pointer"
               >
                 Overview
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsScanModalOpen(true)}
+                className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer"
+              >
+                Scan Schedule Image
               </button>
               <button
                 type="button"
@@ -761,8 +709,17 @@ export function App() {
           }}
           onOpenReports={() => setIsReportOpen(true)}
           onOpenTransfer={() => setIsTransferModalOpen(true)}
+          onOpenScanModal={() => setIsScanModalOpen(true)}
         />
       </main>
+
+      {/* Schedule Screenshot Scanner Modal */}
+      {isScanModalOpen && (
+        <ScheduleUploadModal
+          onClose={() => setIsScanModalOpen(false)}
+          onImportParsedCourses={handleImportParsedCourses}
+        />
+      )}
 
       {/* Instructor Profile Modal */}
       {isProfileOpen && (

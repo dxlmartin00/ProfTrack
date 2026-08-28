@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   BookOpen,
   Smartphone,
-  Hourglass
+  Hourglass,
+  Sparkles
 } from 'lucide-react';
 
 interface DailyTimetableProps {
@@ -26,6 +27,7 @@ interface DailyTimetableProps {
   onAddClassClick: () => void;
   onOpenReports: () => void;
   onOpenTransfer: () => void;
+  onOpenScanModal?: () => void;
 }
 
 export const DailyTimetable: FC<DailyTimetableProps> = ({ 
@@ -35,7 +37,8 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
   onManageCourse,
   onAddClassClick,
   onOpenReports,
-  onOpenTransfer
+  onOpenTransfer,
+  onOpenScanModal,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<'today' | 'all'>('today');
@@ -181,11 +184,23 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
           <button
             type="button"
             onClick={onAddClassClick}
-            className="col-span-2 sm:col-auto inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer order-first sm:order-last"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-3.5 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4 mr-1.5 shrink-0" aria-hidden="true" />
             Add Course
           </button>
+
+          {onOpenScanModal && (
+            <button
+              type="button"
+              onClick={onOpenScanModal}
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-900 bg-zinc-900 px-3 text-xs sm:text-sm font-semibold text-white shadow-2xs hover:bg-zinc-800 transition-colors cursor-pointer min-w-0"
+              title="Upload or scan faculty loading screenshot"
+            >
+              <Sparkles className="w-3.5 h-3.5 mr-1.5 text-amber-300 shrink-0" aria-hidden="true" />
+              <span className="truncate">Scan Image</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -194,7 +209,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             title="Transfer data between Laptop & Phone"
           >
             <Smartphone className="w-4 h-4 mr-1.5 text-zinc-700 shrink-0" aria-hidden="true" />
-            <span className="truncate">Transfer to Phone</span>
+            <span className="truncate">Transfer</span>
           </button>
 
           <button
@@ -203,7 +218,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer min-w-0"
           >
             <FileDown className="w-4 h-4 mr-1.5 text-zinc-600 shrink-0" aria-hidden="true" />
-            <span className="truncate">Export Report</span>
+            <span className="truncate">Report</span>
           </button>
         </div>
       </div>
