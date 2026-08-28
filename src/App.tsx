@@ -49,6 +49,7 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 5, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
     ],
     masterSyllabus: [
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
       'Introduction to Systems Architecture & SDLC Models',
       'Operating System Concepts & Concurrency Management',
       'Memory Management: Paging & Virtual Storage Subsystems',
@@ -56,7 +57,8 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       'Computer Networking & Distributed Client-Server Systems',
       'System Security, Cryptography & Access Control',
       'Virtualization, Hypervisors & Cloud Virtual Machines',
-      'System Performance Benchmarking & Diagnostics Evaluation'
+      'System Performance Benchmarking & Diagnostics Evaluation',
+      'Final Examination'
     ]
   },
 
@@ -76,8 +78,7 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 4, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
     ],
     masterSyllabus: [
-      'NEMSU Vision, Mission, Core Values, Quality Policy & Hymn',
-      'Institutional, Program & Course Outcomes, Syllabus, Policies & Grading System',
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
       'Introduction to Application Development & Emerging Technologies',
       'Ethical and Legal Considerations of App Development',
       'Full-Stack Architecture & Microservices Fundamentals',
@@ -93,7 +94,8 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       'Application Monitoring, Performance Metrics & Telemetry',
       'Mobile App Packaging, Code Signing & Store Deployment',
       'Cybersecurity Best Practices & OWASP Vulnerability Mitigation',
-      'Capstone Presentation of Full-Stack Emerging Tech Solution'
+      'Capstone Presentation of Full-Stack Emerging Tech Solution',
+      'Final Examination'
     ]
   },
 
@@ -113,8 +115,7 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 5, startTime: '11:00', endTime: '12:30', type: 'Laboratory', room: 'IL2' }
     ],
     masterSyllabus: [
-      'NEMSU Vision, Mission, Core Values, Quality Policy & Hymn',
-      'Institutional, Program & Course Outcomes, Syllabus, Policies & Grading System',
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
       'Introduction to Application Development & Emerging Technologies',
       'Ethical and Legal Considerations of App Development',
       'Full-Stack Architecture & Microservices Fundamentals',
@@ -130,7 +131,8 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       'Application Monitoring, Performance Metrics & Telemetry',
       'Mobile App Packaging, Code Signing & Store Deployment',
       'Cybersecurity Best Practices & OWASP Vulnerability Mitigation',
-      'Capstone Presentation of Full-Stack Emerging Tech Solution'
+      'Capstone Presentation of Full-Stack Emerging Tech Solution',
+      'Final Examination'
     ]
   },
 
@@ -149,12 +151,14 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 3, startTime: '13:00', endTime: '16:00', type: 'Laboratory', room: 'IL2' }
     ],
     masterSyllabus: [
-      'Overview of Operating Systems & Architecture',
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
+      'Overview of Operating Systems & Kernel Architectures',
       'Processes, Threads & CPU Scheduling Algorithms',
       'Process Synchronization & Deadlock Prevention',
       'Main Memory Management & Virtual Memory Paging',
       'File System Storage & Secondary Subsystems',
-      'Protection, Security & Virtual Machine Concepts'
+      'Protection, Security & Virtual Machine Concepts',
+      'Final Examination'
     ]
   },
 
@@ -174,12 +178,14 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 5, startTime: '16:00', endTime: '17:30', type: 'Laboratory', room: 'IL2' }
     ],
     masterSyllabus: [
-      'Overview of Operating Systems & Architecture',
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
+      'Overview of Operating Systems & Kernel Architectures',
       'Processes, Threads & CPU Scheduling Algorithms',
       'Process Synchronization & Deadlock Prevention',
       'Main Memory Management & Virtual Memory Paging',
       'File System Storage & Secondary Subsystems',
-      'Protection, Security & Virtual Machine Concepts'
+      'Protection, Security & Virtual Machine Concepts',
+      'Final Examination'
     ]
   },
 
@@ -197,13 +203,15 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 5, startTime: '07:30', endTime: '09:00', type: 'Lecture', room: 'GF003' }
     ],
     masterSyllabus: [
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
       'Introduction to Living in the IT Era & ICT in Society',
       'Evolution of ICT & Computing Systems',
       'Internet, World Wide Web & Cloud Platforms',
       'Data Privacy, Security & Cybersecurity Fundamentals',
       'Digital Ethics, Netiquette & Intellectual Property',
       'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
-      'Future Trends in Information Technology'
+      'Future Trends in Information Technology',
+      'Final Examination'
     ]
   },
 
@@ -221,13 +229,15 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 4, startTime: '16:00', endTime: '17:30', type: 'Lecture', room: '122' }
     ],
     masterSyllabus: [
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
       'Introduction to Living in the IT Era & ICT in Society',
       'Evolution of ICT & Computing Systems',
       'Internet, World Wide Web & Cloud Platforms',
       'Data Privacy, Security & Cybersecurity Fundamentals',
       'Digital Ethics, Netiquette & Intellectual Property',
       'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
-      'Future Trends in Information Technology'
+      'Future Trends in Information Technology',
+      'Final Examination'
     ]
   },
 
@@ -244,13 +254,15 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 3, startTime: '08:00', endTime: '11:00', type: 'Lecture', room: '130' }
     ],
     masterSyllabus: [
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
       'Introduction to Living in the IT Era & ICT in Society',
       'Evolution of ICT & Computing Systems',
       'Internet, World Wide Web & Cloud Platforms',
       'Data Privacy, Security & Cybersecurity Fundamentals',
       'Digital Ethics, Netiquette & Intellectual Property',
       'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
-      'Future Trends in Information Technology'
+      'Future Trends in Information Technology',
+      'Final Examination'
     ]
   }
 ];

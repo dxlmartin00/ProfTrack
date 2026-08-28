@@ -120,12 +120,14 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             { dayOfWeek: 5, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
           ],
           masterSyllabus: [
+            'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
             'Introduction to Systems Architecture & SDLC Foundations',
             'Operating Systems & Concurrency Fundamentals',
             'Memory Management & Subsystems',
             'Distributed Systems & Client-Server Architectures',
             'System Security & Access Control Policies',
-            'Performance Metrics & Architecture Evaluation'
+            'Performance Metrics & Architecture Evaluation',
+            'Final Examination'
           ]
         },
         {
@@ -143,13 +145,17 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             { dayOfWeek: 4, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
           ],
           masterSyllabus: [
+            'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
             'Introduction to Application Development & Emerging Tech',
+            'Ethical and Legal Considerations of App Development',
             'Full-Stack Architecture & Microservices',
             'Mobile Development with Cross-Platform Frameworks',
             'Cloud Deployments & Serverless Architecture',
             'Progressive Web Applications (PWA) & Offline-First',
             'RESTful & GraphQL API Integration',
-            'AI API Integration & Smart Automation'
+            'AI API Integration & Smart Automation',
+            'Capstone Presentation of Full-Stack Emerging Tech Solution',
+            'Final Examination'
           ]
         },
         {
@@ -167,13 +173,17 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             { dayOfWeek: 5, startTime: '11:00', endTime: '12:30', type: 'Laboratory', room: 'IL2' }
           ],
           masterSyllabus: [
+            'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
             'Introduction to Application Development & Emerging Tech',
+            'Ethical and Legal Considerations of App Development',
             'Full-Stack Architecture & Microservices',
             'Mobile Development with Cross-Platform Frameworks',
             'Cloud Deployments & Serverless Architecture',
             'Progressive Web Applications (PWA) & Offline-First',
             'RESTful & GraphQL API Integration',
-            'AI API Integration & Smart Automation'
+            'AI API Integration & Smart Automation',
+            'Capstone Presentation of Full-Stack Emerging Tech Solution',
+            'Final Examination'
           ]
         },
         {
@@ -190,12 +200,14 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             { dayOfWeek: 3, startTime: '13:00', endTime: '16:00', type: 'Laboratory', room: 'IL2' }
           ],
           masterSyllabus: [
+            'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
             'Overview of Operating Systems & Kernel Architectures',
             'Processes, Threads & CPU Scheduling Algorithms',
             'Process Synchronization & Deadlock Handling',
             'Memory Management, Paging & Virtual Memory',
             'File System Structure & Secondary Storage',
-            'Protection, Security & Virtualization'
+            'Protection, Security & Virtualization',
+            'Final Examination'
           ]
         },
         {
@@ -213,12 +225,14 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             { dayOfWeek: 5, startTime: '16:00', endTime: '17:30', type: 'Laboratory', room: 'IL2' }
           ],
           masterSyllabus: [
+            'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
             'Overview of Operating Systems & Kernel Architectures',
             'Processes, Threads & CPU Scheduling Algorithms',
             'Process Synchronization & Deadlock Handling',
             'Memory Management, Paging & Virtual Memory',
             'File System Structure & Secondary Storage',
-            'Protection, Security & Virtualization'
+            'Protection, Security & Virtualization',
+            'Final Examination'
           ]
         },
         {
@@ -234,12 +248,14 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             { dayOfWeek: 5, startTime: '07:30', endTime: '09:00', type: 'Lecture', room: 'GF003' }
           ],
           masterSyllabus: [
+            'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
             'Introduction to Living in the IT Era & ICT in Society',
             'Evolution of ICT & Computing Systems',
             'The Internet, Cloud Computing & Digital Footprints',
             'Data Privacy, Cybersecurity & Digital Ethics',
             'Emerging Technologies (AI, IoT, Automation)',
-            'Future Trends in Information Technology'
+            'Future Trends in Information Technology',
+            'Final Examination'
           ]
         },
         {
@@ -255,12 +271,14 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             { dayOfWeek: 4, startTime: '16:00', endTime: '17:30', type: 'Lecture', room: '122' }
           ],
           masterSyllabus: [
+            'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
             'Introduction to Living in the IT Era & ICT in Society',
             'Evolution of ICT & Computing Systems',
             'The Internet, Cloud Computing & Digital Footprints',
             'Data Privacy, Cybersecurity & Digital Ethics',
             'Emerging Technologies (AI, IoT, Automation)',
-            'Future Trends in Information Technology'
+            'Future Trends in Information Technology',
+            'Final Examination'
           ]
         },
         {
@@ -275,12 +293,14 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             { dayOfWeek: 3, startTime: '08:00', endTime: '11:00', type: 'Lecture', room: '130' }
           ],
           masterSyllabus: [
+            'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
             'Introduction to Living in the IT Era & ICT in Society',
             'Evolution of ICT & Computing Systems',
             'The Internet, Cloud Computing & Digital Footprints',
             'Data Privacy, Cybersecurity & Digital Ethics',
             'Emerging Technologies (AI, IoT, Automation)',
-            'Future Trends in Information Technology'
+            'Future Trends in Information Technology',
+            'Final Examination'
           ]
         }
       ];

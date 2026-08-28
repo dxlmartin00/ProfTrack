@@ -10,13 +10,67 @@ const cleanTopicString = (text: string): string => {
 };
 
 /**
+ * Post-processes topics according to academic guidelines:
+ * 1. Combines Orientation and Week 1 syllabus/policies into a single Item 1.
+ * 2. Ensures the final topic is always "Final Examination".
+ */
+export const normalizeSyllabusTopicList = (rawTopics: string[]): string[] => {
+  if (!rawTopics || rawTopics.length === 0) {
+    return [
+      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
+      'Introduction to Course Subject Matter',
+      'Final Examination'
+    ];
+  }
+
+  const normalized: string[] = [];
+  let hasOrientation = false;
+
+  for (let i = 0; i < rawTopics.length; i++) {
+    const topic = rawTopics[i].trim();
+    if (!topic) continue;
+
+    // Check for Vision/Mission/Orientation/Institutional Outcomes/Week 1 Policies
+    const isOrientationOrWeek1 = /^(NEMSU|University|College)?\s*(Vision|Mission|Core Values|Quality Policy|Hymn|Institutional Outcomes|Program Outcomes|Course Outcomes|Course Syllabus|Course Policies|Grading System|Orientation)/i.test(topic);
+
+    if (isOrientationOrWeek1) {
+      if (!hasOrientation) {
+        normalized.push('Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System');
+        hasOrientation = true;
+      }
+      // Skip duplicate subsequent orientation sub-items to keep it as 1 single item
+      continue;
+    }
+
+    // Ignore if line is just "Final Exam" in the middle, we add it at the end
+    if (/^Final (Exam|Examination|Assessment|Evaluation)$/i.test(topic)) {
+      continue;
+    }
+
+    if (!normalized.includes(topic)) {
+      normalized.push(topic);
+    }
+  }
+
+  // Ensure orientation is first if missing
+  if (!hasOrientation) {
+    normalized.unshift('Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System');
+  }
+
+  // Ensure Final Examination is the last item
+  normalized.push('Final Examination');
+
+  return normalized;
+};
+
+/**
  * Extracts clean syllabus topics from text, with support for tab-separated tables (pasted from Word/Excel)
  */
 export const extractTopicsFromText = (rawText: string): string[] => {
   if (!rawText) return [];
 
   const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  const topics: string[] = [];
+  const rawExtracted: string[] = [];
 
   // Check if pasted content is a TSV / Table (e.g. copied from Word "Detailed Course Learning Plan")
   const isTable = lines.some(l => l.includes('\t'));
@@ -38,22 +92,22 @@ export const extractTopicsFromText = (rawText: string): string[] => {
 
       if (topicColIdx !== -1 && columns[topicColIdx]) {
         const cellContent = columns[topicColIdx];
-        // Split sub-items in the cell
         const subItems = cellContent.split(/\r?\n|;/).map(s => cleanTopicString(s)).filter(s => s.length > 3);
         for (const item of subItems) {
-          if (!topics.includes(item)) {
-            topics.push(item);
+          if (!rawExtracted.includes(item)) {
+            rawExtracted.push(item);
           }
         }
       }
     }
 
-    if (topics.length > 0) return topics;
+    if (rawExtracted.length > 0) {
+      return normalizeSyllabusTopicList(rawExtracted);
+    }
   }
 
   // General text parsing
   for (const line of lines) {
-    // Ignore table headers or column names
     if (/^(TIME FRAME|TOPICS|LEARNING OUTCOMES|PERFORMANCE INDICATORS|INSTRUCTIONAL METHODOLOGY|LEARNING MATERIALS|ASSESSMENT)/i.test(line)) {
       continue;
     }
@@ -62,12 +116,12 @@ export const extractTopicsFromText = (rawText: string): string[] => {
     }
 
     const cleaned = cleanTopicString(line);
-    if (cleaned.length >= 4 && !topics.includes(cleaned)) {
-      topics.push(cleaned);
+    if (cleaned.length >= 4 && !rawExtracted.includes(cleaned)) {
+      rawExtracted.push(cleaned);
     }
   }
 
-  return topics.length > 0 ? topics : lines.slice(0, 25);
+  return normalizeSyllabusTopicList(rawExtracted.length > 0 ? rawExtracted : lines.slice(0, 20));
 };
 
 /**
@@ -106,7 +160,7 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
           if (topicColIndex !== -1) break;
         }
 
-        // If not found by exact match, default to column 1 if table has 4+ columns (standard OBE layout: Timeframe, Topics, LOs, PIs...)
+        // Default to column 1 if table has 4+ columns (OBE layout: Timeframe, Topics, LOs, PIs...)
         if (topicColIndex === -1 && rows[0]?.querySelectorAll('th, td').length >= 4) {
           topicColIndex = 1;
         }
@@ -117,7 +171,6 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
             if (cells.length > topicColIndex) {
               const topicCell = cells[topicColIndex];
               
-              // Extract paragraphs or list items within the cell
               const paragraphs = Array.from(topicCell.querySelectorAll('p, li'));
               const items = paragraphs.length > 0 
                 ? paragraphs.map(p => (p.textContent || '').trim()).filter(Boolean)
@@ -141,7 +194,7 @@ export const parseWordDocxSyllabus = async (file: File): Promise<string[]> => {
       });
 
       if (extractedTopics.length > 0) {
-        return extractedTopics;
+        return normalizeSyllabusTopicList(extractedTopics);
       }
     }
 
