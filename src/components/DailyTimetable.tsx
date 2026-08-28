@@ -66,7 +66,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
     if (now >= start && now <= end) {
       return { 
-        label: 'In Progress (Active Now)', 
+        label: 'Active Now', 
         badgeClass: 'border-emerald-300 bg-emerald-50 text-emerald-900',
         dot: 'bg-emerald-600 animate-pulse',
         isLive: true 
@@ -222,7 +222,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                   <span className="text-xs font-bold uppercase tracking-wider text-emerald-900">
                     Current Active Class
                   </span>
-                  <span className="font-mono text-xs font-semibold text-emerald-800">
+                  <span className="text-xs font-semibold text-emerald-800">
                     {formatTime(activeNowSession.schedule.startTime)} – {formatTime(activeNowSession.schedule.endTime)}
                   </span>
                 </div>
@@ -245,15 +245,19 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
           {/* Unfinished Cut-off Callout in Live Banner */}
           {activeNowTopicStatus?.inProgressTopic && (
-            <div className="bg-white/90 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2 text-xs text-amber-950 font-medium">
-              <Hourglass className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold text-amber-900">Resume teaching from cut-off: </span>
-                <span className="font-semibold text-zinc-950">{activeNowTopicStatus.inProgressTopic.topic}</span>
+            <div className="bg-white/95 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-amber-950">
+              <div className="mt-0.5 p-1 rounded bg-amber-100 text-amber-800 shrink-0">
+                <Hourglass className="h-3.5 w-3.5" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-amber-900">Resume from cut-off:</span>
+                  <span className="font-semibold text-zinc-950">{activeNowTopicStatus.inProgressTopic.topic}</span>
+                </div>
                 {activeNowTopicStatus.inProgressTopic.note && (
-                  <span className="block text-amber-800 text-[11px] font-semibold mt-0.5">
-                    Cut-off note: "{activeNowTopicStatus.inProgressTopic.note}"
-                  </span>
+                  <p className="text-[11px] font-medium text-amber-900">
+                    Cut-off point: "{activeNowTopicStatus.inProgressTopic.note}"
+                  </p>
                 )}
               </div>
             </div>
@@ -359,15 +363,16 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                   <div
                     key={`${cls.id}_${idx}`}
                     onClick={() => onClassClick(cls, sch)}
-                    className="rounded-xl border border-zinc-200 bg-white p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
+                    className="rounded-xl border border-zinc-200 bg-white p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer flex flex-col gap-3 group"
                   >
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="text-base font-bold tracking-tight text-zinc-950">
+                    {/* Header Row: Subject Code, Type Badge, Section, Room */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-base sm:text-lg font-bold tracking-tight text-zinc-950">
                           {cls.subjectCode}
                         </span>
 
-                        <span className={`inline-flex items-center gap-1 rounded-md border px-2.5 py-0.5 text-xs font-semibold ${
+                        <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold ${
                           isLab 
                             ? 'border-purple-300 bg-purple-100 text-purple-900' 
                             : 'border-zinc-300 bg-zinc-100 text-zinc-900'
@@ -376,69 +381,85 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                           {sch.type || 'Lecture'}
                         </span>
 
-                        <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-700">
+                        <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700">
                           {cls.section}
                         </span>
-
-                        {displayRoom && (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600">
-                            <MapPin className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
-                            {displayRoom}
-                          </span>
-                        )}
                       </div>
 
-                      {cls.subjectTitle && (
-                        <p className="text-sm text-zinc-600 font-medium">
-                          {cls.subjectTitle}
-                        </p>
+                      {displayRoom && (
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 bg-zinc-50 border border-zinc-200/80 px-2 py-0.5 rounded">
+                          <MapPin className="w-3 h-3 text-zinc-500 shrink-0" aria-hidden="true" />
+                          {displayRoom}
+                        </span>
                       )}
-
-                      {/* Unfinished / In-Progress Topic Badge */}
-                      {topicStatus.inProgressTopic ? (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-300 text-xs font-semibold text-amber-900">
-                          <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0" />
-                          <span>
-                            Unfinished: <strong className="text-amber-950">{topicStatus.inProgressTopic.topic}</strong>
-                            {topicStatus.inProgressTopic.note ? ` (Cut-off: "${topicStatus.inProgressTopic.note}")` : ''}
-                          </span>
-                        </div>
-                      ) : topicStatus.lastDiscussedTopic ? (
-                        <div className="text-xs text-zinc-600 font-medium flex items-center gap-1.5">
-                          <span className="text-zinc-500">Last discussed:</span>
-                          <span className="font-semibold text-zinc-900 truncate max-w-sm">{topicStatus.lastDiscussedTopic}</span>
-                        </div>
-                      ) : null}
-
-                      {/* Mini syllabus progress bar */}
-                      <div className="flex items-center gap-3 pt-1 text-xs font-semibold text-zinc-600">
-                        <div className="w-28 bg-zinc-200 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-zinc-900 h-full rounded-full" style={{ width: `${stats.percent}%` }} />
-                        </div>
-                        <span>{stats.completed}/{stats.total} Topics Covered ({stats.percent}%)</span>
-                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-3.5 sm:pt-0 border-zinc-100">
-                      <div className="text-left sm:text-right">
-                        <div className="flex items-center sm:justify-end gap-1.5 font-mono text-sm font-bold text-zinc-900">
-                          <Clock className="w-4 h-4 text-zinc-500" aria-hidden="true" />
-                          <span>{formatTime(sch.startTime)} – {formatTime(sch.endTime)}</span>
+                    {/* Subject Title */}
+                    {cls.subjectTitle && (
+                      <p className="text-sm text-zinc-700 font-medium leading-snug">
+                        {cls.subjectTitle}
+                      </p>
+                    )}
+
+                    {/* Unfinished / In-Progress Topic Badge (Cleaned UI) */}
+                    {topicStatus.inProgressTopic ? (
+                      <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2.5 flex items-start gap-2.5 text-xs text-amber-950">
+                        <div className="mt-0.5 p-1 rounded bg-amber-200/80 text-amber-800 shrink-0">
+                          <Hourglass className="h-3.5 w-3.5" />
                         </div>
-                        <p className="text-xs font-medium text-zinc-600 mt-0.5">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-amber-900 uppercase text-[10px] tracking-wider">
+                              Unfinished:
+                            </span>
+                            <span className="font-semibold text-zinc-950 truncate">
+                              {topicStatus.inProgressTopic.topic}
+                            </span>
+                          </div>
+                          {topicStatus.inProgressTopic.note && (
+                            <p className="text-[11px] font-medium text-amber-900 bg-white/80 px-2 py-0.5 rounded border border-amber-200/80 inline-block mt-0.5">
+                              📍 Cut-off: "{topicStatus.inProgressTopic.note}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : topicStatus.lastDiscussedTopic ? (
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium">
+                        <span className="text-zinc-500 font-normal">Last discussed:</span>
+                        <span className="font-semibold text-zinc-900 truncate">{topicStatus.lastDiscussedTopic}</span>
+                      </div>
+                    ) : null}
+
+                    {/* Mini syllabus progress bar */}
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-zinc-600">
+                      <div className="w-24 sm:w-28 bg-zinc-200 h-1.5 rounded-full overflow-hidden">
+                        <div className="bg-zinc-900 h-full rounded-full transition-all" style={{ width: `${stats.percent}%` }} />
+                      </div>
+                      <span className="text-[11px] sm:text-xs text-zinc-600 font-medium">
+                        {stats.completed}/{stats.total} Topics Covered ({stats.percent}%)
+                      </span>
+                    </div>
+
+                    {/* Card Footer: Time, Status Badge & Action */}
+                    <div className="flex items-center justify-between gap-3 border-t border-zinc-100 pt-3 mt-0.5">
+                      <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-900">
+                        <Clock className="w-3.5 h-3.5 text-zinc-500 shrink-0" aria-hidden="true" />
+                        <span>{formatTime(sch.startTime)} – {formatTime(sch.endTime)}</span>
+                        <span className="text-zinc-400 font-normal hidden sm:inline">•</span>
+                        <span className="text-xs text-zinc-500 font-normal hidden sm:inline">
                           {sch.type || 'Lecture'} Slot
-                        </p>
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-2.5 shrink-0">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${status.badgeClass}`}>
-                          <span className={`h-2 w-2 rounded-full ${status.dot}`} aria-hidden="true" />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${status.badgeClass}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} aria-hidden="true" />
                           {status.label}
                         </span>
 
                         <button
                           type="button"
-                          className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3.5 text-xs font-bold text-zinc-800 shadow-2xs group-hover:bg-zinc-950 group-hover:text-white group-hover:border-zinc-950 transition-colors"
+                          className="inline-flex h-8 sm:h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 sm:px-3.5 text-xs font-bold text-zinc-800 shadow-2xs group-hover:bg-zinc-950 group-hover:text-white group-hover:border-zinc-950 transition-colors"
                         >
                           Log Session
                         </button>
@@ -462,7 +483,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
               <button
                 type="button"
                 onClick={onAddClassClick}
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4 mr-1.5" aria-hidden="true" />
                 Add Course
@@ -512,12 +533,15 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
                       {/* Unfinished / In-Progress Topic Badge in All Courses */}
                       {topicStatus.inProgressTopic ? (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-300 text-xs font-semibold text-amber-900 w-full">
-                          <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0" />
-                          <span className="truncate">
-                            Unfinished: <strong className="text-amber-950">{topicStatus.inProgressTopic.topic}</strong>
-                            {topicStatus.inProgressTopic.note ? ` (${topicStatus.inProgressTopic.note})` : ''}
-                          </span>
+                        <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2 flex items-start gap-2 text-xs text-amber-950">
+                          <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <span className="font-bold text-amber-900 text-[10px] uppercase block">Unfinished:</span>
+                            <span className="font-semibold text-zinc-950 truncate block">{topicStatus.inProgressTopic.topic}</span>
+                            {topicStatus.inProgressTopic.note && (
+                              <span className="text-[11px] text-amber-900 font-medium">Cut-off: "{topicStatus.inProgressTopic.note}"</span>
+                            )}
+                          </div>
                         </div>
                       ) : topicStatus.lastDiscussedTopic ? (
                         <p className="text-xs text-zinc-600 font-medium truncate">
