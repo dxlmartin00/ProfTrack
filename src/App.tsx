@@ -76,14 +76,24 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 4, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
     ],
     masterSyllabus: [
+      'NEMSU Vision, Mission, Core Values, Quality Policy & Hymn',
+      'Institutional, Program & Course Outcomes, Syllabus, Policies & Grading System',
       'Introduction to Application Development & Emerging Technologies',
+      'Ethical and Legal Considerations of App Development',
       'Full-Stack Architecture & Microservices Fundamentals',
-      'Cross-Platform Mobile Development with Flutter / React Native',
+      'Cross-Platform Mobile Development with React Native / Flutter',
       'Cloud-Native Deployments, Containers & Docker',
       'Progressive Web Applications (PWA) & Offline-First Storage',
       'RESTful & GraphQL API Integration & Security',
-      'Artificial Intelligence Integration & LLM APIs',
-      'Capstone Presentation of Emerging Tech Solution'
+      'Artificial Intelligence Integration & Large Language Models APIs',
+      'Edge Computing & Internet of Things (IoT) Device Connectors',
+      'DevOps, Continuous Integration & Automated CI/CD Pipelines',
+      'Authentication, OAuth 2.0 & JWT Token Management',
+      'Data Persistence with Relational & NoSQL Cloud Databases',
+      'Application Monitoring, Performance Metrics & Telemetry',
+      'Mobile App Packaging, Code Signing & Store Deployment',
+      'Cybersecurity Best Practices & OWASP Vulnerability Mitigation',
+      'Capstone Presentation of Full-Stack Emerging Tech Solution'
     ]
   },
 
@@ -103,14 +113,24 @@ export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
       { dayOfWeek: 5, startTime: '11:00', endTime: '12:30', type: 'Laboratory', room: 'IL2' }
     ],
     masterSyllabus: [
+      'NEMSU Vision, Mission, Core Values, Quality Policy & Hymn',
+      'Institutional, Program & Course Outcomes, Syllabus, Policies & Grading System',
       'Introduction to Application Development & Emerging Technologies',
+      'Ethical and Legal Considerations of App Development',
       'Full-Stack Architecture & Microservices Fundamentals',
-      'Cross-Platform Mobile Development with Flutter / React Native',
+      'Cross-Platform Mobile Development with React Native / Flutter',
       'Cloud-Native Deployments, Containers & Docker',
       'Progressive Web Applications (PWA) & Offline-First Storage',
       'RESTful & GraphQL API Integration & Security',
-      'Artificial Intelligence Integration & LLM APIs',
-      'Capstone Presentation of Emerging Tech Solution'
+      'Artificial Intelligence Integration & Large Language Models APIs',
+      'Edge Computing & Internet of Things (IoT) Device Connectors',
+      'DevOps, Continuous Integration & Automated CI/CD Pipelines',
+      'Authentication, OAuth 2.0 & JWT Token Management',
+      'Data Persistence with Relational & NoSQL Cloud Databases',
+      'Application Monitoring, Performance Metrics & Telemetry',
+      'Mobile App Packaging, Code Signing & Store Deployment',
+      'Cybersecurity Best Practices & OWASP Vulnerability Mitigation',
+      'Capstone Presentation of Full-Stack Emerging Tech Solution'
     ]
   },
 
