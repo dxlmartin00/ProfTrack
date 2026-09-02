@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { FC } from 'react';
 import type { ClassSession, SessionLog } from '../services/db';
+import { getCourseProgressDetails } from '../utils/courseProgress';
 import { format } from 'date-fns';
 import { 
   X, 
@@ -41,55 +42,27 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'syllabus' | 'history'>('syllabus');
 
-  // Compute completed and partial topics across all logs for this specific course
-  const { completedSet, partialNotesMap, latestInProgressTopic, lastDiscussedTopic } = useMemo<{
-    completedSet: Set<string>;
-    partialNotesMap: Map<string, string>;
-    latestInProgressTopic: { topic: string; note?: string } | null;
-    lastDiscussedTopic: string | null;
-  }>(() => {
-    const completed = new Set<string>();
-    const partials = new Map<string, string>();
-    let inProgressItem: { topic: string; note?: string } | null = null;
-    let lastTopic: string | null = null;
+  // Convert courseLogs to full format with classInfo to pass into getCourseProgressDetails
+  const fullLogs = useMemo(() => {
+    return courseLogs.map(l => ({ ...l, classInfo: classSession }));
+  }, [courseLogs, classSession]);
 
-    courseLogs.forEach((log) => {
-      log.topicsCovered.forEach((topic) => {
-        const match = log.nextActions?.match(new RegExp(`\\[In Progress: ${topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: - ([^\\]]+))?\\]`));
-        if (match) {
-          partials.set(topic, match[1] || 'In progress');
-          if (!inProgressItem) {
-            inProgressItem = { topic, note: match[1] };
-          }
-        } else if (log.nextActions?.includes(`[In Progress: ${topic}]`)) {
-          partials.set(topic, 'In progress');
-          if (!inProgressItem) {
-            inProgressItem = { topic };
-          }
-        } else {
-          completed.add(topic);
-          partials.delete(topic);
-        }
-      });
+  const courseProgress = useMemo(() => {
+    return getCourseProgressDetails(classSession, fullLogs);
+  }, [classSession, fullLogs]);
+
+  const completedSet = useMemo(() => new Set(courseProgress.completedTopics), [courseProgress.completedTopics]);
+  const partialNotesMap = useMemo(() => {
+    const map = new Map<string, string>();
+    courseProgress.partialTopics.forEach(p => {
+      map.set(p.topic, p.note || 'In progress');
     });
+    return map;
+  }, [courseProgress.partialTopics]);
 
-    if (courseLogs.length > 0 && courseLogs[0].topicsCovered.length > 0) {
-      lastTopic = courseLogs[0].topicsCovered[courseLogs[0].topicsCovered.length - 1];
-    }
-
-    return {
-      completedSet: completed,
-      partialNotesMap: partials,
-      latestInProgressTopic: inProgressItem,
-      lastDiscussedTopic: lastTopic
-    };
-  }, [courseLogs]);
-
-  const totalTopics = classSession.masterSyllabus.length || 1;
-  const completedCount = classSession.masterSyllabus.filter((t) => completedSet.has(t)).length;
-  const progressPercent = Math.round((completedCount / totalTopics) * 100);
-
-  const suggestedNextTopic = classSession.masterSyllabus.find(t => !completedSet.has(t) && !partialNotesMap.has(t));
+  const suggestedNextTopic = useMemo(() => {
+    return classSession.masterSyllabus.find(t => !completedSet.has(t) && !partialNotesMap.has(t));
+  }, [classSession.masterSyllabus, completedSet, partialNotesMap]);
 
   const handleDelete = () => {
     if (window.confirm(`Are you sure you want to delete ${classSession.subjectCode} (${classSession.section})? This cannot be undone.`)) {
@@ -168,34 +141,37 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                 <Layers className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
                 Syllabus Accomplishment
               </span>
-              <span className="text-zinc-950 font-mono">{completedCount} of {classSession.masterSyllabus.length} Topics ({progressPercent}%)</span>
+              <span className="text-zinc-950 font-mono">{courseProgress.completedCount} of {courseProgress.totalTopics} Topics ({courseProgress.percent}%)</span>
             </div>
             <div className="w-full bg-zinc-200 h-2 rounded-full overflow-hidden">
               <div 
                 className="bg-zinc-950 h-full rounded-full transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
+                style={{ width: `${courseProgress.percent}%` }}
               />
             </div>
           </div>
 
           {/* Unfinished / In Progress Current Status Callout */}
-          {latestInProgressTopic ? (
+          {courseProgress.isContinuingPartial && courseProgress.partialTopics.length > 0 ? (
             <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 flex items-start gap-2.5 text-xs text-amber-950 font-medium">
               <Hourglass className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-amber-900">Last discussed (Unfinished / In Progress): </span>
-                <span className="font-semibold text-zinc-950">{latestInProgressTopic.topic}</span>
-                {latestInProgressTopic.note && (
+                <span className="font-bold text-amber-900">Current Unfinished Lesson: </span>
+                <span className="font-semibold text-zinc-950">{courseProgress.partialTopics[0].topic}</span>
+                {courseProgress.partialTopics[0].note && (
                   <span className="block text-amber-800 text-[11px] font-semibold mt-0.5">
-                    Cut-off point: "{latestInProgressTopic.note}" — to be resumed next meeting.
+                    Cut-off point: "{courseProgress.partialTopics[0].note}" — to be resumed next meeting.
                   </span>
                 )}
               </div>
             </div>
-          ) : lastDiscussedTopic ? (
-            <div className="text-xs text-zinc-600 font-medium flex items-center gap-1.5 pt-0.5">
-              <span className="text-zinc-500">Last completed topic:</span>
-              <span className="font-semibold text-zinc-900">{lastDiscussedTopic}</span>
+          ) : courseProgress.latestNote ? (
+            <div className="rounded-lg border border-zinc-200 bg-white p-2.5 flex items-start gap-2 text-xs text-zinc-800">
+              <FileText className="h-3.5 w-3.5 text-zinc-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-zinc-900">Notes from Last Class: </span>
+                <span className="text-zinc-700 font-medium">{courseProgress.latestNote}</span>
+              </div>
             </div>
           ) : null}
 
@@ -348,80 +324,80 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               </div>
             ) : (
               <div className="space-y-3">
-                {courseLogs.map((log, index) => (
-                  <div
-                    key={log.id || index}
-                    className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 space-y-2.5"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-xs uppercase px-2 py-0.5 rounded bg-zinc-200 text-zinc-900">
-                          {log.sessionType || 'Lecture'}
-                        </span>
-                        <span className="text-xs font-mono font-bold text-zinc-700">
-                          {format(new Date(log.date), 'EEEE, MMM dd, yyyy')}
-                        </span>
-                      </div>
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
-                        log.engagementLevel === 'High'
-                          ? 'border-emerald-300 bg-emerald-100 text-emerald-900'
-                          : 'border-zinc-300 bg-white text-zinc-800'
-                      }`}>
-                        Engagement: {log.engagementLevel || 'Medium'}
-                      </span>
-                    </div>
-
-                    {log.topicsCovered.length > 0 && (
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-zinc-700">Topics Discussed in this Session:</p>
-                        <div className="space-y-1">
-                          {log.topicsCovered.map((t, idx) => {
-                            const isPart = log.nextActions?.includes(`[In Progress: ${t}`);
-                            return (
-                              <div key={idx} className="flex items-center gap-2 text-xs text-zinc-900">
-                                <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 shrink-0" />
-                                <span>{t}</span>
-                                {isPart && (
-                                  <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300">
-                                    Partially Covered
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
+                {courseLogs.map((log, index) => {
+                  const isLab = log.sessionType === 'Laboratory';
+                  return (
+                    <div
+                      key={log.id || index}
+                      className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-4 space-y-2.5 text-xs text-zinc-700"
+                    >
+                      <div className="flex items-center justify-between gap-2 border-b border-zinc-200/80 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold uppercase ${
+                            isLab ? 'bg-purple-100 text-purple-900' : 'bg-zinc-100 text-zinc-900'
+                          }`}>
+                            {isLab ? <FlaskConical className="w-3 h-3 text-purple-700" /> : <GraduationCap className="w-3 h-3 text-zinc-700" />}
+                            {log.sessionType || 'Lecture'}
+                          </span>
+                          <span className="font-semibold text-zinc-950">
+                            {format(new Date(log.date), 'EEEE, MMMM d, yyyy')}
+                          </span>
                         </div>
-                      </div>
-                    )}
 
-                    {log.nextActions && (
-                      <p className="text-xs text-zinc-700 bg-white p-2.5 rounded border border-zinc-200">
-                        <span className="font-bold text-zinc-900">Notes & Cut-offs:</span> {log.nextActions}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                        <span className={`px-2 py-0.5 rounded font-bold ${
+                          log.engagementLevel === 'High'
+                            ? 'bg-emerald-100 text-emerald-900'
+                            : log.engagementLevel === 'Low'
+                            ? 'bg-rose-100 text-rose-900'
+                            : 'bg-zinc-100 text-zinc-800'
+                        }`}>
+                          {log.engagementLevel || 'Medium'} Engagement
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="font-bold text-zinc-900 block mb-1">Topics Discussed:</span>
+                        <ul className="list-disc list-inside space-y-0.5 text-zinc-800 font-medium">
+                          {log.topicsCovered.map((t, idx) => (
+                            <li key={idx} className="break-words">{t}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {log.nextActions && (
+                        <div className="bg-white p-2.5 rounded border border-zinc-200 mt-1">
+                          <span className="font-bold text-zinc-900 block text-[11px] uppercase tracking-wider">Action Items / Cut-off:</span>
+                          <p className="text-zinc-700 mt-0.5 break-words font-medium">{log.nextActions}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-zinc-200 p-4 shrink-0 bg-zinc-50">
+        <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 p-4 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer shadow-2xs"
           >
             Close
           </button>
-          
+
           <button
             type="button"
-            onClick={() => onLogNewSession(classSession)}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-4 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
+            onClick={() => {
+              onClose();
+              onLogNewSession(classSession);
+            }}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 px-4 text-xs font-bold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
           >
-            <PlusCircle className="w-4 h-4 mr-2" aria-hidden="true" />
-            Log Session for this Class
+            <PlusCircle className="w-4 h-4 mr-1.5" />
+            Log Class Progress
           </button>
         </div>
 

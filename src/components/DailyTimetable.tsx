@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import type { ClassSession, ClassSchedule, SessionLog } from '../services/db';
+import { getCourseProgressDetails } from '../utils/courseProgress';
 import { format, parse } from 'date-fns';
 import { 
   Clock, 
@@ -16,7 +17,8 @@ import {
   BookOpen,
   Smartphone,
   Hourglass,
-  Camera
+  Camera,
+  FileText
 } from 'lucide-react';
 
 interface DailyTimetableProps {
@@ -91,47 +93,6 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
     };
   };
 
-  // Helper to get syllabus accomplishment % for a class
-  const getCourseSyllabusStats = (cls: ClassSession) => {
-    const courseLogs = logs.filter(l => l.classInfo.id === cls.id);
-    const coveredSet = new Set<string>();
-    courseLogs.forEach(l => l.topicsCovered.forEach(t => coveredSet.add(t)));
-
-    const total = cls.masterSyllabus.length || 1;
-    const completed = cls.masterSyllabus.filter(t => coveredSet.has(t)).length;
-    const percent = Math.round((completed / total) * 100);
-
-    return { completed, total: cls.masterSyllabus.length, percent };
-  };
-
-  // Helper to get unfinished/in-progress and last discussed topics for a class
-  const getCourseTopicStatus = (cls: ClassSession) => {
-    const courseLogs = logs.filter(l => l.classInfo.id === cls.id);
-    
-    let inProgressTopic: { topic: string; note?: string } | null = null;
-    let lastDiscussedTopic: string | null = null;
-
-    for (const log of courseLogs) {
-      for (const topic of log.topicsCovered) {
-        if (log.nextActions?.includes(`[In Progress: ${topic}`)) {
-          const match = log.nextActions.match(new RegExp(`\\[In Progress: ${topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: - ([^\\]]+))?\\]`));
-          inProgressTopic = { topic, note: match ? match[1] : undefined };
-          break;
-        }
-      }
-      if (inProgressTopic) break;
-    }
-
-    if (courseLogs.length > 0) {
-      const latestLog = courseLogs[0];
-      if (latestLog.topicsCovered.length > 0) {
-        lastDiscussedTopic = latestLog.topicsCovered[latestLog.topicsCovered.length - 1];
-      }
-    }
-
-    return { inProgressTopic, lastDiscussedTopic };
-  };
-
   // Build today's sessions
   const todaySessions: Array<{ classInfo: ClassSession; schedule: ClassSchedule }> = [];
   classes.forEach((cls) => {
@@ -157,7 +118,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
     return status.isLive;
   });
 
-  const activeNowTopicStatus = activeNowSession ? getCourseTopicStatus(activeNowSession.classInfo) : null;
+  const activeProgress = activeNowSession ? getCourseProgressDetails(activeNowSession.classInfo, logs) : null;
 
   return (
     <div className="flex flex-col gap-5 sm:gap-6 max-w-5xl mx-auto w-full min-w-0 px-3.5 py-4 sm:px-6 sm:py-8 box-border">
@@ -224,7 +185,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
       </div>
 
       {/* Live Class Notification Banner */}
-      {activeNowSession && (
+      {activeNowSession && activeProgress && (
         <div className="rounded-xl border border-emerald-300 bg-emerald-50/80 p-4 sm:p-5 shadow-2xs flex flex-col gap-3 w-full min-w-0 box-border">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full min-w-0">
             <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -259,7 +220,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
           </div>
 
           {/* Unfinished Cut-off Callout in Live Banner */}
-          {activeNowTopicStatus?.inProgressTopic && (
+          {activeProgress.isContinuingPartial && activeProgress.partialTopics.length > 0 && (
             <div className="bg-white/95 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-amber-950 w-full min-w-0 box-border">
               <div className="mt-0.5 p-1 rounded bg-amber-100 text-amber-800 shrink-0">
                 <Hourglass className="h-3.5 w-3.5" />
@@ -267,13 +228,28 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
               <div className="space-y-0.5 min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-bold text-amber-900 shrink-0">Resume from cut-off:</span>
-                  <span className="font-semibold text-zinc-950 break-words">{activeNowTopicStatus.inProgressTopic.topic}</span>
+                  <span className="font-semibold text-zinc-950 break-words">{activeProgress.partialTopics[0].topic}</span>
                 </div>
-                {activeNowTopicStatus.inProgressTopic.note && (
+                {activeProgress.partialTopics[0].note && (
                   <p className="text-[11px] font-medium text-amber-900 break-words">
-                    Cut-off point: "{activeNowTopicStatus.inProgressTopic.note}"
+                    Cut-off point: "{activeProgress.partialTopics[0].note}"
                   </p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Clean Notes from Last Class in Live Banner */}
+          {activeProgress.latestNote && (
+            <div className="bg-white/95 border border-emerald-300/80 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-zinc-900 w-full min-w-0 box-border">
+              <FileText className="h-3.5 w-3.5 text-emerald-700 shrink-0 mt-0.5" />
+              <div className="min-w-0 flex-1">
+                <span className="font-bold text-emerald-950 uppercase text-[10px] tracking-wider block">
+                  Notes & Actions from Last Meeting:
+                </span>
+                <p className="text-xs text-zinc-900 font-medium break-words mt-0.5 leading-relaxed">
+                  {activeProgress.latestNote}
+                </p>
               </div>
             </div>
           )}
@@ -371,8 +347,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                 const status = getStatus(sch.startTime, sch.endTime);
                 const isLab = sch.type === 'Laboratory';
                 const displayRoom = sch.room || cls.room;
-                const stats = getCourseSyllabusStats(cls);
-                const topicStatus = getCourseTopicStatus(cls);
+                const progress = getCourseProgressDetails(cls, logs);
 
                 return (
                   <div
@@ -417,7 +392,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                     )}
 
                     {/* Unfinished / In-Progress Topic Badge */}
-                    {topicStatus.inProgressTopic ? (
+                    {progress.isContinuingPartial && progress.partialTopics.length > 0 ? (
                       <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2.5 flex items-start gap-2.5 text-xs text-amber-950 w-full min-w-0 box-border">
                         <div className="mt-0.5 p-1 rounded bg-amber-200/80 text-amber-800 shrink-0">
                           <Hourglass className="h-3.5 w-3.5" />
@@ -425,33 +400,50 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="min-w-0">
                             <span className="font-bold text-amber-900 uppercase text-[10px] tracking-wider block">
-                              Unfinished Lesson:
+                              Unfinished Lesson (Resume Today):
                             </span>
                             <p className="font-semibold text-zinc-950 text-xs leading-snug break-words">
-                              {topicStatus.inProgressTopic.topic}
+                              {progress.partialTopics[0].topic}
                             </p>
                           </div>
-                          {topicStatus.inProgressTopic.note && (
+                          {progress.partialTopics[0].note && (
                             <p className="text-[11px] font-medium text-amber-900 bg-white/90 px-2 py-0.5 rounded border border-amber-200 inline-block break-words max-w-full">
-                              📍 Cut-off: "{topicStatus.inProgressTopic.note}"
+                              📍 Cut-off: "{progress.partialTopics[0].note}"
                             </p>
                           )}
                         </div>
                       </div>
-                    ) : topicStatus.lastDiscussedTopic ? (
-                      <div className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium min-w-0">
-                        <span className="text-zinc-500 font-normal shrink-0">Last discussed:</span>
-                        <span className="font-semibold text-zinc-900 truncate">{topicStatus.lastDiscussedTopic}</span>
+                    ) : (
+                      progress.currentActiveTopic && (
+                        <div className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium min-w-0">
+                          <span className="text-zinc-500 font-normal shrink-0">Next Up:</span>
+                          <span className="font-semibold text-zinc-900 truncate">{progress.currentActiveTopic}</span>
+                        </div>
+                      )
+                    )}
+
+                    {/* Notes from Last Session Box (High-Visibility Next Class Context) */}
+                    {progress.latestNote && (
+                      <div className="rounded-lg border border-zinc-200 bg-zinc-50/90 p-2.5 flex items-start gap-2 text-xs text-zinc-800 w-full min-w-0 box-border">
+                        <FileText className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <span className="font-bold text-zinc-700 uppercase text-[10px] tracking-wider block">
+                            Notes from Last Class:
+                          </span>
+                          <p className="text-xs text-zinc-900 font-medium leading-relaxed break-words mt-0.5">
+                            {progress.latestNote}
+                          </p>
+                        </div>
                       </div>
-                    ) : null}
+                    )}
 
                     {/* Mini syllabus progress bar */}
                     <div className="flex items-center gap-2.5 text-xs font-semibold text-zinc-600 w-full min-w-0">
                       <div className="w-24 sm:w-28 bg-zinc-200 h-1.5 rounded-full overflow-hidden shrink-0">
-                        <div className="bg-zinc-900 h-full rounded-full transition-all" style={{ width: `${stats.percent}%` }} />
+                        <div className="bg-zinc-900 h-full rounded-full transition-all" style={{ width: `${progress.percent}%` }} />
                       </div>
                       <span className="text-[11px] sm:text-xs text-zinc-600 font-medium truncate">
-                        {stats.completed}/{stats.total} Topics Covered ({stats.percent}%)
+                        {progress.completedCount}/{progress.totalTopics} Topics Covered ({progress.percent}%)
                       </span>
                     </div>
 
@@ -507,8 +499,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 w-full min-w-0">
               {filteredAllClasses.map((cls) => {
-                const stats = getCourseSyllabusStats(cls);
-                const topicStatus = getCourseTopicStatus(cls);
+                const progress = getCourseProgressDetails(cls, logs);
 
                 return (
                   <div
@@ -547,20 +538,20 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       )}
 
                       {/* Unfinished / In-Progress Topic Badge in All Courses */}
-                      {topicStatus.inProgressTopic ? (
+                      {progress.isContinuingPartial && progress.partialTopics.length > 0 ? (
                         <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2 flex items-start gap-2 text-xs text-amber-950 w-full min-w-0 box-border">
                           <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0 mt-0.5" />
                           <div className="min-w-0 flex-1">
-                            <span className="font-bold text-amber-900 text-[10px] uppercase block">Unfinished:</span>
-                            <span className="font-semibold text-zinc-950 truncate block">{topicStatus.inProgressTopic.topic}</span>
-                            {topicStatus.inProgressTopic.note && (
-                              <span className="text-[11px] text-amber-900 font-medium block truncate">Cut-off: "{topicStatus.inProgressTopic.note}"</span>
+                            <span className="font-bold text-amber-900 text-[10px] uppercase block">Unfinished Lesson:</span>
+                            <span className="font-semibold text-zinc-950 truncate block">{progress.partialTopics[0].topic}</span>
+                            {progress.partialTopics[0].note && (
+                              <span className="text-[11px] text-amber-900 font-medium block truncate">Cut-off: "{progress.partialTopics[0].note}"</span>
                             )}
                           </div>
                         </div>
-                      ) : topicStatus.lastDiscussedTopic ? (
-                        <p className="text-xs text-zinc-600 font-medium truncate">
-                          <span className="text-zinc-500">Last discussed:</span> {topicStatus.lastDiscussedTopic}
+                      ) : progress.latestNote ? (
+                        <p className="text-xs text-zinc-600 font-medium line-clamp-1">
+                          <span className="text-zinc-500">Note:</span> {progress.latestNote}
                         </p>
                       ) : null}
 
@@ -568,12 +559,12 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       <div className="space-y-1 bg-zinc-50 p-2.5 rounded-lg border border-zinc-200/80 w-full min-w-0">
                         <div className="flex items-center justify-between text-xs font-semibold">
                           <span className="text-zinc-600">Syllabus Progress</span>
-                          <span className="font-mono text-zinc-950 font-bold">{stats.completed}/{stats.total} ({stats.percent}%)</span>
+                          <span className="font-mono text-zinc-950 font-bold">{progress.completedCount}/{progress.totalTopics} ({progress.percent}%)</span>
                         </div>
                         <div className="w-full bg-zinc-200 h-2 rounded-full overflow-hidden">
                           <div 
                             className="bg-zinc-950 h-full rounded-full transition-all duration-300"
-                            style={{ width: `${stats.percent}%` }}
+                            style={{ width: `${progress.percent}%` }}
                           />
                         </div>
                       </div>

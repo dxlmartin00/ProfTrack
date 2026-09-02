@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import type { FC, MouseEvent } from 'react';
 import type { ClassSession, ClassSchedule, ScheduleType, SessionLog } from '../services/db';
+import { getCourseProgressDetails } from '../utils/courseProgress';
+import { format } from 'date-fns';
 import { 
   X, 
   Check, 
@@ -9,7 +11,8 @@ import {
   Sparkles,
   CheckCircle2,
   Hourglass,
-  RotateCcw
+  RotateCcw,
+  FileText
 } from 'lucide-react';
 
 export type TopicProgressStatus = 'none' | 'completed' | 'in_progress';
@@ -44,41 +47,22 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
     activeSchedule?.type || 'Lecture'
   );
 
-  // 1. Calculate past completed vs partial topics and their prior cut-off notes
-  const { initialCompletedSet, initialPartialSet, initialCutoffNotes } = useMemo(() => {
-    const completedSet = new Set<string>();
-    const partialSet = new Set<string>();
-    const cutoffs = new Map<string, string>();
-
-    const courseLogs = pastLogs.filter(
-      l => l.classInfo.id === classSession.id
-    );
-
-    // Read chronological logs
-    courseLogs.forEach(log => {
-      log.topicsCovered.forEach(topic => {
-        const match = log.nextActions?.match(new RegExp(`\\[In Progress: ${topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?: - ([^\\]]+))?\\]`));
-        if (match) {
-          partialSet.add(topic);
-          if (match[1]) {
-            cutoffs.set(topic, match[1]);
-          }
-        } else if (log.nextActions?.includes(`[In Progress: ${topic}]`)) {
-          partialSet.add(topic);
-        } else {
-          completedSet.add(topic);
-          partialSet.delete(topic);
-          cutoffs.delete(topic);
-        }
-      });
-    });
-
-    return {
-      initialCompletedSet: completedSet,
-      initialPartialSet: partialSet,
-      initialCutoffNotes: cutoffs
-    };
+  // 1. Calculate chronological completed vs partial topics and notes from previous class
+  const courseProgress = useMemo(() => {
+    return getCourseProgressDetails(classSession, pastLogs);
   }, [classSession, pastLogs]);
+
+  const initialCompletedSet = useMemo(() => {
+    return new Set(courseProgress.completedTopics);
+  }, [courseProgress.completedTopics]);
+
+  const initialPartialMap = useMemo(() => {
+    const map = new Map<string, string>();
+    courseProgress.partialTopics.forEach(p => {
+      if (p.note) map.set(p.topic, p.note);
+    });
+    return map;
+  }, [courseProgress.partialTopics]);
 
   // 2. State of every syllabus topic: 'none' | 'completed' | 'in_progress'
   const [topicStatuses, setTopicStatuses] = useState<Map<string, TopicProgressStatus>>(() => {
@@ -86,7 +70,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
     classSession.masterSyllabus.forEach(topic => {
       if (initialCompletedSet.has(topic)) {
         map.set(topic, 'completed');
-      } else if (initialPartialSet.has(topic)) {
+      } else if (courseProgress.partialTopics.some(p => p.topic === topic)) {
         map.set(topic, 'in_progress');
       } else {
         map.set(topic, 'none');
@@ -97,17 +81,15 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
   // Track cut-off notes per topic
   const [cutoffNotes, setCutoffNotes] = useState<Map<string, string>>(() => {
-    return new Map(initialCutoffNotes);
+    return new Map(initialPartialMap);
   });
 
   // Track which topics were newly touched in this session
   const [sessionSelectedTopics, setSessionSelectedTopics] = useState<Set<string>>(() => {
     const preselected = new Set<string>();
-    const firstUnfinished = classSession.masterSyllabus.find(
-      t => initialPartialSet.has(t) || !initialCompletedSet.has(t)
-    );
-    if (firstUnfinished) {
-      preselected.add(firstUnfinished);
+    // Pre-select the partial topic from last session if present, or next uncompleted topic
+    if (courseProgress.currentActiveTopic) {
+      preselected.add(courseProgress.currentActiveTopic);
     }
     return preselected;
   });
@@ -165,7 +147,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
     handleUpdateCutoffNote(topic, updated);
   };
 
-  // Reset checklist to initial state
+  // Reset checklist to initial clean state
   const handleResetChecklist = () => {
     const map = new Map<string, TopicProgressStatus>();
     classSession.masterSyllabus.forEach(topic => {
@@ -284,8 +266,36 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
         </div>
 
         {/* Dialog Body */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1 bg-white">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-white">
           
+          {/* Notes from Previous Meeting Banner (High Visibility Reminder) */}
+          {(courseProgress.latestNote || courseProgress.partialTopics.length > 0) && (
+            <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-3.5 text-xs text-sky-950 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-2 text-sky-900">
+                <FileText className="h-4 w-4 text-sky-700 shrink-0" />
+                <span className="font-bold uppercase tracking-wider text-[11px]">
+                  Notes from Last Class {courseProgress.lastLogDate && `(${format(courseProgress.lastLogDate, 'MMM d')})`}:
+                </span>
+              </div>
+
+              {courseProgress.latestNote && (
+                <p className="text-xs font-medium text-zinc-900 leading-relaxed break-words pl-6">
+                  {courseProgress.latestNote}
+                </p>
+              )}
+
+              {courseProgress.partialTopics.length > 0 && (
+                <div className="pl-6 pt-1 flex items-center gap-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                    <Hourglass className="h-3 w-3 text-amber-700" />
+                    Continuing: {courseProgress.partialTopics[0].topic}
+                    {courseProgress.partialTopics[0].note && ` (Cut-off: "${courseProgress.partialTopics[0].note}")`}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Session Type Toggle */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
@@ -327,7 +337,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                   Course Syllabus Checklist ({completedCount}/{classSession.masterSyllabus.length} Completed)
                 </label>
                 <p className="text-xs text-zinc-600">
-                  Click any topic to check or uncheck. For unfinished topics, tap "In Progress" to add a cut-off note.
+                  Click any topic to check or mark finished. Tap "In Progress" to record a cut-off point.
                 </p>
               </div>
               
@@ -350,7 +360,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                 const isInProgress = status === 'in_progress';
                 const isSuggested = topic === suggestedNextTopic && !isChecked;
                 const wasPreviouslyDone = initialCompletedSet.has(topic);
-                const priorCutoff = initialCutoffNotes.get(topic);
+                const priorCutoff = initialPartialMap.get(topic);
 
                 return (
                   <div
@@ -461,35 +471,31 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                           </div>
                         </div>
 
-                        {/* Cut-off note input when in_progress */}
+                        {/* Cut-off notes input box if In-Progress */}
                         {isInProgress && (
-                          <div className="rounded-lg border border-amber-300 bg-amber-50/80 p-3 space-y-2">
+                          <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-2 animate-in fade-in duration-150">
                             <div className="flex items-center justify-between">
-                              <label htmlFor={`cutoff-input-${index}`} className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
-                                <Hourglass className="h-3.5 w-3.5 text-amber-700" />
-                                Where did you get cut off?
+                              <label className="text-xs font-bold text-amber-950">
+                                📍 Lesson Cut-off Point / Slide Number:
                               </label>
-                              <span className="text-[11px] font-semibold text-amber-800">
-                                To continue next class
-                              </span>
+                              <span className="text-[10px] text-amber-800 font-medium">Where did you stop?</span>
                             </div>
 
                             <input
-                              id={`cutoff-input-${index}`}
                               type="text"
-                              placeholder="e.g. Stopped at Slide 24 (Activity Lifecycle), finished Part 1 only..."
                               value={cutoffNotes.get(topic) || ''}
                               onChange={(e) => handleUpdateCutoffNote(topic, e.target.value)}
-                              className="w-full h-8 rounded-md border border-amber-300 bg-white px-2.5 text-xs text-zinc-950 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 shadow-2xs font-medium"
+                              placeholder="e.g. Stopped at Slide #24, Chapter 2 Example 3..."
+                              className="w-full rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs text-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500"
                             />
 
-                            <div className="flex flex-wrap gap-1.5 pt-0.5">
-                              {['Stopped at Slide #', 'Finished Part 1 only', 'Covered Section A', 'Cut off before Lab Exercise'].map((chip) => (
+                            <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                              {['Stopped at Slide #', 'Halfway through discussion', 'Completed theory, lab pending', 'Up to Section 2'].map(chip => (
                                 <button
                                   key={chip}
                                   type="button"
                                   onClick={() => handleAppendCutoffChip(topic, chip)}
-                                  className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold bg-white border border-amber-300 text-amber-900 hover:bg-amber-100 transition-colors cursor-pointer"
+                                  className="text-[10px] font-semibold bg-white text-amber-900 px-2 py-0.5 rounded border border-amber-300 hover:bg-amber-100 transition-colors cursor-pointer"
                                 >
                                   + {chip}
                                 </button>
@@ -505,82 +511,78 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
             </div>
           </div>
 
-          {/* Engagement Level */}
-          <div className="space-y-2.5">
+          {/* Next Actions & General Notes */}
+          <div className="space-y-2">
             <label className="text-sm font-bold text-zinc-950">
-              Class Engagement Rating
+              Next Class Action Items & Follow-ups
             </label>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: 'Low', label: 'Low', desc: 'Passive participation' },
-                { value: 'Medium', label: 'Medium', desc: 'Average engagement' },
-                { value: 'High', label: 'High', desc: 'High interaction' }
-              ].map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => setEngagement(item.value)}
-                  className={`flex flex-col items-center justify-center rounded-lg border p-3 text-center transition-all cursor-pointer ${
-                    engagement === item.value
-                      ? 'border-zinc-950 bg-zinc-950 text-white font-bold shadow-2xs'
-                      : 'border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-800'
-                  }`}
-                >
-                  <span className="text-sm font-bold">{item.label}</span>
-                  <span className={`text-xs mt-0.5 ${engagement === item.value ? 'text-zinc-300' : 'text-zinc-600'}`}>
-                    {item.desc}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+            <p className="text-xs text-zinc-600">
+              Notes recorded here will appear on your timetable and modal as a reminder before your next meeting.
+            </p>
 
-          {/* Next Steps */}
-          <div className="space-y-2.5">
-            <label htmlFor="next-actions" className="text-sm font-bold text-zinc-950">
-              Reminders & Next Steps
-            </label>
-            
-            <div className="flex flex-wrap gap-2">
+            <textarea
+              value={nextActions}
+              onChange={(e) => setNextActions(e.target.value)}
+              placeholder="e.g. Prepare quiz on SQLite CRUD, bring sample Android devices..."
+              rows={2}
+              className="w-full rounded-lg border border-zinc-300 bg-white p-3 text-xs text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950"
+            />
+
+            <div className="flex items-center gap-1.5 flex-wrap">
               {quickPrompts.map((prompt) => (
                 <button
                   key={prompt}
                   type="button"
                   onClick={() => handlePromptChipClick(prompt)}
-                  className="inline-flex items-center rounded-md border border-zinc-300 bg-zinc-100 px-2.5 py-1 text-xs font-semibold text-zinc-800 hover:bg-zinc-200 transition-colors cursor-pointer"
+                  className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950 transition-colors cursor-pointer"
                 >
                   + {prompt}
                 </button>
               ))}
             </div>
+          </div>
 
-            <textarea
-              id="next-actions"
-              rows={3}
-              placeholder="E.g., Review problem set #2, continue recursion next class..."
-              value={nextActions}
-              onChange={(e) => setNextActions(e.target.value)}
-              className="flex w-full rounded-lg border border-zinc-300 bg-white p-3 text-sm text-zinc-900 shadow-2xs placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950"
-            />
+          {/* Student Engagement Rating */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+              Class Engagement Rating
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {['Low', 'Medium', 'High'].map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setEngagement(level)}
+                  className={`h-9 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                    engagement === level
+                      ? 'border-zinc-950 bg-zinc-950 text-white shadow-2xs'
+                      : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
+                  }`}
+                >
+                  {level} Engagement
+                </button>
+              ))}
+            </div>
           </div>
 
         </div>
 
         {/* Dialog Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-zinc-200 p-4 shrink-0 bg-zinc-50">
+        <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 p-4 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer shadow-2xs"
           >
             Cancel
           </button>
+
           <button
             type="button"
             onClick={handleSubmit}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 px-5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 px-5 text-xs font-bold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
           >
-            Save {sessionType} Log ({completedCount} Finished)
+            Save Session Progress
           </button>
         </div>
 
