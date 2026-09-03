@@ -8,12 +8,16 @@ import { DataTransferModal } from './components/DataTransferModal';
 import { ProfileModal, getInitials } from './components/ProfileModal';
 import { ScheduleUploadModal } from './components/ScheduleUploadModal';
 import { SyllabusUploadModal } from './components/SyllabusUploadModal';
+import { DeviceSyncModal } from './components/DeviceSyncModal';
 import type { ClassSession, ClassSchedule, SessionLog, ScheduleType, InstructorProfile } from './services/db';
 import { 
   addClass as dbAddClass, 
   updateClass as dbUpdateClass, 
   deleteClass as dbDeleteClass, 
   submitSessionLog,
+  pushAccountSyncToCloud,
+  fetchAccountSyncFromCloud,
+  subscribeToAccountSync,
   DEFAULT_INSTRUCTOR_PROFILE
 } from './services/db';
 import { 
@@ -33,6 +37,11 @@ import {
 } from './services/auth';
 import type { UserAccount } from './services/auth';
 import { 
+  getUserLastUpdated, 
+  setUserLastUpdated, 
+  createAccountSyncSnapshot 
+} from './services/sync';
+import { 
   Bell, 
   Wifi, 
   WifiOff, 
@@ -42,7 +51,8 @@ import {
   CheckCircle2,
   Camera,
   ShieldCheck,
-  LogOut
+  LogOut,
+  ArrowRightLeft
 } from 'lucide-react';
 
 export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
@@ -379,31 +389,92 @@ export function App() {
   });
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(!currentUser);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isDeviceSyncModalOpen, setIsDeviceSyncModalOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<UserAccount[]>(() => getStoredUsers());
 
   // 2. User-isolated Data States
   const [profile, setProfile] = useState<InstructorProfile>(() => loadUserProfile(currentUser));
   const [classes, setClasses] = useState<ClassSession[]>(() => loadUserClasses(currentUser));
   const [logs, setLogs] = useState<(SessionLog & { classInfo: ClassSession })[]>(() => loadUserLogs(currentUser));
+  const [lastUpdatedTimestamp, setLastUpdatedTimestamp] = useState<number>(() => {
+    return currentUser ? getUserLastUpdated(currentUser.id) : Date.now();
+  });
 
-  // 3. Isolated Storage Auto-Sync
+  // 3. Isolated Storage & Cloud Auto-Sync with Timestamp
   useEffect(() => {
     if (!currentUser) return;
     const keys = getUserStorageKeys(currentUser.id);
     localStorage.setItem(keys.classesKey, JSON.stringify(classes));
-  }, [classes, currentUser]);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    const keys = getUserStorageKeys(currentUser.id);
     localStorage.setItem(keys.logsKey, JSON.stringify(logs));
-  }, [logs, currentUser]);
+    localStorage.setItem(keys.profileKey, JSON.stringify(profile));
 
+    const now = Date.now();
+    setLastUpdatedTimestamp(now);
+    setUserLastUpdated(currentUser.id, now);
+
+    // Push state snapshot to cloud Firestore if available
+    const snapshot = createAccountSyncSnapshot(
+      currentUser.id,
+      currentUser.username,
+      classes,
+      logs,
+      profile,
+      now
+    );
+    pushAccountSyncToCloud(snapshot).catch(err => {
+      console.warn('Deferred cloud sync:', err);
+    });
+  }, [classes, logs, profile, currentUser]);
+
+  // 4. Cross-Device Cloud Sync Listener ("Latest Device Wins")
   useEffect(() => {
     if (!currentUser) return;
-    const keys = getUserStorageKeys(currentUser.id);
-    localStorage.setItem(keys.profileKey, JSON.stringify(profile));
-  }, [profile, currentUser]);
+
+    // Check Cloud for newer snapshot on login or device resume
+    fetchAccountSyncFromCloud(currentUser.id).then(cloudSnapshot => {
+      if (cloudSnapshot && cloudSnapshot.updatedAt) {
+        const localTime = getUserLastUpdated(currentUser.id);
+        if (cloudSnapshot.updatedAt > localTime + 2000) {
+          // Cloud has newer update from another device!
+          setClasses(cloudSnapshot.classes);
+          setLogs(cloudSnapshot.logs);
+          if (cloudSnapshot.profile) setProfile(cloudSnapshot.profile);
+          setLastUpdatedTimestamp(cloudSnapshot.updatedAt);
+          setUserLastUpdated(currentUser.id, cloudSnapshot.updatedAt);
+          setQrNotification(`🔄 Synced with latest updates from ${cloudSnapshot.deviceLabel || 'your other device'}!`);
+          setTimeout(() => setQrNotification(null), 5000);
+        } else if (localTime > (cloudSnapshot.updatedAt || 0) + 2000) {
+          // This device is newer, push to cloud so other devices get it
+          const localSnapshot = createAccountSyncSnapshot(
+            currentUser.id,
+            currentUser.username,
+            classes,
+            logs,
+            profile,
+            localTime
+          );
+          pushAccountSyncToCloud(localSnapshot);
+        }
+      }
+    });
+
+    // Subscribe to live changes if Firestore is active
+    const unsubscribe = subscribeToAccountSync(currentUser.id, (remoteSnapshot) => {
+      if (!remoteSnapshot || !remoteSnapshot.updatedAt) return;
+      const localTime = getUserLastUpdated(currentUser.id);
+      if (remoteSnapshot.updatedAt > localTime + 2000) {
+        setClasses(remoteSnapshot.classes);
+        setLogs(remoteSnapshot.logs);
+        if (remoteSnapshot.profile) setProfile(remoteSnapshot.profile);
+        setLastUpdatedTimestamp(remoteSnapshot.updatedAt);
+        setUserLastUpdated(currentUser.id, remoteSnapshot.updatedAt);
+        setQrNotification(`🔄 Live update received from ${remoteSnapshot.deviceLabel}!`);
+        setTimeout(() => setQrNotification(null), 4000);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [currentUser?.id]);
 
   // Modal States
   const [selectedClassForLog, setSelectedClassForLog] = useState<ClassSession | null>(null);
@@ -459,7 +530,7 @@ export function App() {
         const rawEncoded = hash.replace('#import=', '');
         const parsed = decompressPayload(rawEncoded);
         if (parsed) {
-          const { classes: importedClasses, logs: importedLogs, profile: importedProfile } = unpackTransferPayload(parsed);
+          const { classes: importedClasses, logs: importedLogs, profile: importedProfile, updatedAt: incomingTime, deviceLabel: incomingDevice } = unpackTransferPayload(parsed);
 
           if (importedClasses.length > 0 || importedLogs.length > 0) {
             setClasses(importedClasses);
@@ -467,7 +538,13 @@ export function App() {
             if (importedProfile) {
               setProfile(importedProfile);
             }
-            setQrNotification(`Successfully restored ${importedClasses.length} courses, logs, and profile!`);
+            const finalTime = incomingTime || Date.now();
+            setLastUpdatedTimestamp(finalTime);
+            if (currentUser) {
+              setUserLastUpdated(currentUser.id, finalTime);
+            }
+            const devInfo = incomingDevice ? ` from ${incomingDevice}` : '';
+            setQrNotification(`✅ Synced latest updates${devInfo}! (${importedClasses.length} courses)`);
             setTimeout(() => setQrNotification(null), 6000);
           }
         }
@@ -633,12 +710,18 @@ export function App() {
   const handleImportData = (
     importedClasses: ClassSession[], 
     importedLogs: (SessionLog & { classInfo: ClassSession })[],
-    importedProfile?: InstructorProfile
+    importedProfile?: InstructorProfile,
+    updatedAt?: number
   ) => {
     setClasses(importedClasses);
     setLogs(importedLogs);
     if (importedProfile) {
       handleSaveProfile(importedProfile);
+    }
+    const finalTime = updatedAt || Date.now();
+    setLastUpdatedTimestamp(finalTime);
+    if (currentUser) {
+      setUserLastUpdated(currentUser.id, finalTime);
     }
   };
 
@@ -750,6 +833,18 @@ export function App() {
               {isOnline ? <Wifi className="h-3.5 w-3.5 text-emerald-700" /> : <WifiOff className="h-3.5 w-3.5 text-amber-700" />}
               <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
             </span>
+
+            {/* Live Device Sync Pill */}
+            <button
+              type="button"
+              onClick={() => setIsDeviceSyncModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 p-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold text-zinc-800 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              title="Device & Account Sync: Tap to view connected devices and synchronization status"
+            >
+              <ArrowRightLeft className="h-3.5 w-3.5 text-zinc-600" />
+              <span className="hidden md:inline">Sync</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
 
             {/* Notification Bell / Test Trigger button */}
             <button
@@ -960,8 +1055,49 @@ export function App() {
           classes={classes}
           logs={logs}
           profile={profile}
+          lastUpdatedTimestamp={lastUpdatedTimestamp}
           onClose={() => setIsTransferModalOpen(false)}
           onImportData={handleImportData}
+        />
+      )}
+
+      {/* Device & Cross-Device Account Sync Modal */}
+      {isDeviceSyncModalOpen && (
+        <DeviceSyncModal
+          isOpen={isDeviceSyncModalOpen}
+          currentUser={currentUser}
+          coursesCount={classes.length}
+          logsCount={logs.length}
+          lastUpdatedTimestamp={lastUpdatedTimestamp}
+          onClose={() => setIsDeviceSyncModalOpen(false)}
+          onOpenTransfer={() => {
+            setIsDeviceSyncModalOpen(false);
+            setIsTransferModalOpen(true);
+          }}
+          onForceCheckSync={() => {
+            if (currentUser) {
+              fetchAccountSyncFromCloud(currentUser.id).then(cloudSnapshot => {
+                if (cloudSnapshot && cloudSnapshot.updatedAt) {
+                  const localTime = getUserLastUpdated(currentUser.id);
+                  if (cloudSnapshot.updatedAt > localTime) {
+                    setClasses(cloudSnapshot.classes);
+                    setLogs(cloudSnapshot.logs);
+                    if (cloudSnapshot.profile) setProfile(cloudSnapshot.profile);
+                    setLastUpdatedTimestamp(cloudSnapshot.updatedAt);
+                    setUserLastUpdated(currentUser.id, cloudSnapshot.updatedAt);
+                    setQrNotification(`🔄 Successfully updated from ${cloudSnapshot.deviceLabel}!`);
+                    setTimeout(() => setQrNotification(null), 4000);
+                  } else {
+                    setQrNotification('✅ This device is already up to date with the latest changes.');
+                    setTimeout(() => setQrNotification(null), 4000);
+                  }
+                } else {
+                  setQrNotification('✅ Local data is up to date.');
+                  setTimeout(() => setQrNotification(null), 4000);
+                }
+              });
+            }
+          }}
         />
       )}
 

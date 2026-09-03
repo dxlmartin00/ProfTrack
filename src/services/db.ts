@@ -2,15 +2,18 @@ import {
   collection, 
   doc, 
   setDoc, 
+  getDoc,
   getDocs, 
   deleteDoc,
   updateDoc, 
   query, 
   where, 
   serverTimestamp,
-  arrayUnion
+  arrayUnion,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import type { AccountSyncSnapshot } from './sync';
 
 export type ScheduleType = 'Lecture' | 'Laboratory' | 'Tutorial' | 'Discussion';
 
@@ -226,3 +229,63 @@ export const getMonthlyLogs = async (instructorId: string, year: number, month: 
 
   return logs;
 };
+
+/**
+ * Pushes the complete account state snapshot to Cloud Firestore (if configured).
+ */
+export const pushAccountSyncToCloud = async (snapshot: AccountSyncSnapshot): Promise<boolean> => {
+  if (!db) return false;
+  try {
+    const syncDocRef = doc(db, 'user_sync', snapshot.userId);
+    await withTimeout(setDoc(syncDocRef, {
+      ...snapshot,
+      cloudSyncedAt: serverTimestamp(),
+    }, { merge: true }));
+    return true;
+  } catch (err) {
+    console.warn('Deferred cloud sync (offline local mode):', err);
+    return false;
+  }
+};
+
+/**
+ * Fetches the latest cloud snapshot for this user.
+ */
+export const fetchAccountSyncFromCloud = async (userId: string): Promise<AccountSyncSnapshot | null> => {
+  if (!db) return null;
+  try {
+    const syncDocRef = doc(db, 'user_sync', userId);
+    const snap = await withTimeout(getDoc(syncDocRef));
+    if (snap.exists()) {
+      return snap.data() as AccountSyncSnapshot;
+    }
+  } catch (err) {
+    console.warn('Cloud sync fetch deferred (offline mode):', err);
+  }
+  return null;
+};
+
+/**
+ * Subscribes to real-time changes in Firestore for this user account.
+ */
+export const subscribeToAccountSync = (
+  userId: string,
+  onRemoteUpdate: (snapshot: AccountSyncSnapshot) => void
+): (() => void) => {
+  if (!db) return () => {};
+  try {
+    const syncDocRef = doc(db, 'user_sync', userId);
+    const unsubscribe = onSnapshot(syncDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data() as AccountSyncSnapshot;
+        onRemoteUpdate(data);
+      }
+    }, (err) => {
+      console.warn('Cloud sync listener inactive (offline mode):', err);
+    });
+    return unsubscribe;
+  } catch {
+    return () => {};
+  }
+};
+

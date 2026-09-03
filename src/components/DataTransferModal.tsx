@@ -3,6 +3,7 @@ import type { FC, ChangeEvent } from 'react';
 import qrcode from 'qrcode-generator';
 import { compressPayload, decompressPayload, packTransferPayload, unpackTransferPayload } from '../utils/codec';
 import type { ClassSession, SessionLog, InstructorProfile } from '../services/db';
+import { getDeviceId, getDeviceLabel } from '../services/sync';
 import { 
   X, 
   Download, 
@@ -22,11 +23,13 @@ interface DataTransferModalProps {
   classes: ClassSession[];
   logs: (SessionLog & { classInfo: ClassSession })[];
   profile?: InstructorProfile;
+  lastUpdatedTimestamp?: number;
   onClose: () => void;
   onImportData: (
     importedClasses: ClassSession[], 
     importedLogs: (SessionLog & { classInfo: ClassSession })[],
-    importedProfile?: InstructorProfile
+    importedProfile?: InstructorProfile,
+    updatedAt?: number
   ) => void;
 }
 
@@ -34,6 +37,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
   classes,
   logs,
   profile,
+  lastUpdatedTimestamp,
   onClose,
   onImportData,
 }) => {
@@ -65,10 +69,13 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
   const backupPayload = useMemo(() => ({
     v: '2.0',
     exportedAt: new Date().toISOString(),
+    updatedAt: lastUpdatedTimestamp || Date.now(),
+    deviceId: getDeviceId(),
+    deviceLabel: getDeviceLabel(),
     classes,
     logs,
     profile,
-  }), [classes, logs, profile]);
+  }), [classes, logs, profile, lastUpdatedTimestamp]);
 
   const backupJsonString = useMemo(() => {
     try {
@@ -81,11 +88,15 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
   // Ultra-compact transit string for QR sync
   const compactTransitString = useMemo(() => {
     try {
-      return packTransferPayload(classes, logs, profile);
+      return packTransferPayload(classes, logs, profile, {
+        updatedAt: lastUpdatedTimestamp || Date.now(),
+        deviceId: getDeviceId(),
+        deviceLabel: getDeviceLabel()
+      });
     } catch {
       return JSON.stringify(backupPayload);
     }
-  }, [classes, logs, profile, backupPayload]);
+  }, [classes, logs, profile, backupPayload, lastUpdatedTimestamp]);
 
   // Generate deep-link QR URL with compressed payload
   const qrTransferUrl = useMemo(() => {
@@ -109,20 +120,12 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
       qr.make();
       return qr.createSvgTag({ scalable: true, margin: 2 });
     } catch (err) {
-      console.warn('QR code auto-type fallback, trying type 40:', err);
-      try {
-        const qr = qrcode(40, 'L');
-        qr.addData(qrTransferUrl);
-        qr.make();
-        return qr.createSvgTag({ scalable: true, margin: 2 });
-      } catch (e) {
-        console.error('QR code generation failed:', e);
-        return null;
-      }
+      console.error('Failed to generate SVG QR:', err);
+      return null;
     }
   }, [qrTransferUrl]);
 
-  // Download .json file
+  // Download .json backup
   const handleDownloadBackup = () => {
     try {
       const blob = new Blob([backupJsonString], { type: 'application/json' });
@@ -140,6 +143,42 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
     }
   };
 
+  // Helper with Latest Device Wins conflict check
+  const applyImportWithConflictCheck = (
+    importedClasses: ClassSession[], 
+    importedLogs: (SessionLog & { classInfo: ClassSession })[], 
+    importedProfile?: InstructorProfile,
+    incomingUpdatedAt?: number,
+    incomingDeviceLabel?: string
+  ) => {
+    const localTime = lastUpdatedTimestamp || 0;
+    const incomingTime = incomingUpdatedAt || 0;
+
+    if (incomingTime > 0 && localTime > 0) {
+      if (incomingTime < localTime - 5000) {
+        const confirmOverwrite = window.confirm(
+          `Notice: Your current device has newer updates than this incoming transfer.\n\nCurrent device: ${new Date(localTime).toLocaleTimeString()}\nIncoming update: ${new Date(incomingTime).toLocaleTimeString()} (${incomingDeviceLabel || 'Other device'})\n\nDo you want to overwrite with the incoming data anyway?`
+        );
+        if (!confirmOverwrite) {
+          setImportStatus({
+            success: true,
+            message: 'Kept current device’s newer data. No changes applied.'
+          });
+          return;
+        }
+      }
+    }
+
+    onImportData(importedClasses, importedLogs, importedProfile, incomingTime || Date.now());
+    const isNewer = incomingTime > localTime;
+    setImportStatus({
+      success: true,
+      message: isNewer
+        ? `✅ Synced with latest updates from ${incomingDeviceLabel || 'your other device'}!`
+        : `Successfully imported ${importedClasses.length} courses, ${importedLogs.length} session logs, and profile!`
+    });
+  };
+
   // Upload .json file
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,17 +190,13 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
         const text = event.target?.result as string;
         const parsed = JSON.parse(text);
         
-        const { classes: importedClasses, logs: validLogs, profile: importedProfile } = unpackTransferPayload(parsed);
+        const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel } = unpackTransferPayload(parsed);
 
         if (!importedClasses || importedClasses.length === 0) {
           throw new Error('Invalid backup file format: missing classes.');
         }
 
-        onImportData(importedClasses, validLogs, importedProfile);
-        setImportStatus({
-          success: true,
-          message: `Successfully imported ${importedClasses.length} courses, ${validLogs.length} session logs, and profile!`
-        });
+        applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt || parsed.updatedAt, incDeviceLabel || parsed.deviceLabel);
       } catch (err: any) {
         setImportStatus({
           success: false,
@@ -205,26 +240,18 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
         const encoded = inputStr.split('#import=')[1];
         const decompressed = decompressPayload(encoded);
         if (decompressed) {
-          const { classes: importedClasses, logs: validLogs, profile: importedProfile } = unpackTransferPayload(decompressed);
+          const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel } = unpackTransferPayload(decompressed);
 
-          onImportData(importedClasses, validLogs, importedProfile);
-          setImportStatus({
-            success: true,
-            message: `Successfully restored ${importedClasses.length} courses and profile!`
-          });
+          applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt, incDeviceLabel);
           setManualCodeInput('');
           return;
         }
       }
 
       const parsed = JSON.parse(inputStr);
-      const { classes: importedClasses, logs: validLogs, profile: importedProfile } = unpackTransferPayload(parsed);
+      const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel } = unpackTransferPayload(parsed);
 
-      onImportData(importedClasses, validLogs, importedProfile);
-      setImportStatus({
-        success: true,
-        message: `Successfully imported ${importedClasses.length} courses and profile!`
-      });
+      applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt, incDeviceLabel);
       setManualCodeInput('');
     } catch (err: any) {
       setImportStatus({

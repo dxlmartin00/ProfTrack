@@ -67,10 +67,14 @@ const DEFAULT_SYLLABI: Record<string, string[]> = {
 export function packTransferPayload(
   classes: ClassSession[], 
   logs: (SessionLog & { classInfo: ClassSession })[], 
-  profile?: InstructorProfile
+  profile?: InstructorProfile,
+  metadata?: { updatedAt?: number; deviceId?: string; deviceLabel?: string }
 ): string {
   const compact = {
     v: '3',
+    t: metadata?.updatedAt || Date.now(),
+    did: metadata?.deviceId,
+    dl: metadata?.deviceLabel,
     c: classes.map(c => {
       const defaultSyl = DEFAULT_SYLLABI[c.subjectCode] || DEFAULT_SYLLABI['CS 315'];
       const isCustomSyllabus = JSON.stringify(c.masterSyllabus) !== JSON.stringify(defaultSyl);
@@ -116,6 +120,9 @@ export function unpackTransferPayload(parsed: any): {
   classes: ClassSession[];
   logs: (SessionLog & { classInfo: ClassSession })[];
   profile?: InstructorProfile;
+  updatedAt?: number;
+  deviceId?: string;
+  deviceLabel?: string;
 } {
   if (!parsed) return { classes: [], logs: [] };
 
@@ -209,7 +216,11 @@ export function unpackTransferPayload(parsed: any): {
     };
   }
 
-  return { classes, logs, profile };
+  const updatedAt = typeof parsed.t === 'number' ? parsed.t : (typeof parsed.updatedAt === 'number' ? parsed.updatedAt : undefined);
+  const deviceId = parsed.did || parsed.deviceId;
+  const deviceLabel = parsed.dl || parsed.deviceLabel;
+
+  return { classes, logs, profile, updatedAt, deviceId, deviceLabel };
 }
 
 /**
