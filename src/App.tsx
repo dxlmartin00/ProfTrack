@@ -22,6 +22,16 @@ import {
 } from './services/pwa';
 import { decompressPayload, unpackTransferPayload } from './utils/codec';
 import { getCourseProgressDetails } from './utils/courseProgress';
+import { AuthModal } from './components/AuthModal';
+import { AdminDashboardModal } from './components/AdminDashboardModal';
+import { 
+  initializeAuth, 
+  getUserStorageKeys, 
+  logoutUser, 
+  getStoredUsers, 
+  DEFAULT_ADMIN_ACCOUNT 
+} from './services/auth';
+import type { UserAccount } from './services/auth';
 import { 
   Bell, 
   Wifi, 
@@ -30,7 +40,9 @@ import {
   RotateCcw,
   Smartphone,
   CheckCircle2,
-  Camera
+  Camera,
+  ShieldCheck,
+  LogOut
 } from 'lucide-react';
 
 export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
@@ -298,56 +310,100 @@ export const INITIAL_OFFICIAL_LOGS: (SessionLog & { classInfo: ClassSession })[]
   }
 ];
 
-const LOCAL_STORAGE_KEY = 'proftrack_classes_cache';
-const LOCAL_STORAGE_LOGS_KEY = 'proftrack_session_logs';
-const LOCAL_STORAGE_PROFILE_KEY = 'proftrack_instructor_profile';
+// User-isolated data loading helpers
+const loadUserClasses = (user: UserAccount | null): ClassSession[] => {
+  if (!user) return [];
+  const keys = getUserStorageKeys(user.id);
+  try {
+    const cached = localStorage.getItem(keys.classesKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error('Failed to load user classes:', err);
+  }
+  if (user.id === DEFAULT_ADMIN_ACCOUNT.id) {
+    return OFFICIAL_SEMESTER_COURSES;
+  }
+  return [];
+};
+
+const loadUserLogs = (user: UserAccount | null): (SessionLog & { classInfo: ClassSession })[] => {
+  if (!user) return [];
+  const keys = getUserStorageKeys(user.id);
+  try {
+    const cached = localStorage.getItem(keys.logsKey);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item: any) => ({
+          ...item,
+          date: new Date(item.date)
+        }));
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load user logs:', err);
+  }
+  if (user.id === DEFAULT_ADMIN_ACCOUNT.id) {
+    return INITIAL_OFFICIAL_LOGS;
+  }
+  return [];
+};
+
+const loadUserProfile = (user: UserAccount | null): InstructorProfile => {
+  if (!user) return DEFAULT_INSTRUCTOR_PROFILE;
+  const keys = getUserStorageKeys(user.id);
+  try {
+    const saved = localStorage.getItem(keys.profileKey);
+    if (saved) return JSON.parse(saved);
+  } catch (err) {
+    console.error('Failed to load user profile:', err);
+  }
+  return {
+    fullName: user.fullName || DEFAULT_INSTRUCTOR_PROFILE.fullName,
+    position: user.role === 'admin' ? 'Department Chair / Assistant Professor I' : 'Instructor I',
+    department: user.department || DEFAULT_INSTRUCTOR_PROFILE.department,
+    institution: user.institution || DEFAULT_INSTRUCTOR_PROFILE.institution,
+    email: `${user.username}@university.edu.ph`,
+    employeeId: user.id
+  };
+};
 
 export function App() {
-  // Load cached profile or default
-  const [profile, setProfile] = useState<InstructorProfile>(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_PROFILE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // Fallback
-    }
-    return DEFAULT_INSTRUCTOR_PROFILE;
+  // 1. Multi-Tenant User & Session State
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
+    const { currentUser: initialUser } = initializeAuth();
+    return initialUser;
   });
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(!currentUser);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState<UserAccount[]>(() => getStoredUsers());
 
-  // Load cached classes or recover official semester courses
-  const [classes, setClasses] = useState<ClassSession[]>(() => {
-    try {
-      const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
-    } catch {
-      // Fallback
-    }
-    return OFFICIAL_SEMESTER_COURSES;
-  });
+  // 2. User-isolated Data States
+  const [profile, setProfile] = useState<InstructorProfile>(() => loadUserProfile(currentUser));
+  const [classes, setClasses] = useState<ClassSession[]>(() => loadUserClasses(currentUser));
+  const [logs, setLogs] = useState<(SessionLog & { classInfo: ClassSession })[]>(() => loadUserLogs(currentUser));
 
-  // Load cached session logs or recover official semester logs
-  const [logs, setLogs] = useState<(SessionLog & { classInfo: ClassSession })[]>(() => {
-    try {
-      const cached = localStorage.getItem(LOCAL_STORAGE_LOGS_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((item: any) => ({
-            ...item,
-            date: new Date(item.date),
-          }));
-        }
-      }
-    } catch {
-      // Fallback
-    }
-    return INITIAL_OFFICIAL_LOGS;
-  });
+  // 3. Isolated Storage Auto-Sync
+  useEffect(() => {
+    if (!currentUser) return;
+    const keys = getUserStorageKeys(currentUser.id);
+    localStorage.setItem(keys.classesKey, JSON.stringify(classes));
+  }, [classes, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const keys = getUserStorageKeys(currentUser.id);
+    localStorage.setItem(keys.logsKey, JSON.stringify(logs));
+  }, [logs, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const keys = getUserStorageKeys(currentUser.id);
+    localStorage.setItem(keys.profileKey, JSON.stringify(profile));
+  }, [profile, currentUser]);
 
   // Modal States
   const [selectedClassForLog, setSelectedClassForLog] = useState<ClassSession | null>(null);
@@ -382,30 +438,16 @@ export function App() {
     };
   }, []);
 
-  // Sync to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(classes));
-    } catch (e) {
-      console.error('Failed to save classes to storage', e);
-    }
-  }, [classes]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(logs));
-    } catch (e) {
-      console.error('Failed to save logs to storage', e);
-    }
-  }, [logs]);
-
   // Save profile helper
   const handleSaveProfile = (newProfile: InstructorProfile) => {
     setProfile(newProfile);
-    try {
-      localStorage.setItem(LOCAL_STORAGE_PROFILE_KEY, JSON.stringify(newProfile));
-    } catch (e) {
-      console.error('Failed to save profile to storage', e);
+    if (currentUser) {
+      const keys = getUserStorageKeys(currentUser.id);
+      try {
+        localStorage.setItem(keys.profileKey, JSON.stringify(newProfile));
+      } catch (e) {
+        console.error('Failed to save profile to storage', e);
+      }
     }
   };
 
@@ -424,10 +466,7 @@ export function App() {
             setLogs(importedLogs);
             if (importedProfile) {
               setProfile(importedProfile);
-              localStorage.setItem(LOCAL_STORAGE_PROFILE_KEY, JSON.stringify(importedProfile));
             }
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(importedClasses));
-            localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(importedLogs));
             setQrNotification(`Successfully restored ${importedClasses.length} courses, logs, and profile!`);
             setTimeout(() => setQrNotification(null), 6000);
           }
@@ -487,7 +526,6 @@ export function App() {
   // Import courses parsed from Screenshot Scanner
   const handleImportParsedCourses = (imported: ClassSession[]) => {
     setClasses(imported);
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(imported));
     setQrNotification(`Successfully loaded ${imported.length} courses from schedule image!`);
     setTimeout(() => setQrNotification(null), 5000);
   };
@@ -616,20 +654,35 @@ export function App() {
     }
   };
 
+  // Auth & Multi-tenant Action Handlers
+  const handleLoginSuccess = (user: UserAccount) => {
+    setCurrentUser(user);
+    setClasses(loadUserClasses(user));
+    setLogs(loadUserLogs(user));
+    setProfile(loadUserProfile(user));
+    setIsAuthModalOpen(false);
+    setAllUsers(getStoredUsers());
+    setQrNotification(`Welcome back, ${user.fullName}!`);
+    setTimeout(() => setQrNotification(null), 4000);
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    setCurrentUser(null);
+    setIsAuthModalOpen(true);
+  };
+
+  const handleAccountsUpdated = () => {
+    setAllUsers(getStoredUsers());
+  };
+
+  const pendingCount = allUsers.filter(u => u.status === 'pending').length;
+
   // Reset or Restore official courses
   const handleResetDemoData = () => {
-    if (classes.length > 0) {
-      if (window.confirm('Reset schedule back to all 8 official semester courses?')) {
-        setClasses(OFFICIAL_SEMESTER_COURSES);
-        setLogs(INITIAL_OFFICIAL_LOGS);
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(OFFICIAL_SEMESTER_COURSES));
-        localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(INITIAL_OFFICIAL_LOGS));
-      }
-    } else {
+    if (window.confirm('Reset schedule back to all 8 official semester courses?')) {
       setClasses(OFFICIAL_SEMESTER_COURSES);
       setLogs(INITIAL_OFFICIAL_LOGS);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(OFFICIAL_SEMESTER_COURSES));
-      localStorage.setItem(LOCAL_STORAGE_LOGS_KEY, JSON.stringify(INITIAL_OFFICIAL_LOGS));
     }
   };
 
@@ -731,6 +784,24 @@ export function App() {
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
 
+            {/* Admin Console Shortcut (Only visible for Admin martin.dan) */}
+            {currentUser?.role === 'admin' && (
+              <button
+                type="button"
+                onClick={() => setIsAdminModalOpen(true)}
+                className="inline-flex h-8 sm:h-9 items-center justify-center gap-1.5 rounded-lg border border-zinc-950 bg-zinc-950 text-white px-2.5 sm:px-3 text-xs font-bold shadow-2xs hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+                title="Administrator Console: Manage and approve instructor accounts"
+              >
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Admin Console</span>
+                {pendingCount > 0 && (
+                  <span className="inline-flex items-center justify-center bg-amber-500 text-white rounded-full h-4 min-w-[16px] px-1 text-[10px] font-bold">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {/* Instructor Profile Avatar Badge */}
             <button
               type="button"
@@ -744,12 +815,23 @@ export function App() {
               </div>
               <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
                 <span className="text-xs font-bold text-zinc-950 group-hover:text-zinc-800 truncate max-w-[130px]">
-                  {profile.fullName}
+                  {currentUser?.username || profile.fullName}
                 </span>
                 <span className="text-[10px] text-zinc-500 font-medium truncate max-w-[130px]">
-                  {profile.position}
+                  {currentUser?.role === 'admin' ? 'Administrator' : 'Instructor'}
                 </span>
               </div>
+            </button>
+
+            {/* Switch Account / Logout Button */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-600 hover:text-zinc-950 transition-colors cursor-pointer shrink-0"
+              title="Switch Account / Sign Out"
+              aria-label="Switch Account / Sign Out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -894,6 +976,23 @@ export function App() {
             setSelectedScheduleForLog(undefined);
           }}
           onSuccess={handleLogSuccess}
+        />
+      )}
+
+      {/* Multi-Tenant Authentication Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen || !currentUser}
+        onLoginSuccess={handleLoginSuccess}
+        onClose={() => setIsAuthModalOpen(false)}
+        allowClose={!!currentUser}
+      />
+
+      {/* Administrator Instructor Account Management Console */}
+      {isAdminModalOpen && (
+        <AdminDashboardModal
+          isOpen={isAdminModalOpen}
+          onClose={() => setIsAdminModalOpen(false)}
+          onAccountsUpdated={handleAccountsUpdated}
         />
       )}
 
