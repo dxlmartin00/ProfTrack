@@ -28,12 +28,13 @@ import { decompressPayload, unpackTransferPayload } from './utils/codec';
 import { getCourseProgressDetails } from './utils/courseProgress';
 import { AuthModal } from './components/AuthModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
+import { AdminAccountManagementView } from './components/AdminAccountManagementView';
 import { 
   initializeAuth, 
   getUserStorageKeys, 
   logoutUser, 
   getStoredUsers, 
-  DEFAULT_ADMIN_ACCOUNT 
+  DAN_MARTIN_ACCOUNT
 } from './services/auth';
 import type { UserAccount } from './services/auth';
 import { 
@@ -323,17 +324,22 @@ export const INITIAL_OFFICIAL_LOGS: (SessionLog & { classInfo: ClassSession })[]
 // User-isolated data loading helpers
 const loadUserClasses = (user: UserAccount | null): ClassSession[] => {
   if (!user) return [];
+  // Dedicated Admin account only manages accounts, never classes
+  if (user.role === 'admin' || user.username === 'admin.admin') {
+    return [];
+  }
   const keys = getUserStorageKeys(user.id);
   try {
     const cached = localStorage.getItem(keys.classesKey);
     if (cached) {
       const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
     }
   } catch (err) {
     console.error('Failed to load user classes:', err);
   }
-  if (user.id === DEFAULT_ADMIN_ACCOUNT.id) {
+  // Prof. Dan Martin's 8 official semester courses
+  if (user.id === DAN_MARTIN_ACCOUNT.id || user.username === 'martin.dan') {
     return OFFICIAL_SEMESTER_COURSES;
   }
   return [];
@@ -341,12 +347,16 @@ const loadUserClasses = (user: UserAccount | null): ClassSession[] => {
 
 const loadUserLogs = (user: UserAccount | null): (SessionLog & { classInfo: ClassSession })[] => {
   if (!user) return [];
+  // Dedicated Admin account only manages accounts, never classes
+  if (user.role === 'admin' || user.username === 'admin.admin') {
+    return [];
+  }
   const keys = getUserStorageKeys(user.id);
   try {
     const cached = localStorage.getItem(keys.logsKey);
     if (cached) {
       const parsed = JSON.parse(cached);
-      if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed.map((item: any) => ({
           ...item,
           date: new Date(item.date)
@@ -356,7 +366,8 @@ const loadUserLogs = (user: UserAccount | null): (SessionLog & { classInfo: Clas
   } catch (err) {
     console.error('Failed to load user logs:', err);
   }
-  if (user.id === DEFAULT_ADMIN_ACCOUNT.id) {
+  // Prof. Dan Martin's initial official logs
+  if (user.id === DAN_MARTIN_ACCOUNT.id || user.username === 'martin.dan') {
     return INITIAL_OFFICIAL_LOGS;
   }
   return [];
@@ -373,7 +384,7 @@ const loadUserProfile = (user: UserAccount | null): InstructorProfile => {
   }
   return {
     fullName: user.fullName || DEFAULT_INSTRUCTOR_PROFILE.fullName,
-    position: user.role === 'admin' ? 'Department Chair / Assistant Professor I' : 'Instructor I',
+    position: user.role === 'admin' ? 'System Administrator' : 'Assistant Professor I',
     department: user.department || DEFAULT_INSTRUCTOR_PROFILE.department,
     institution: user.institution || DEFAULT_INSTRUCTOR_PROFILE.institution,
     email: `${user.username}@university.edu.ph`,
@@ -787,36 +798,45 @@ export function App() {
             </div>
 
             <nav className="hidden md:flex items-center gap-5 text-sm">
-              <button
-                type="button"
-                onClick={() => {}}
-                className="text-zinc-950 font-semibold transition-colors hover:text-zinc-700 cursor-pointer"
-              >
-                Overview
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsScanModalOpen(true)}
-                className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer flex items-center gap-1.5"
-              >
-                <Camera className="h-3.5 w-3.5 text-zinc-700" />
-                Scan Image
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsReportOpen(true)}
-                className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer"
-              >
-                Accomplishment Reports
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsTransferModalOpen(true)}
-                className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer flex items-center gap-1.5"
-              >
-                <Smartphone className="h-3.5 w-3.5" />
-                Transfer to Phone
-              </button>
+              {currentUser?.role === 'admin' ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-xs font-bold text-zinc-800">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  Administrator Account Portal
+                </span>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {}}
+                    className="text-zinc-950 font-semibold transition-colors hover:text-zinc-700 cursor-pointer"
+                  >
+                    Overview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsScanModalOpen(true)}
+                    className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Camera className="h-3.5 w-3.5 text-zinc-700" />
+                    Scan Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsReportOpen(true)}
+                    className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer"
+                  >
+                    Accomplishment Reports
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsTransferModalOpen(true)}
+                    className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Smartphone className="h-3.5 w-3.5" />
+                    Transfer to Phone
+                  </button>
+                </>
+              )}
             </nav>
           </div>
 
@@ -953,25 +973,33 @@ export function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full min-w-0 overflow-x-hidden">
-        <DailyTimetable
-          classes={classes}
-          logs={logs}
-          onClassClick={(cls, sch) => {
-            setSelectedClassForLog(cls);
-            setSelectedScheduleForLog(sch);
-          }}
-          onManageCourse={(cls) => {
-            setInspectedCourse(cls);
-          }}
-          onAddClassClick={() => {
-            setEditingCourse(null);
-            setIsAddClassOpen(true);
-          }}
-          onOpenReports={() => setIsReportOpen(true)}
-          onOpenTransfer={() => setIsTransferModalOpen(true)}
-          onOpenScanModal={() => setIsScanModalOpen(true)}
-          onQuickAdvanceLesson={handleQuickAdvanceLesson}
-        />
+        {currentUser?.role === 'admin' ? (
+          <AdminAccountManagementView
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            onAccountsUpdated={handleAccountsUpdated}
+          />
+        ) : (
+          <DailyTimetable
+            classes={classes}
+            logs={logs}
+            onClassClick={(cls, sch) => {
+              setSelectedClassForLog(cls);
+              setSelectedScheduleForLog(sch);
+            }}
+            onManageCourse={(cls) => {
+              setInspectedCourse(cls);
+            }}
+            onAddClassClick={() => {
+              setEditingCourse(null);
+              setIsAddClassOpen(true);
+            }}
+            onOpenReports={() => setIsReportOpen(true)}
+            onOpenTransfer={() => setIsTransferModalOpen(true)}
+            onOpenScanModal={() => setIsScanModalOpen(true)}
+            onQuickAdvanceLesson={handleQuickAdvanceLesson}
+          />
+        )}
       </main>
 
       {/* Schedule Screenshot Scanner Modal */}

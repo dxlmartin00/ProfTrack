@@ -19,8 +19,23 @@ export interface UserAccount {
 const USERS_STORAGE_KEY = 'proftrack_users_registry';
 const CURRENT_USER_SESSION_KEY = 'proftrack_active_user_id';
 
-// Default Master Administrator Account
+// Default Dedicated Master Administrator Account (Only job is managing accounts, not classes)
 export const DEFAULT_ADMIN_ACCOUNT: UserAccount = {
+  id: 'usr_sys_admin',
+  username: 'admin.admin',
+  pin: '0000',
+  firstName: 'System',
+  lastName: 'Admin',
+  fullName: 'System Administrator',
+  department: 'Academic Affairs & IT Administration',
+  institution: 'University of Makati',
+  role: 'admin',
+  status: 'approved',
+  createdAt: new Date('2026-01-01').toISOString(),
+};
+
+// Prof. Dan Martin (Normal Instructor Account)
+export const DAN_MARTIN_ACCOUNT: UserAccount = {
   id: 'usr_martin_dan',
   username: 'martin.dan',
   pin: '1234',
@@ -29,7 +44,7 @@ export const DEFAULT_ADMIN_ACCOUNT: UserAccount = {
   fullName: 'Prof. Dan Martin',
   department: 'College of Computer Studies',
   institution: 'University of Makati',
-  role: 'admin',
+  role: 'instructor', // Normal instructor account
   status: 'approved',
   createdAt: new Date('2026-01-01').toISOString(),
 };
@@ -79,7 +94,7 @@ export function getStoredUsers(): UserAccount[] {
   } catch (err) {
     console.error('Failed to read users registry:', err);
   }
-  return [DEFAULT_ADMIN_ACCOUNT];
+  return [DEFAULT_ADMIN_ACCOUNT, DAN_MARTIN_ACCOUNT];
 }
 
 /**
@@ -94,7 +109,7 @@ export function saveStoredUsers(users: UserAccount[]): void {
 }
 
 /**
- * Initializes authentication registry and performs zero-data-loss migration for the existing master account.
+ * Initializes authentication registry and performs zero-data-loss migration for Dan Martin and System Admin.
  */
 export function initializeAuth(): {
   currentUser: UserAccount | null;
@@ -102,27 +117,42 @@ export function initializeAuth(): {
 } {
   let users = getStoredUsers();
 
-  // Ensure master admin account always exists
-  const hasAdmin = users.some(u => u.username === DEFAULT_ADMIN_ACCOUNT.username);
-  if (!hasAdmin) {
+  // Ensure master admin account (admin.admin / 0000) exists and is admin
+  const adminIdx = users.findIndex(u => u.username === DEFAULT_ADMIN_ACCOUNT.username);
+  if (adminIdx === -1) {
     users = [DEFAULT_ADMIN_ACCOUNT, ...users];
-    saveStoredUsers(users);
+  } else {
+    users[adminIdx].role = 'admin';
+    users[adminIdx].status = 'approved';
+    if (!users[adminIdx].pin) users[adminIdx].pin = '0000';
   }
 
+  // Ensure Dan Martin (martin.dan) exists and is a normal instructor account
+  const danIdx = users.findIndex(u => u.username === DAN_MARTIN_ACCOUNT.username);
+  if (danIdx === -1) {
+    users = [...users, DAN_MARTIN_ACCOUNT];
+  } else {
+    // Explicitly convert Dan Martin to normal instructor account
+    users[danIdx].role = 'instructor';
+    users[danIdx].status = 'approved';
+  }
+
+  saveStoredUsers(users);
+
   // Seamless zero-data-loss migration for Prof. Dan Martin's existing data
-  const adminKeys = getUserStorageKeys(DEFAULT_ADMIN_ACCOUNT.id);
+  const danKeys = getUserStorageKeys(DAN_MARTIN_ACCOUNT.id);
   const existingClasses = localStorage.getItem('proftrack_classes_cache');
   const existingLogs = localStorage.getItem('proftrack_session_logs');
   const existingProfile = localStorage.getItem('proftrack_instructor_profile');
 
-  if (existingClasses && !localStorage.getItem(adminKeys.classesKey)) {
-    localStorage.setItem(adminKeys.classesKey, existingClasses);
+  if (existingClasses && !localStorage.getItem(danKeys.classesKey)) {
+    localStorage.setItem(danKeys.classesKey, existingClasses);
   }
-  if (existingLogs && !localStorage.getItem(adminKeys.logsKey)) {
-    localStorage.setItem(adminKeys.logsKey, existingLogs);
+  if (existingLogs && !localStorage.getItem(danKeys.logsKey)) {
+    localStorage.setItem(danKeys.logsKey, existingLogs);
   }
-  if (existingProfile && !localStorage.getItem(adminKeys.profileKey)) {
-    localStorage.setItem(adminKeys.profileKey, existingProfile);
+  if (existingProfile && !localStorage.getItem(danKeys.profileKey)) {
+    localStorage.setItem(danKeys.profileKey, existingProfile);
   }
 
   // Retrieve active session user
@@ -132,11 +162,11 @@ export function initializeAuth(): {
     currentUser = users.find(u => u.id === activeUserId && u.status === 'approved') || null;
   }
 
-  // If this is the initial run and no session is set, default to master admin so existing workflow stays frictionless
-  if (!currentUser && !localStorage.getItem('proftrack_auth_initialized_flag')) {
-    currentUser = DEFAULT_ADMIN_ACCOUNT;
-    localStorage.setItem(CURRENT_USER_SESSION_KEY, DEFAULT_ADMIN_ACCOUNT.id);
-    localStorage.setItem('proftrack_auth_initialized_flag', 'true');
+  // If initial run or no session, default to Dan Martin (Instructor) so timetable displays immediately
+  if (!currentUser && !localStorage.getItem('proftrack_auth_initialized_flag_v2')) {
+    currentUser = DAN_MARTIN_ACCOUNT;
+    localStorage.setItem(CURRENT_USER_SESSION_KEY, DAN_MARTIN_ACCOUNT.id);
+    localStorage.setItem('proftrack_auth_initialized_flag_v2', 'true');
   }
 
   return { currentUser, users };

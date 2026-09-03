@@ -4,7 +4,8 @@ import {
   authenticateUser, 
   registerInstructor, 
   formatUsername,
-  DEFAULT_ADMIN_ACCOUNT
+  DEFAULT_ADMIN_ACCOUNT,
+  DAN_MARTIN_ACCOUNT
 } from '../services/auth';
 import type { UserAccount } from '../services/auth';
 import { 
@@ -120,6 +121,16 @@ export const AuthModal: FC<AuthModalProps> = ({
     setUsername(DEFAULT_ADMIN_ACCOUNT.username);
     setPin(DEFAULT_ADMIN_ACCOUNT.pin);
     const res = authenticateUser(DEFAULT_ADMIN_ACCOUNT.username, DEFAULT_ADMIN_ACCOUNT.pin);
+    if (res.success && res.user) {
+      onLoginSuccess(res.user);
+      if (onClose) onClose();
+    }
+  };
+
+  const handleQuickDanMartinLogin = () => {
+    setUsername(DAN_MARTIN_ACCOUNT.username);
+    setPin(DAN_MARTIN_ACCOUNT.pin);
+    const res = authenticateUser(DAN_MARTIN_ACCOUNT.username, DAN_MARTIN_ACCOUNT.pin);
     if (res.success && res.user) {
       onLoginSuccess(res.user);
       if (onClose) onClose();
@@ -256,24 +267,47 @@ export const AuthModal: FC<AuthModalProps> = ({
                 Sign In to Dashboard
               </button>
 
-              {/* Quick Admin Demo Login Box */}
-              <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-700 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-zinc-900 flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-800" />
-                    Administrator Account:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleQuickAdminLogin}
-                    className="text-[11px] font-bold text-zinc-950 hover:underline cursor-pointer bg-white px-2 py-0.5 rounded border border-zinc-300 shadow-2xs"
-                  >
-                    Quick Sign In →
-                  </button>
+              {/* Quick Preset Login Helpers */}
+              <div className="space-y-2 pt-1">
+                {/* Admin Box */}
+                <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-700 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-zinc-900 flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-zinc-800" />
+                      System Administrator (Account Management):
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleQuickAdminLogin}
+                      className="text-[11px] font-bold text-zinc-950 hover:underline cursor-pointer bg-white px-2 py-0.5 rounded border border-zinc-300 shadow-2xs"
+                    >
+                      Sign In →
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-zinc-600">
+                    Username: <code className="font-mono text-zinc-950 font-bold">admin.admin</code> • PIN: <code className="font-mono text-zinc-950 font-bold">0000</code>
+                  </p>
                 </div>
-                <p className="text-[11px] text-zinc-600">
-                  Username: <code className="font-mono text-zinc-950 font-bold">martin.dan</code> • PIN: <code className="font-mono text-zinc-950 font-bold">1234</code>
-                </p>
+
+                {/* Faculty Dan Martin Box */}
+                <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-xs text-blue-950 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-blue-900 flex items-center gap-1">
+                      <GraduationCap className="w-3.5 h-3.5 text-blue-800" />
+                      Faculty Instructor (Dan Martin):
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleQuickDanMartinLogin}
+                      className="text-[11px] font-bold text-blue-950 hover:underline cursor-pointer bg-white px-2 py-0.5 rounded border border-blue-300 shadow-2xs"
+                    >
+                      Sign In →
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-blue-800">
+                    Username: <code className="font-mono text-blue-950 font-bold">martin.dan</code> • PIN: <code className="font-mono text-blue-950 font-bold">1234</code>
+                  </p>
+                </div>
               </div>
             </form>
           ) : (
@@ -289,7 +323,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                     Your account username is <code className="font-mono font-bold text-emerald-950 bg-white px-1.5 py-0.5 rounded border border-emerald-300">{regSuccessUser.username}</code>.
                   </p>
                   <p className="text-emerald-900 font-medium leading-relaxed bg-white/80 p-2 rounded border border-emerald-200">
-                    ⏳ <strong>Awaiting Approval:</strong> Your account has been registered with status <strong>Pending</strong>. The administrator (<code className="font-mono">martin.dan</code>) must approve your account in the Admin Console before you can log in.
+                    ⏳ <strong>Awaiting Approval:</strong> Your account has been registered with status <strong>Pending</strong>. The system administrator (<code className="font-mono font-bold">admin.admin</code>) must approve your account in the Admin Console before you can log in.
                   </p>
                   <button
                     type="button"
