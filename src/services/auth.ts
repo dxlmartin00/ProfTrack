@@ -1,10 +1,20 @@
+import { 
+  hashPinWithSalt, 
+  verifyPin, 
+  generateSalt, 
+  safeJsonParse, 
+  sanitizeString 
+} from '../utils/crypto';
+
 export type UserRole = 'admin' | 'instructor';
 export type AccountStatus = 'approved' | 'pending' | 'rejected';
 
 export interface UserAccount {
   id: string;
   username: string; // formatted as <lastname>.<firstname>
-  pin: string;      // 4-digit PIN (default "1234")
+  pinHash: string;  // Salted SHA-256 cryptographic hash (never plaintext)
+  salt: string;     // Cryptographically secure unique salt
+  pin?: string;     // Transient field for legacy migration only
   firstName: string;
   lastName: string;
   fullName: string;
@@ -18,12 +28,19 @@ export interface UserAccount {
 
 const USERS_STORAGE_KEY = 'proftrack_users_registry';
 const CURRENT_USER_SESSION_KEY = 'proftrack_active_user_id';
+const FAILED_ATTEMPTS_PREFIX = 'proftrack_sec_lockout_';
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5-minute temporary security lockout
+
+const ADMIN_INIT_SALT = 'proftrack_admin_salt_2026';
+const DAN_INIT_SALT = 'proftrack_dan_salt_2026';
 
 // Default Dedicated Master Administrator Account (Only job is managing accounts, not classes)
 export const DEFAULT_ADMIN_ACCOUNT: UserAccount = {
   id: 'usr_sys_admin',
   username: 'admin.admin',
-  pin: '0000',
+  salt: ADMIN_INIT_SALT,
+  pinHash: hashPinWithSalt('0000', ADMIN_INIT_SALT),
   firstName: 'System',
   lastName: 'Admin',
   fullName: 'System Administrator',
@@ -38,7 +55,8 @@ export const DEFAULT_ADMIN_ACCOUNT: UserAccount = {
 export const DAN_MARTIN_ACCOUNT: UserAccount = {
   id: 'usr_martin_dan',
   username: 'martin.dan',
-  pin: '1234',
+  salt: DAN_INIT_SALT,
+  pinHash: hashPinWithSalt('1234', DAN_INIT_SALT),
   firstName: 'Dan',
   lastName: 'Martin',
   fullName: 'Prof. Dan Martin',
@@ -80,14 +98,28 @@ export function getUserStorageKeys(userId: string) {
 }
 
 /**
- * Retrieves all registered users from storage.
+ * Retrieves all registered users from storage with prototype-pollution protection and auto-upgrade to salted SHA-256.
  */
 export function getStoredUsers(): UserAccount[] {
   try {
     const raw = localStorage.getItem(USERS_STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
+      const parsed = safeJsonParse<UserAccount[]>(raw, []);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        let upgraded = false;
+        for (const u of parsed) {
+          // Automatic cryptographic upgrade for legacy plaintext PINs
+          if (!u.pinHash || !u.salt) {
+            const rawPin = u.pin || (u.role === 'admin' ? '0000' : '1234');
+            u.salt = generateSalt();
+            u.pinHash = hashPinWithSalt(rawPin, u.salt);
+            delete u.pin;
+            upgraded = true;
+          }
+        }
+        if (upgraded) {
+          saveStoredUsers(parsed);
+        }
         return parsed;
       }
     }
@@ -117,14 +149,18 @@ export function initializeAuth(): {
 } {
   let users = getStoredUsers();
 
-  // Ensure master admin account (admin.admin / 0000) exists and is admin
+  // Ensure master admin account (admin.admin / 0000) exists and has correct hash
   const adminIdx = users.findIndex(u => u.username === DEFAULT_ADMIN_ACCOUNT.username);
   if (adminIdx === -1) {
     users = [DEFAULT_ADMIN_ACCOUNT, ...users];
   } else {
     users[adminIdx].role = 'admin';
     users[adminIdx].status = 'approved';
-    if (!users[adminIdx].pin) users[adminIdx].pin = '0000';
+    if (!users[adminIdx].pinHash) {
+      users[adminIdx].salt = ADMIN_INIT_SALT;
+      users[adminIdx].pinHash = hashPinWithSalt('0000', ADMIN_INIT_SALT);
+    }
+    delete users[adminIdx].pin;
   }
 
   // Ensure Dan Martin (martin.dan) exists and is a normal instructor account
@@ -135,6 +171,11 @@ export function initializeAuth(): {
     // Explicitly convert Dan Martin to normal instructor account
     users[danIdx].role = 'instructor';
     users[danIdx].status = 'approved';
+    if (!users[danIdx].pinHash) {
+      users[danIdx].salt = DAN_INIT_SALT;
+      users[danIdx].pinHash = hashPinWithSalt('1234', DAN_INIT_SALT);
+    }
+    delete users[danIdx].pin;
   }
 
   saveStoredUsers(users);
@@ -174,35 +215,92 @@ export function initializeAuth(): {
 
 /**
  * Authenticates an instructor or admin via Username and 4-digit PIN.
+ * Features Salted SHA-256 validation and 5-attempt brute-force lockout protection.
  */
 export function authenticateUser(
   username: string,
   pin: string
 ): { success: boolean; user?: UserAccount; error?: string } {
-  const users = getStoredUsers();
-  const normalizedUsername = username.toLowerCase().trim();
+  const normalizedUsername = sanitizeString(username, 50).toLowerCase().trim();
   const cleanPin = pin.trim();
 
-  const user = users.find(u => u.username === normalizedUsername);
-  if (!user) {
-    return { success: false, error: `Account "${normalizedUsername}" not found.` };
+  // 1. Check Brute-Force Rate Limiting & Temporary Lockout
+  const lockoutKey = `${FAILED_ATTEMPTS_PREFIX}${normalizedUsername}`;
+  let lockRecord: { attempts: number; lockedUntil?: number } = { attempts: 0 };
+  try {
+    const raw = sessionStorage.getItem(lockoutKey);
+    if (raw) lockRecord = safeJsonParse(raw, { attempts: 0 });
+  } catch {}
+
+  if (lockRecord.lockedUntil && lockRecord.lockedUntil > Date.now()) {
+    const waitSec = Math.ceil((lockRecord.lockedUntil - Date.now()) / 1000);
+    const waitMin = Math.ceil(waitSec / 60);
+    return {
+      success: false,
+      error: `Security Lockout: Too many failed login attempts. Please wait ${waitMin} minute(s) before trying again.`
+    };
   }
 
-  if (user.pin !== cleanPin) {
-    return { success: false, error: 'Incorrect 4-digit PIN. Please try again.' };
+  const users = getStoredUsers();
+  const user = users.find(u => u.username === normalizedUsername);
+  
+  // Generic response to prevent user enumeration
+  if (!user) {
+    return { success: false, error: 'Invalid username or 4-digit PIN.' };
   }
+
+  // 2. Cryptographic Salted SHA-256 Verification
+  let isMatch = false;
+  if (user.pinHash && user.salt) {
+    isMatch = verifyPin(cleanPin, user.salt, user.pinHash);
+  } else if (user.pin) {
+    isMatch = user.pin === cleanPin;
+    if (isMatch) {
+      user.salt = generateSalt();
+      user.pinHash = hashPinWithSalt(cleanPin, user.salt);
+      delete user.pin;
+      saveStoredUsers(users);
+    }
+  }
+
+  if (!isMatch) {
+    lockRecord.attempts = (lockRecord.attempts || 0) + 1;
+    if (lockRecord.attempts >= MAX_FAILED_ATTEMPTS) {
+      lockRecord.lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
+      try {
+        sessionStorage.setItem(lockoutKey, JSON.stringify(lockRecord));
+      } catch {}
+      return {
+        success: false,
+        error: 'Security Lockout: 5 failed attempts reached. Account locked for 5 minutes.'
+      };
+    }
+    try {
+      sessionStorage.setItem(lockoutKey, JSON.stringify(lockRecord));
+    } catch {}
+    const remaining = MAX_FAILED_ATTEMPTS - lockRecord.attempts;
+    return {
+      success: false,
+      error: `Invalid credentials. (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before lockout)`
+    };
+  }
+
+  // Clear failed attempts counter on successful PIN verification
+  try {
+    sessionStorage.removeItem(lockoutKey);
+  } catch {}
 
   if (user.status === 'pending') {
     return { 
       success: false, 
-      error: 'Your account is currently pending administrator approval. Please ask the administrator to approve your account.' 
+      error: 'Your instructor account is currently pending administrator approval.' 
     };
   }
 
   if (user.status === 'rejected') {
     return { 
       success: false, 
-      error: 'This account has been deactivated or rejected by the administrator.' 
+      error: 'This instructor account has been deactivated by the administrator.' 
     };
   }
 
@@ -215,7 +313,7 @@ export function authenticateUser(
 }
 
 /**
- * Registers a new instructor account with status "pending".
+ * Registers a new instructor account with status "pending" and salted SHA-256 hash.
  */
 export function registerInstructor(data: {
   firstName: string;
@@ -225,13 +323,16 @@ export function registerInstructor(data: {
   pin?: string;
 }): { success: boolean; user?: UserAccount; error?: string } {
   const users = getStoredUsers();
-  const username = formatUsername(data.lastName, data.firstName);
-  const pin = (data.pin && data.pin.trim().length === 4) ? data.pin.trim() : '1234';
+  const cleanFirstName = sanitizeString(data.firstName, 40);
+  const cleanLastName = sanitizeString(data.lastName, 40);
+  const cleanDept = sanitizeString(data.department || 'College of Computer Studies', 80);
+  const cleanInst = sanitizeString(data.institution || 'University of Makati', 80);
 
-  if (!data.firstName.trim() || !data.lastName.trim()) {
+  if (!cleanFirstName || !cleanLastName) {
     return { success: false, error: 'Please enter both your first and last name.' };
   }
 
+  const username = formatUsername(cleanLastName, cleanFirstName);
   if (users.some(u => u.username === username)) {
     return { 
       success: false, 
@@ -239,18 +340,20 @@ export function registerInstructor(data: {
     };
   }
 
-  const cleanFirstName = data.firstName.trim();
-  const cleanLastName = data.lastName.trim();
+  const rawPin = (data.pin && data.pin.trim().length === 4) ? data.pin.trim() : '1234';
+  const salt = generateSalt();
+  const pinHash = hashPinWithSalt(rawPin, salt);
 
   const newUser: UserAccount = {
-    id: `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    id: `usr_${Date.now()}_${generateSalt(4)}`,
     username,
-    pin,
+    salt,
+    pinHash,
     firstName: cleanFirstName,
     lastName: cleanLastName,
     fullName: `Prof. ${cleanFirstName} ${cleanLastName}`,
-    department: data.department?.trim() || 'College of Computer Studies',
-    institution: data.institution?.trim() || 'University of Makati',
+    department: cleanDept,
+    institution: cleanInst,
     role: 'instructor',
     status: 'pending', // Requires admin approval
     createdAt: new Date().toISOString(),
@@ -263,9 +366,30 @@ export function registerInstructor(data: {
 }
 
 /**
+ * Verifies that the currently active session belongs to an approved administrator.
+ */
+export function verifyAdminSession(): boolean {
+  try {
+    const activeUserId = localStorage.getItem(CURRENT_USER_SESSION_KEY);
+    if (!activeUserId) return false;
+    const users = getStoredUsers();
+    const current = users.find(u => u.id === activeUserId);
+    return !!current && current.role === 'admin' && current.status === 'approved';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Admin action: Approve, Reject, or set Pending status for an instructor account.
+ * Requires an active approved administrator session.
  */
 export function updateUserStatus(userId: string, status: AccountStatus): boolean {
+  if (!verifyAdminSession()) {
+    console.warn('Unauthorized administrative action rejected.');
+    return false;
+  }
+
   const users = getStoredUsers();
   const idx = users.findIndex(u => u.id === userId);
   if (idx === -1) return false;
@@ -282,13 +406,23 @@ export function updateUserStatus(userId: string, status: AccountStatus): boolean
 
 /**
  * Admin action: Reset instructor PIN (defaults back to "1234").
+ * Hashes the new PIN with a new unique cryptographic salt.
  */
 export function resetUserPin(userId: string, newPin = '1234'): boolean {
+  if (!verifyAdminSession()) {
+    console.warn('Unauthorized administrative action rejected.');
+    return false;
+  }
+
   const users = getStoredUsers();
   const idx = users.findIndex(u => u.id === userId);
   if (idx === -1) return false;
 
-  users[idx].pin = newPin;
+  const newSalt = generateSalt();
+  users[idx].salt = newSalt;
+  users[idx].pinHash = hashPinWithSalt(newPin, newSalt);
+  delete users[idx].pin; // Ensure no plaintext PIN remains
+
   saveStoredUsers(users);
   return true;
 }
@@ -297,6 +431,11 @@ export function resetUserPin(userId: string, newPin = '1234'): boolean {
  * Admin action: Delete instructor account and clean isolated storage.
  */
 export function deleteUser(userId: string): boolean {
+  if (!verifyAdminSession()) {
+    console.warn('Unauthorized administrative action rejected.');
+    return false;
+  }
+
   const users = getStoredUsers();
   const target = users.find(u => u.id === userId);
   if (!target || target.role === 'admin') return false; // Never delete master admin
@@ -321,8 +460,8 @@ export function getUserDataCounts(userId: string): { coursesCount: number; logsC
     const keys = getUserStorageKeys(userId);
     const classesRaw = localStorage.getItem(keys.classesKey);
     const logsRaw = localStorage.getItem(keys.logsKey);
-    const coursesCount = classesRaw ? JSON.parse(classesRaw).length : 0;
-    const logsCount = logsRaw ? JSON.parse(logsRaw).length : 0;
+    const coursesCount = classesRaw ? safeJsonParse<any[]>(classesRaw, []).length : 0;
+    const logsCount = logsRaw ? safeJsonParse<any[]>(logsRaw, []).length : 0;
     return { coursesCount, logsCount };
   } catch {
     return { coursesCount: 0, logsCount: 0 };

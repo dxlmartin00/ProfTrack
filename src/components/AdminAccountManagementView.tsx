@@ -382,13 +382,14 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                           )}
                         </div>
 
-                        {/* Username & PIN & College */}
+                        {/* Username & Security & College */}
                         <div className="flex items-center gap-3 text-xs text-zinc-600 flex-wrap">
                           <span>
                             Username: <code className="font-mono font-bold text-zinc-900 bg-zinc-100 px-1 py-0.2 rounded border border-zinc-200">{u.username}</code>
                           </span>
-                          <span>
-                            PIN: <code className="font-mono font-bold text-zinc-900 bg-zinc-100 px-1 py-0.2 rounded border border-zinc-200">{u.pin}</code>
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                            <ShieldCheck className="h-3 w-3" />
+                            Salted SHA-256
                           </span>
                           <span className="flex items-center gap-1 text-zinc-500">
                             <Building2 className="h-3 w-3" />

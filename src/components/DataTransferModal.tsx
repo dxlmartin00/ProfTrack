@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import type { FC, ChangeEvent } from 'react';
 import qrcode from 'qrcode-generator';
+import DOMPurify from 'dompurify';
 import { compressPayload, decompressPayload, packTransferPayload, unpackTransferPayload } from '../utils/codec';
 import type { ClassSession, SessionLog, InstructorProfile } from '../services/db';
 import { getDeviceId, getDeviceLabel } from '../services/sync';
@@ -110,7 +111,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
     }
   }, [compactTransitString, targetDomain]);
 
-  // Generate pure scalable SVG string from qrcode-generator
+  // Generate pure scalable SVG string from qrcode-generator (Sanitized via DOMPurify)
   const qrSvgMarkup = useMemo(() => {
     try {
       if (!qrTransferUrl) return null;
@@ -118,7 +119,8 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
       const qr = qrcode(0, 'L');
       qr.addData(qrTransferUrl);
       qr.make();
-      return qr.createSvgTag({ scalable: true, margin: 2 });
+      const rawSvg = qr.createSvgTag({ scalable: true, margin: 2 });
+      return DOMPurify.sanitize(rawSvg, { USE_PROFILES: { svg: true, svgFilters: true } });
     } catch (err) {
       console.error('Failed to generate SVG QR:', err);
       return null;

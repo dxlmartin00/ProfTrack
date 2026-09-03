@@ -1,5 +1,6 @@
 import * as LZString from 'lz-string';
 import type { ClassSession, SessionLog, InstructorProfile, ClassSchedule, ScheduleType } from '../services/db';
+import { safeJsonParse, sanitizeString } from './crypto';
 
 /**
  * Standard course defaults used to hydrate omitted fields and keep QR codes ultra-compact (< 300 bytes)
@@ -129,7 +130,8 @@ export function unpackTransferPayload(parsed: any): {
   // 1. Classes unpacking
   const rawClasses = parsed.classes || parsed.c || [];
   const classes: ClassSession[] = rawClasses.map((c: any) => {
-    const subjectCode = c.subjectCode || c.sc || 'CS 315';
+    const rawCode = c.subjectCode || c.sc || 'CS 315';
+    const subjectCode = sanitizeString(rawCode, 30);
     const defaultSyl = DEFAULT_SYLLABI[subjectCode] || DEFAULT_SYLLABI['CS 315'] || [];
 
     // Parse schedules (supports pipe-delimited compact string or object)
@@ -141,33 +143,36 @@ export function unpackTransferPayload(parsed: any): {
           const [d, st, et, t, r] = s.split('|');
           const type: ScheduleType = (t === 'Lab' || t === 'Laboratory') ? 'Laboratory' : 'Lecture';
           return {
-            dayOfWeek: parseInt(d, 10) || 1,
-            startTime: st || '08:00',
-            endTime: et || '09:00',
+            dayOfWeek: Math.max(1, Math.min(7, parseInt(d, 10) || 1)),
+            startTime: sanitizeString(st || '08:00', 10),
+            endTime: sanitizeString(et || '09:00', 10),
             type: type,
-            room: r || ''
+            room: sanitizeString(r || '', 30)
           };
         }
         return {
-          dayOfWeek: s.dayOfWeek ?? s.d ?? 1,
-          startTime: s.startTime || s.st || '08:00',
-          endTime: s.endTime || s.et || '09:00',
+          dayOfWeek: Math.max(1, Math.min(7, s.dayOfWeek ?? s.d ?? 1)),
+          startTime: sanitizeString(s.startTime || s.st || '08:00', 10),
+          endTime: sanitizeString(s.endTime || s.et || '09:00', 10),
           type: (s.type === 'Lab' || s.type === 'Laboratory' || s.t === 'Lab') ? 'Laboratory' : 'Lecture',
-          room: s.room || s.r || ''
+          room: sanitizeString(s.room || s.r || '', 30)
         };
       });
     }
 
+    const rawSyllabus = Array.isArray(c.masterSyllabus || c.syl) ? (c.masterSyllabus || c.syl) : defaultSyl;
+    const sanitizedSyllabus = rawSyllabus.map((topic: unknown) => sanitizeString(topic, 250)).filter(Boolean);
+
     return {
-      id: c.id || `course_${Date.now()}`,
-      instructorId: c.instructorId || 'inst1',
+      id: sanitizeString(c.id || `course_${Date.now()}`, 50),
+      instructorId: sanitizeString(c.instructorId || 'inst1', 50),
       subjectCode: subjectCode,
-      subjectTitle: c.subjectTitle || c.st || subjectCode,
-      section: c.section || c.sec || '',
-      year: c.year || c.yr || '3rd Year',
-      room: c.room || c.rm || '',
+      subjectTitle: sanitizeString(c.subjectTitle || c.st || subjectCode, 150),
+      section: sanitizeString(c.section || c.sec || '', 30),
+      year: sanitizeString(c.year || c.yr || '3rd Year', 30),
+      room: sanitizeString(c.room || c.rm || '', 30),
       schedule: schedule,
-      masterSyllabus: (c.masterSyllabus || c.syl || defaultSyl)
+      masterSyllabus: sanitizedSyllabus
     };
   });
 
@@ -177,7 +182,7 @@ export function unpackTransferPayload(parsed: any): {
   const rawLogs = parsed.logs || parsed.l || [];
   const logs: (SessionLog & { classInfo: ClassSession })[] = rawLogs.map((l: any) => {
     const classInfo = l.classInfo || classMap.get(l.cid) || classes[0] || {
-      id: l.cid || 'course_default',
+      id: sanitizeString(l.cid || 'course_default', 50),
       instructorId: 'inst1',
       subjectCode: 'Class',
       subjectTitle: 'Class',
@@ -191,12 +196,15 @@ export function unpackTransferPayload(parsed: any): {
     const sessionType: ScheduleType = (l.sessionType === 'Laboratory' || l.st === 'Lab') ? 'Laboratory' : 'Lecture';
     const engagement = l.engagementLevel || (l.el === 'M' ? 'Medium' : (l.el === 'L' ? 'Low' : 'High'));
 
+    const rawTopics = Array.isArray(l.topicsCovered || l.tc) ? (l.topicsCovered || l.tc) : [];
+    const sanitizedTopics = rawTopics.map((t: unknown) => sanitizeString(t, 250)).filter(Boolean);
+
     return {
-      id: l.id || `log_${Date.now()}`,
+      id: sanitizeString(l.id || `log_${Date.now()}`, 50),
       date: new Date(l.date || l.dt || Date.now()),
       sessionType: sessionType,
-      topicsCovered: l.topicsCovered || l.tc || [],
-      nextActions: l.nextActions || l.na || '',
+      topicsCovered: sanitizedTopics,
+      nextActions: sanitizeString(l.nextActions || l.na || '', 500),
       engagementLevel: engagement,
       classInfo: classInfo
     };
@@ -207,18 +215,18 @@ export function unpackTransferPayload(parsed: any): {
   const rawProf = parsed.profile || parsed.p;
   if (rawProf) {
     profile = {
-      fullName: rawProf.fullName || rawProf.fn || '',
-      position: rawProf.position || rawProf.pos || '',
-      department: rawProf.department || rawProf.dept || '',
-      institution: rawProf.institution || rawProf.inst || '',
-      employeeId: rawProf.employeeId || rawProf.eid || '',
-      email: rawProf.email || rawProf.em || ''
+      fullName: sanitizeString(rawProf.fullName || rawProf.fn || '', 100),
+      position: sanitizeString(rawProf.position || rawProf.pos || '', 100),
+      department: sanitizeString(rawProf.department || rawProf.dept || '', 120),
+      institution: sanitizeString(rawProf.institution || rawProf.inst || '', 120),
+      employeeId: sanitizeString(rawProf.employeeId || rawProf.eid || '', 50),
+      email: sanitizeString(rawProf.email || rawProf.em || '', 100)
     };
   }
 
   const updatedAt = typeof parsed.t === 'number' ? parsed.t : (typeof parsed.updatedAt === 'number' ? parsed.updatedAt : undefined);
-  const deviceId = parsed.did || parsed.deviceId;
-  const deviceLabel = parsed.dl || parsed.deviceLabel;
+  const deviceId = sanitizeString(parsed.did || parsed.deviceId || '', 80) || undefined;
+  const deviceLabel = sanitizeString(parsed.dl || parsed.deviceLabel || '', 80) || undefined;
 
   return { classes, logs, profile, updatedAt, deviceId, deviceLabel };
 }
@@ -256,7 +264,8 @@ export function compressPayload(data: any): string {
  * Safely decompress a URL-safe string into the original JS object.
  */
 export function decompressPayload<T = any>(encoded: string): T | null {
-  if (!encoded || typeof encoded !== 'string') return null;
+  // Prevent ReDoS and memory exhaustion attacks from untrusted QR / deep links
+  if (!encoded || typeof encoded !== 'string' || encoded.length > 500000) return null;
 
   try {
     const lz: any = LZString;
@@ -285,7 +294,7 @@ export function decompressPayload<T = any>(encoded: string): T | null {
     }
 
     if (!jsonStr) return null;
-    return JSON.parse(jsonStr) as T;
+    return safeJsonParse<T>(jsonStr, null as any);
   } catch (err) {
     console.error('Failed to decompress payload:', err);
     return null;

@@ -3,9 +3,7 @@ import type { FC, FormEvent } from 'react';
 import { 
   authenticateUser, 
   registerInstructor, 
-  formatUsername,
-  DEFAULT_ADMIN_ACCOUNT,
-  DAN_MARTIN_ACCOUNT
+  formatUsername
 } from '../services/auth';
 import type { UserAccount } from '../services/auth';
 import { 
@@ -14,7 +12,6 @@ import {
   User, 
   Building2, 
   School, 
-  ShieldCheck, 
   UserPlus, 
   LogIn, 
   AlertCircle, 
@@ -114,26 +111,6 @@ export const AuthModal: FC<AuthModalProps> = ({
       setRegLastName('');
     } else {
       setRegError(res.error || 'Failed to register account.');
-    }
-  };
-
-  const handleQuickAdminLogin = () => {
-    setUsername(DEFAULT_ADMIN_ACCOUNT.username);
-    setPin(DEFAULT_ADMIN_ACCOUNT.pin);
-    const res = authenticateUser(DEFAULT_ADMIN_ACCOUNT.username, DEFAULT_ADMIN_ACCOUNT.pin);
-    if (res.success && res.user) {
-      onLoginSuccess(res.user);
-      if (onClose) onClose();
-    }
-  };
-
-  const handleQuickDanMartinLogin = () => {
-    setUsername(DAN_MARTIN_ACCOUNT.username);
-    setPin(DAN_MARTIN_ACCOUNT.pin);
-    const res = authenticateUser(DAN_MARTIN_ACCOUNT.username, DAN_MARTIN_ACCOUNT.pin);
-    if (res.success && res.user) {
-      onLoginSuccess(res.user);
-      if (onClose) onClose();
     }
   };
 
@@ -266,49 +243,6 @@ export const AuthModal: FC<AuthModalProps> = ({
                 <LogIn className="w-4 h-4 mr-2" />
                 Sign In to Dashboard
               </button>
-
-              {/* Quick Preset Login Helpers */}
-              <div className="space-y-2 pt-1">
-                {/* Admin Box */}
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-700 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-zinc-900 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-zinc-800" />
-                      System Administrator (Account Management):
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleQuickAdminLogin}
-                      className="text-[11px] font-bold text-zinc-950 hover:underline cursor-pointer bg-white px-2 py-0.5 rounded border border-zinc-300 shadow-2xs"
-                    >
-                      Sign In →
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-zinc-600">
-                    Username: <code className="font-mono text-zinc-950 font-bold">admin.admin</code> • PIN: <code className="font-mono text-zinc-950 font-bold">0000</code>
-                  </p>
-                </div>
-
-                {/* Faculty Dan Martin Box */}
-                <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-3 text-xs text-blue-950 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-blue-900 flex items-center gap-1">
-                      <GraduationCap className="w-3.5 h-3.5 text-blue-800" />
-                      Faculty Instructor (Dan Martin):
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleQuickDanMartinLogin}
-                      className="text-[11px] font-bold text-blue-950 hover:underline cursor-pointer bg-white px-2 py-0.5 rounded border border-blue-300 shadow-2xs"
-                    >
-                      Sign In →
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-blue-800">
-                    Username: <code className="font-mono text-blue-950 font-bold">martin.dan</code> • PIN: <code className="font-mono text-blue-950 font-bold">1234</code>
-                  </p>
-                </div>
-              </div>
             </form>
           ) : (
             /* Registration Form */
