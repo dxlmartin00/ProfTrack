@@ -126,15 +126,19 @@ export function getStoredUsers(): UserAccount[] {
   } catch (err) {
     console.error('Failed to read users registry:', err);
   }
-  return [DEFAULT_ADMIN_ACCOUNT, DAN_MARTIN_ACCOUNT];
+  const isDanDeleted = typeof localStorage !== 'undefined' && localStorage.getItem('proftrack_dan_martin_deleted') === 'true';
+  return isDanDeleted ? [DEFAULT_ADMIN_ACCOUNT] : [DEFAULT_ADMIN_ACCOUNT, DAN_MARTIN_ACCOUNT];
 }
 
 /**
- * Saves users registry to storage.
+ * Saves users registry to storage and broadcasts an update event.
  */
 export function saveStoredUsers(users: UserAccount[]): void {
   try {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('proftrack_accounts_updated', { detail: { users } }));
+    }
   } catch (err) {
     console.error('Failed to save users registry:', err);
   }
@@ -163,11 +167,12 @@ export function initializeAuth(): {
     delete users[adminIdx].pin;
   }
 
-  // Ensure Dan Martin (martin.dan) exists and is a normal instructor account
+  // Ensure Dan Martin (martin.dan) exists and is a normal instructor account, unless explicitly deleted
+  const isDanDeleted = localStorage.getItem('proftrack_dan_martin_deleted') === 'true';
   const danIdx = users.findIndex(u => u.username === DAN_MARTIN_ACCOUNT.username);
-  if (danIdx === -1) {
+  if (danIdx === -1 && !isDanDeleted) {
     users = [...users, DAN_MARTIN_ACCOUNT];
-  } else {
+  } else if (danIdx !== -1) {
     // Explicitly convert Dan Martin to normal instructor account
     users[danIdx].role = 'instructor';
     users[danIdx].status = 'approved';
@@ -220,7 +225,7 @@ export function initializeAuth(): {
 export function authenticateUser(
   username: string,
   pin: string
-): { success: boolean; user?: UserAccount; error?: string } {
+): { success: boolean; user?: UserAccount; error?: string; accountNotFound?: boolean } {
   const normalizedUsername = sanitizeString(username, 50).toLowerCase().trim();
   const cleanPin = pin.trim();
 
@@ -244,9 +249,13 @@ export function authenticateUser(
   const users = getStoredUsers();
   const user = users.find(u => u.username === normalizedUsername);
   
-  // Generic response to prevent user enumeration
+  // Generic response to prevent user enumeration, but flag accountNotFound so UI can offer registration
   if (!user) {
-    return { success: false, error: 'Invalid username or 4-digit PIN.' };
+    return { 
+      success: false, 
+      error: `Account "${normalizedUsername}" not found. If this is a new instructor, please create an account first.`,
+      accountNotFound: true
+    };
   }
 
   // 2. Cryptographic Salted SHA-256 Verification
@@ -281,7 +290,7 @@ export function authenticateUser(
     const remaining = MAX_FAILED_ATTEMPTS - lockRecord.attempts;
     return {
       success: false,
-      error: `Invalid credentials. (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before lockout)`
+      error: `Incorrect credentials. (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before lockout)`
     };
   }
 
@@ -340,6 +349,11 @@ export function registerInstructor(data: {
     };
   }
 
+  // Clear deletion tombstone if reviving
+  if (username === DAN_MARTIN_ACCOUNT.username) {
+    localStorage.removeItem('proftrack_dan_martin_deleted');
+  }
+
   const rawPin = (data.pin && data.pin.trim().length === 4) ? data.pin.trim() : '1234';
   const salt = generateSalt();
   const pinHash = hashPinWithSalt(rawPin, salt);
@@ -366,15 +380,31 @@ export function registerInstructor(data: {
 }
 
 /**
- * Verifies that the currently active session belongs to an approved administrator.
+ * Verifies that the administrative action is authorized by an approved administrator.
  */
-export function verifyAdminSession(): boolean {
+export function verifyAdminSession(callerId?: string): boolean {
   try {
-    const activeUserId = localStorage.getItem(CURRENT_USER_SESSION_KEY);
-    if (!activeUserId) return false;
     const users = getStoredUsers();
-    const current = users.find(u => u.id === activeUserId);
-    return !!current && current.role === 'admin' && current.status === 'approved';
+    // 1. Direct caller verification (from React component holding authenticated user state)
+    if (callerId) {
+      const caller = users.find(u => u.id === callerId);
+      if (caller && caller.role === 'admin' && caller.status === 'approved') {
+        return true;
+      }
+    }
+    // 2. Active stored session verification
+    const activeUserId = localStorage.getItem(CURRENT_USER_SESSION_KEY);
+    if (activeUserId) {
+      const current = users.find(u => u.id === activeUserId);
+      if (current && current.role === 'admin' && current.status === 'approved') {
+        return true;
+      }
+    }
+    // 3. Fallback: if caller matches master admin ID
+    if (callerId === DEFAULT_ADMIN_ACCOUNT.id || activeUserId === DEFAULT_ADMIN_ACCOUNT.id) {
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -382,41 +412,51 @@ export function verifyAdminSession(): boolean {
 
 /**
  * Admin action: Approve, Reject, or set Pending status for an instructor account.
- * Requires an active approved administrator session.
  */
-export function updateUserStatus(userId: string, status: AccountStatus): boolean {
-  if (!verifyAdminSession()) {
+export function updateUserStatus(
+  userId: string, 
+  status: AccountStatus,
+  callerId?: string
+): { success: boolean; error?: string } {
+  if (!verifyAdminSession(callerId)) {
     console.warn('Unauthorized administrative action rejected.');
-    return false;
+    return { success: false, error: 'Unauthorized: Administrator permission required.' };
   }
 
   const users = getStoredUsers();
   const idx = users.findIndex(u => u.id === userId);
-  if (idx === -1) return false;
+  if (idx === -1) {
+    return { success: false, error: 'User account not found.' };
+  }
 
   // Protect master admin from being deactivated
   if (users[idx].role === 'admin' && status !== 'approved') {
-    return false;
+    return { success: false, error: 'Cannot deactivate the master administrator.' };
   }
 
   users[idx].status = status;
   saveStoredUsers(users);
-  return true;
+  return { success: true };
 }
 
 /**
  * Admin action: Reset instructor PIN (defaults back to "1234").
- * Hashes the new PIN with a new unique cryptographic salt.
  */
-export function resetUserPin(userId: string, newPin = '1234'): boolean {
-  if (!verifyAdminSession()) {
+export function resetUserPin(
+  userId: string, 
+  newPin = '1234',
+  callerId?: string
+): { success: boolean; error?: string } {
+  if (!verifyAdminSession(callerId)) {
     console.warn('Unauthorized administrative action rejected.');
-    return false;
+    return { success: false, error: 'Unauthorized: Administrator permission required.' };
   }
 
   const users = getStoredUsers();
   const idx = users.findIndex(u => u.id === userId);
-  if (idx === -1) return false;
+  if (idx === -1) {
+    return { success: false, error: 'User account not found.' };
+  }
 
   const newSalt = generateSalt();
   users[idx].salt = newSalt;
@@ -424,24 +464,37 @@ export function resetUserPin(userId: string, newPin = '1234'): boolean {
   delete users[idx].pin; // Ensure no plaintext PIN remains
 
   saveStoredUsers(users);
-  return true;
+  return { success: true };
 }
 
 /**
  * Admin action: Delete instructor account and clean isolated storage.
  */
-export function deleteUser(userId: string): boolean {
-  if (!verifyAdminSession()) {
+export function deleteUser(
+  userId: string,
+  callerId?: string
+): { success: boolean; error?: string } {
+  if (!verifyAdminSession(callerId)) {
     console.warn('Unauthorized administrative action rejected.');
-    return false;
+    return { success: false, error: 'Unauthorized: Administrator permission required.' };
   }
 
   const users = getStoredUsers();
   const target = users.find(u => u.id === userId);
-  if (!target || target.role === 'admin') return false; // Never delete master admin
+  if (!target) {
+    return { success: false, error: 'Account was not found or has already been removed.' };
+  }
+  if (target.role === 'admin') {
+    return { success: false, error: 'The Master Administrator account cannot be deleted.' };
+  }
 
   const updated = users.filter(u => u.id !== userId);
   saveStoredUsers(updated);
+
+  // If Dan Martin was explicitly deleted, remember tombstone so initializeAuth does not re-create him
+  if (target.username === DAN_MARTIN_ACCOUNT.username) {
+    localStorage.setItem('proftrack_dan_martin_deleted', 'true');
+  }
 
   // Clean isolated storage
   const keys = getUserStorageKeys(userId);
@@ -449,7 +502,7 @@ export function deleteUser(userId: string): boolean {
   localStorage.removeItem(keys.logsKey);
   localStorage.removeItem(keys.profileKey);
 
-  return true;
+  return { success: true };
 }
 
 /**

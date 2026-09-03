@@ -403,6 +403,19 @@ export function App() {
   const [isDeviceSyncModalOpen, setIsDeviceSyncModalOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<UserAccount[]>(() => getStoredUsers());
 
+  // Listen to accounts updates across tabs and modals
+  useEffect(() => {
+    const handleSync = () => {
+      setAllUsers(getStoredUsers());
+    };
+    window.addEventListener('proftrack_accounts_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('proftrack_accounts_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
   // 2. User-isolated Data States
   const [profile, setProfile] = useState<InstructorProfile>(() => loadUserProfile(currentUser));
   const [classes, setClasses] = useState<ClassSession[]>(() => loadUserClasses(currentUser));
@@ -976,6 +989,7 @@ export function App() {
         {currentUser?.role === 'admin' ? (
           <AdminAccountManagementView
             currentUser={currentUser}
+            usersList={allUsers}
             onLogout={handleLogout}
             onAccountsUpdated={handleAccountsUpdated}
           />
@@ -1147,6 +1161,7 @@ export function App() {
       <AuthModal
         isOpen={isAuthModalOpen || !currentUser}
         onLoginSuccess={handleLoginSuccess}
+        onAccountsUpdated={handleAccountsUpdated}
         onClose={() => setIsAuthModalOpen(false)}
         allowClose={!!currentUser}
       />
@@ -1157,6 +1172,7 @@ export function App() {
           isOpen={isAdminModalOpen}
           onClose={() => setIsAdminModalOpen(false)}
           onAccountsUpdated={handleAccountsUpdated}
+          callerId={currentUser?.id}
         />
       )}
 

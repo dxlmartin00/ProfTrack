@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { FC } from 'react';
 import { 
   getStoredUsers, 
@@ -23,24 +23,48 @@ import {
   Building2,
   GraduationCap,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 
 interface AdminAccountManagementViewProps {
   currentUser: UserAccount;
+  usersList?: UserAccount[];
   onLogout: () => void;
   onAccountsUpdated?: () => void;
 }
 
 export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = ({
   currentUser,
+  usersList,
   onLogout,
   onAccountsUpdated
 }) => {
-  const [users, setUsers] = useState<UserAccount[]>(() => getStoredUsers());
+  const [users, setUsers] = useState<UserAccount[]>(() => usersList || getStoredUsers());
   const [filterTab, setFilterTab] = useState<'pending' | 'approved' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
-  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Synchronize when usersList prop changes
+  useEffect(() => {
+    if (usersList) {
+      setUsers(usersList);
+    }
+  }, [usersList]);
+
+  // Synchronize live across tabs and on account registration/modification events
+  useEffect(() => {
+    const handleSync = () => {
+      const updated = getStoredUsers();
+      setUsers(updated);
+    };
+    window.addEventListener('proftrack_accounts_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('proftrack_accounts_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   const refreshUsers = () => {
     const updated = getStoredUsers();
@@ -49,11 +73,14 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
   };
 
   const handleStatusChange = (userId: string, newStatus: AccountStatus, name: string) => {
-    const ok = updateUserStatus(userId, newStatus);
-    if (ok) {
+    const res = updateUserStatus(userId, newStatus, currentUser.id);
+    if (res.success) {
       refreshUsers();
-      setActionNotice(`Updated ${name} status to "${newStatus.toUpperCase()}".`);
+      setActionNotice({ type: 'success', message: `Updated ${name} status to "${newStatus.toUpperCase()}".` });
       setTimeout(() => setActionNotice(null), 4000);
+    } else {
+      setActionNotice({ type: 'error', message: res.error || 'Failed to update user status.' });
+      setTimeout(() => setActionNotice(null), 5000);
     }
   };
 
@@ -61,25 +88,31 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
     const confirm = window.confirm(`Reset PIN for ${name} to default "1234"?`);
     if (!confirm) return;
 
-    const ok = resetUserPin(userId, '1234');
-    if (ok) {
+    const res = resetUserPin(userId, '1234', currentUser.id);
+    if (res.success) {
       refreshUsers();
-      setActionNotice(`Reset PIN for ${name} to "1234".`);
+      setActionNotice({ type: 'success', message: `Reset PIN for ${name} to "1234".` });
       setTimeout(() => setActionNotice(null), 4000);
+    } else {
+      setActionNotice({ type: 'error', message: res.error || 'Failed to reset PIN.' });
+      setTimeout(() => setActionNotice(null), 5000);
     }
   };
 
   const handleDelete = (userId: string, name: string) => {
     const confirm = window.confirm(
-      `Are you sure you want to delete the instructor account for ${name}?\n\nThis will also remove their isolated timetable and lesson data.`
+      `Are you sure you want to permanently delete the instructor account for ${name}?\n\nThis will also remove their isolated timetable and lesson data.`
     );
     if (!confirm) return;
 
-    const ok = deleteUser(userId);
-    if (ok) {
+    const res = deleteUser(userId, currentUser.id);
+    if (res.success) {
       refreshUsers();
-      setActionNotice(`Instructor account for ${name} was deleted.`);
+      setActionNotice({ type: 'success', message: `Instructor account for ${name} was permanently deleted.` });
       setTimeout(() => setActionNotice(null), 4000);
+    } else {
+      setActionNotice({ type: 'error', message: res.error || 'Failed to delete account.' });
+      setTimeout(() => setActionNotice(null), 5000);
     }
   };
 
@@ -156,9 +189,17 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
 
       {/* Action Notice Toast */}
       {actionNotice && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3 text-xs font-semibold text-emerald-950 flex items-center gap-2 animate-in fade-in">
-          <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
-          <span>{actionNotice}</span>
+        <div className={`rounded-xl px-5 py-3 text-xs font-semibold flex items-center gap-2 animate-in fade-in ${
+          actionNotice.type === 'error'
+            ? 'bg-rose-50 border border-rose-200 text-rose-950'
+            : 'bg-emerald-50 border border-emerald-200 text-emerald-950'
+        }`}>
+          {actionNotice.type === 'error' ? (
+            <AlertCircle className="h-4 w-4 text-rose-700 shrink-0" />
+          ) : (
+            <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
+          )}
+          <span>{actionNotice.message}</span>
         </div>
       )}
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { FC } from 'react';
 import { 
   getStoredUsers, 
@@ -21,24 +21,47 @@ import {
   BookOpen, 
   FileText,
   Search,
-  Building2
+  Building2,
+  AlertCircle
 } from 'lucide-react';
 
 interface AdminDashboardModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAccountsUpdated?: () => void;
+  callerId?: string;
 }
 
 export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
   isOpen,
   onClose,
-  onAccountsUpdated
+  onAccountsUpdated,
+  callerId
 }) => {
   const [users, setUsers] = useState<UserAccount[]>(() => getStoredUsers());
   const [filterTab, setFilterTab] = useState<'pending' | 'approved' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
-  const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Sync users whenever modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setUsers(getStoredUsers());
+    }
+  }, [isOpen]);
+
+  // Sync live across events
+  useEffect(() => {
+    const handleSync = () => {
+      setUsers(getStoredUsers());
+    };
+    window.addEventListener('proftrack_accounts_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('proftrack_accounts_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -49,32 +72,41 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
   };
 
   const handleStatusChange = (userId: string, newStatus: AccountStatus, name: string) => {
-    const ok = updateUserStatus(userId, newStatus);
-    if (ok) {
+    const res = updateUserStatus(userId, newStatus, callerId);
+    if (res.success) {
       refreshUsers();
-      setActionNotice(`Updated ${name} status to "${newStatus.toUpperCase()}".`);
+      setActionNotice({ type: 'success', message: `Updated ${name} status to "${newStatus.toUpperCase()}".` });
       setTimeout(() => setActionNotice(null), 4000);
+    } else {
+      setActionNotice({ type: 'error', message: res.error || 'Failed to update user status.' });
+      setTimeout(() => setActionNotice(null), 5000);
     }
   };
 
   const handleResetPin = (userId: string, name: string) => {
     if (window.confirm(`Reset PIN for ${name} back to default "1234"?`)) {
-      const ok = resetUserPin(userId, '1234');
-      if (ok) {
+      const res = resetUserPin(userId, '1234', callerId);
+      if (res.success) {
         refreshUsers();
-        setActionNotice(`Successfully reset PIN for ${name} to "1234".`);
+        setActionNotice({ type: 'success', message: `Successfully reset PIN for ${name} to "1234".` });
         setTimeout(() => setActionNotice(null), 4000);
+      } else {
+        setActionNotice({ type: 'error', message: res.error || 'Failed to reset PIN.' });
+        setTimeout(() => setActionNotice(null), 5000);
       }
     }
   };
 
   const handleDelete = (userId: string, name: string) => {
     if (window.confirm(`Are you sure you want to permanently delete account ${name}? Their isolated courses and logs will also be removed.`)) {
-      const ok = deleteUser(userId);
-      if (ok) {
+      const res = deleteUser(userId, callerId);
+      if (res.success) {
         refreshUsers();
-        setActionNotice(`Account ${name} deleted.`);
+        setActionNotice({ type: 'success', message: `Account ${name} deleted.` });
         setTimeout(() => setActionNotice(null), 4000);
+      } else {
+        setActionNotice({ type: 'error', message: res.error || 'Failed to delete account.' });
+        setTimeout(() => setActionNotice(null), 5000);
       }
     }
   };
@@ -133,9 +165,17 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
 
         {/* Action Notice Toast */}
         {actionNotice && (
-          <div className="bg-emerald-50 border-b border-emerald-200 px-5 py-2.5 text-xs font-semibold text-emerald-950 flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
-            <span>{actionNotice}</span>
+          <div className={`border-b px-5 py-2.5 text-xs font-semibold flex items-center gap-2 ${
+            actionNotice.type === 'error'
+              ? 'bg-rose-50 border-rose-200 text-rose-950'
+              : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+          }`}>
+            {actionNotice.type === 'error' ? (
+              <AlertCircle className="h-4 w-4 text-rose-700 shrink-0" />
+            ) : (
+              <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
+            )}
+            <span>{actionNotice.message}</span>
           </div>
         )}
 

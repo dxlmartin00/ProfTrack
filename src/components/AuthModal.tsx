@@ -24,6 +24,7 @@ interface AuthModalProps {
   isOpen: boolean;
   onLoginSuccess: (user: UserAccount) => void;
   onClose?: () => void;
+  onAccountsUpdated?: () => void;
   allowClose?: boolean;
 }
 
@@ -31,6 +32,7 @@ export const AuthModal: FC<AuthModalProps> = ({
   isOpen,
   onLoginSuccess,
   onClose,
+  onAccountsUpdated,
   allowClose = false,
 }) => {
   const [mode, setMode] = useState<'signin' | 'register'>('signin');
@@ -40,6 +42,7 @@ export const AuthModal: FC<AuthModalProps> = ({
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
+  const [suggestRegisterFor, setSuggestRegisterFor] = useState<string | null>(null);
 
   // Register Form State
   const [regFirstName, setRegFirstName] = useState('');
@@ -61,6 +64,7 @@ export const AuthModal: FC<AuthModalProps> = ({
   const handleSignIn = (e: FormEvent) => {
     e.preventDefault();
     setSignInError(null);
+    setSuggestRegisterFor(null);
 
     if (!username.trim()) {
       setSignInError('Please enter your username (format: lastname.firstname)');
@@ -78,7 +82,21 @@ export const AuthModal: FC<AuthModalProps> = ({
       if (onClose) onClose();
     } else {
       setSignInError(res.error || 'Authentication failed. Please check your credentials.');
+      if (res.accountNotFound) {
+        setSuggestRegisterFor(username.trim());
+      }
     }
+  };
+
+  const handleQuickSwitchToRegister = (nameToUse: string) => {
+    const parts = nameToUse.split('.');
+    const cleanLast = parts[0] ? parts[0].charAt(0).toUpperCase() + parts[0].slice(1) : '';
+    const cleanFirst = parts[1] ? parts[1].charAt(0).toUpperCase() + parts[1].slice(1) : '';
+    setRegLastName(cleanLast);
+    setRegFirstName(cleanFirst);
+    setSignInError(null);
+    setSuggestRegisterFor(null);
+    setMode('register');
   };
 
   const handleRegister = (e: FormEvent) => {
@@ -106,6 +124,7 @@ export const AuthModal: FC<AuthModalProps> = ({
 
     if (res.success && res.user) {
       setRegSuccessUser(res.user);
+      if (onAccountsUpdated) onAccountsUpdated();
       // Reset form
       setRegFirstName('');
       setRegLastName('');
@@ -183,9 +202,24 @@ export const AuthModal: FC<AuthModalProps> = ({
             /* Sign In Form */
             <form onSubmit={handleSignIn} className="space-y-4">
               {signInError && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 flex items-start gap-2.5 text-xs text-red-900 animate-in fade-in">
-                  <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
-                  <p className="leading-snug">{signInError}</p>
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 space-y-2 text-xs text-red-900 animate-in fade-in">
+                  <div className="flex items-start gap-2.5">
+                    <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                    <p className="leading-snug">{signInError}</p>
+                  </div>
+                  {suggestRegisterFor && (
+                    <div className="pt-1 border-t border-red-200/60 flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-[11px] text-red-800 font-medium">New instructor account?</span>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickSwitchToRegister(suggestRegisterFor)}
+                        className="inline-flex items-center gap-1 font-bold text-xs bg-white text-zinc-950 px-2.5 py-1 rounded border border-zinc-300 shadow-2xs hover:bg-zinc-50 cursor-pointer"
+                      >
+                        <UserPlus className="w-3.5 h-3.5 text-emerald-700" />
+                        Create Account Now →
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
