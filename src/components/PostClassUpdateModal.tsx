@@ -47,7 +47,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
     activeSchedule?.type || 'Lecture'
   );
 
-  // 1. Calculate chronological completed vs partial topics and notes from previous class
+  // 1. Calculate chronological completed vs partial topics, next lesson, and preserved notes
   const courseProgress = useMemo(() => {
     return getCourseProgressDetails(classSession, pastLogs);
   }, [classSession, pastLogs]);
@@ -87,7 +87,6 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
   // Track which topics were newly touched in this session
   const [sessionSelectedTopics, setSessionSelectedTopics] = useState<Set<string>>(() => {
     const preselected = new Set<string>();
-    // Pre-select the partial topic from last session if present, or next uncompleted topic
     if (courseProgress.currentActiveTopic) {
       preselected.add(courseProgress.currentActiveTopic);
     }
@@ -95,12 +94,52 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
   });
 
   const [nextActions, setNextActions] = useState('');
+  const [isNoteDone, setIsNoteDone] = useState<boolean>(courseProgress.isLatestNoteDone);
   const [engagement, setEngagement] = useState<string>('Medium');
 
   // Find the first uncompleted topic for the "Suggested Next" badge
   const suggestedNextTopic = useMemo(() => {
     return classSession.masterSyllabus.find(t => topicStatuses.get(t) !== 'completed');
   }, [classSession.masterSyllabus, topicStatuses]);
+
+  // 1-Click Action: Mark Partial Lesson as Done & Proceed to Next Lesson
+  const handleMarkPartialDoneAndProceed = () => {
+    const partialTopic = courseProgress.currentActiveTopic;
+    if (!partialTopic) return;
+
+    const newMap = new Map(topicStatuses);
+    const newSelected = new Set(sessionSelectedTopics);
+
+    // 1. Mark partial lesson as Completed
+    newMap.set(partialTopic, 'completed');
+    newSelected.add(partialTopic);
+
+    // 2. Proceed to next lesson in syllabus
+    const nextTopic = courseProgress.nextLessonTopic;
+    if (nextTopic) {
+      newMap.set(nextTopic, 'completed');
+      newSelected.add(nextTopic);
+    }
+
+    // 3. Clear from active cut-off list, but preserve in notes
+    const prevCutoff = cutoffNotes.get(partialTopic);
+    const newCutoff = new Map(cutoffNotes);
+    newCutoff.delete(partialTopic);
+
+    setTopicStatuses(newMap);
+    setSessionSelectedTopics(newSelected);
+    setCutoffNotes(newCutoff);
+
+    // 4. Preserve notes so they are NOT erased
+    if (!nextActions.trim()) {
+      const parts: string[] = [];
+      if (prevCutoff) parts.push(`✓ Finished cut-off: "${prevCutoff}"`);
+      if (courseProgress.latestNote) parts.push(courseProgress.latestNote);
+      if (parts.length > 0) {
+        setNextActions(parts.join(' • '));
+      }
+    }
+  };
 
   // Toggle checkbox directly (Allows checking next topic OR unchecking completed topic to fix misclicks)
   const handleToggleTopic = (topic: string) => {
@@ -192,8 +231,18 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
     const effectiveTodayTopics = todayTouched.length > 0 ? todayTouched : allCompleted;
 
-    // Build nextActions summary with partial progress and cut-off points
+    // Build nextActions summary with partial progress, cut-off points, and preserved notes
     let finalNextActions = nextActions.trim();
+
+    // Preserve previous notes if no new note was typed (GUARANTEES NOTES ARE NEVER ERASED)
+    if (!finalNextActions && courseProgress.latestNote) {
+      finalNextActions = isNoteDone 
+        ? `[Note Done] ${courseProgress.latestNote}` 
+        : courseProgress.latestNote;
+    } else if (finalNextActions && isNoteDone && !finalNextActions.includes('[Note Done]')) {
+      finalNextActions = `[Note Done] ${finalNextActions}`;
+    }
+
     if (allPartial.length > 0) {
       const partialDetails = allPartial.map(t => {
         const note = cutoffNotes.get(t)?.trim();
@@ -268,31 +317,90 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
         {/* Dialog Body */}
         <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-white">
           
-          {/* Notes from Previous Meeting Banner (High Visibility Reminder) */}
-          {(courseProgress.latestNote || courseProgress.partialTopics.length > 0) && (
-            <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-3.5 text-xs text-sky-950 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-2 text-sky-900">
-                <FileText className="h-4 w-4 text-sky-700 shrink-0" />
-                <span className="font-bold uppercase tracking-wider text-[11px]">
-                  Notes from Last Class {courseProgress.lastLogDate && `(${format(courseProgress.lastLogDate, 'MMM d')})`}:
-                </span>
+          {/* Quick Action: Mark Partial Lesson as Done & Proceed to Next Lesson */}
+          {courseProgress.isContinuingPartial && courseProgress.currentActiveTopic && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50/90 p-4 space-y-3 shadow-2xs animate-in fade-in duration-150">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="inline-flex items-center gap-1 rounded bg-amber-200/80 px-2 py-0.5 text-[10px] font-bold text-amber-950 uppercase tracking-wider">
+                      <Hourglass className="h-3 w-3 text-amber-800" />
+                      Unfinished Lesson From Last Meeting
+                    </span>
+                  </div>
+                  <p className="font-bold text-zinc-950 text-sm leading-snug break-words">
+                    {courseProgress.currentActiveTopic}
+                  </p>
+                  {courseProgress.partialTopics[0]?.note && (
+                    <p className="text-xs text-amber-900 font-medium break-words">
+                      📍 Cut-off point: "{courseProgress.partialTopics[0].note}"
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleMarkPartialDoneAndProceed}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 px-3.5 text-xs font-bold text-white shadow-sm transition-all shrink-0 cursor-pointer w-full sm:w-auto"
+                  title="Mark this partial lesson completed and advance to the next syllabus topic"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span>Mark Done & Proceed to Next Lesson →</span>
+                </button>
               </div>
 
-              {courseProgress.latestNote && (
-                <p className="text-xs font-medium text-zinc-900 leading-relaxed break-words pl-6">
-                  {courseProgress.latestNote}
-                </p>
-              )}
-
-              {courseProgress.partialTopics.length > 0 && (
-                <div className="pl-6 pt-1 flex items-center gap-1.5 flex-wrap">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
-                    <Hourglass className="h-3 w-3 text-amber-700" />
-                    Continuing: {courseProgress.partialTopics[0].topic}
-                    {courseProgress.partialTopics[0].note && ` (Cut-off: "${courseProgress.partialTopics[0].note}")`}
-                  </span>
+              {courseProgress.nextLessonTopic && (
+                <div className="pt-2 border-t border-amber-200/80 flex items-center gap-1.5 text-xs text-zinc-700">
+                  <span className="text-zinc-500 font-medium">Next topic in line:</span>
+                  <span className="font-bold text-zinc-950">{courseProgress.nextLessonTopic}</span>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Notes from Previous Meeting Banner (Preserved & Never Erased) */}
+          {courseProgress.latestNote && (
+            <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-3.5 text-xs text-sky-950 space-y-2 shadow-2xs">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-sky-900">
+                  <FileText className="h-4 w-4 text-sky-700 shrink-0" />
+                  <span className="font-bold uppercase tracking-wider text-[11px]">
+                    Notes from Last Class {courseProgress.latestNoteDate && `(${format(courseProgress.latestNoteDate, 'MMM d')})`}:
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsNoteDone(prev => !prev)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold border transition-colors cursor-pointer ${
+                    isNoteDone
+                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                      : 'bg-white text-sky-800 border-sky-300 hover:bg-sky-100'
+                  }`}
+                  title="Toggle whether this note's action item was fulfilled"
+                >
+                  <Check className="h-3 w-3" />
+                  {isNoteDone ? 'Note Done ✓' : 'Mark Note as Done'}
+                </button>
+              </div>
+
+              <p className={`text-xs font-medium pl-6 leading-relaxed break-words ${isNoteDone ? 'line-through text-zinc-600' : 'text-zinc-900'}`}>
+                {courseProgress.latestNote}
+              </p>
+
+              <div className="pl-6 pt-0.5 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (courseProgress.latestNote) {
+                      setNextActions(prev => prev ? `${prev} • ${courseProgress.latestNote}` : (courseProgress.latestNote || ''));
+                    }
+                  }}
+                  className="text-[10px] font-semibold text-sky-800 hover:text-sky-950 underline cursor-pointer"
+                >
+                  + Keep / Copy note into today's log
+                </button>
+              </div>
             </div>
           )}
 

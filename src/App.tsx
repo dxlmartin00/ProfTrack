@@ -21,6 +21,7 @@ import {
   sendLocalNotification 
 } from './services/pwa';
 import { decompressPayload, unpackTransferPayload } from './utils/codec';
+import { getCourseProgressDetails } from './utils/courseProgress';
 import { 
   Bell, 
   Wifi, 
@@ -549,6 +550,47 @@ export function App() {
     setSelectedScheduleForLog(undefined);
   };
 
+  // 1-Click Action: Mark Partial Lesson as Done & Proceed to Next Lesson directly from Timetable (Preserving Notes)
+  const handleQuickAdvanceLesson = (cls: ClassSession) => {
+    const progress = getCourseProgressDetails(cls, logs);
+    const partialTopic = progress.currentActiveTopic;
+    if (!partialTopic) return;
+
+    const nextTopic = progress.nextLessonTopic;
+    const cutoff = progress.partialTopics[0]?.note;
+    
+    // Preserve past notes and cut-off records so they are NEVER erased
+    const noteSummaryParts: string[] = [];
+    if (cutoff) noteSummaryParts.push(`✓ Finished cut-off: "${cutoff}"`);
+    if (progress.latestNote) noteSummaryParts.push(progress.latestNote);
+
+    const actionSummary = noteSummaryParts.length > 0
+      ? noteSummaryParts.join(' • ')
+      : `Completed: ${partialTopic}`;
+
+    const newLog: SessionLog & { classInfo: ClassSession } = {
+      id: 'log_' + Date.now(),
+      date: new Date(),
+      sessionType: 'Lecture',
+      topicsCovered: [partialTopic],
+      nextActions: actionSummary,
+      engagementLevel: 'High',
+      classInfo: cls,
+    };
+
+    setLogs(prev => [newLog, ...prev]);
+
+    submitSessionLog(cls.id, {
+      sessionType: 'Lecture',
+      topicsCovered: [partialTopic],
+      nextActions: actionSummary,
+      engagementLevel: 'High'
+    }).catch(err => console.warn('Cached offline:', err));
+
+    setQrNotification(`✅ Marked "${partialTopic}" as completed! Advancing to "${nextTopic || 'next lesson'}". Notes preserved.`);
+    setTimeout(() => setQrNotification(null), 5000);
+  };
+
   // Restore imported data from phone or backup file
   const handleImportData = (
     importedClasses: ClassSession[], 
@@ -751,6 +793,7 @@ export function App() {
           onOpenReports={() => setIsReportOpen(true)}
           onOpenTransfer={() => setIsTransferModalOpen(true)}
           onOpenScanModal={() => setIsScanModalOpen(true)}
+          onQuickAdvanceLesson={handleQuickAdvanceLesson}
         />
       </main>
 

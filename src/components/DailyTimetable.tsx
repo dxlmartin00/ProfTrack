@@ -30,6 +30,7 @@ interface DailyTimetableProps {
   onOpenReports: () => void;
   onOpenTransfer: () => void;
   onOpenScanModal?: () => void;
+  onQuickAdvanceLesson?: (cls: ClassSession) => void;
 }
 
 export const DailyTimetable: FC<DailyTimetableProps> = ({ 
@@ -41,6 +42,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
   onOpenReports,
   onOpenTransfer,
   onOpenScanModal,
+  onQuickAdvanceLesson,
 }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<'today' | 'all'>('today');
@@ -219,35 +221,60 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             </button>
           </div>
 
-          {/* Unfinished Cut-off Callout in Live Banner */}
+          {/* Unfinished Cut-off Callout in Live Banner with 1-Click Proceed */}
           {activeProgress.isContinuingPartial && activeProgress.partialTopics.length > 0 && (
-            <div className="bg-white/95 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-amber-950 w-full min-w-0 box-border">
-              <div className="mt-0.5 p-1 rounded bg-amber-100 text-amber-800 shrink-0">
-                <Hourglass className="h-3.5 w-3.5" />
-              </div>
+            <div className="bg-white/95 border border-amber-300 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-950 w-full min-w-0 box-border">
               <div className="space-y-0.5 min-w-0 flex-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
+                  <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0" />
                   <span className="font-bold text-amber-900 shrink-0">Resume from cut-off:</span>
                   <span className="font-semibold text-zinc-950 break-words">{activeProgress.partialTopics[0].topic}</span>
                 </div>
                 {activeProgress.partialTopics[0].note && (
-                  <p className="text-[11px] font-medium text-amber-900 break-words">
+                  <p className="text-[11px] font-medium text-amber-900 break-words pl-5">
                     Cut-off point: "{activeProgress.partialTopics[0].note}"
                   </p>
                 )}
+                {activeProgress.nextLessonTopic && (
+                  <p className="text-[11px] text-zinc-600 font-medium pl-5 pt-0.5 truncate">
+                    Next lesson: <span className="font-bold text-zinc-950">{activeProgress.nextLessonTopic}</span>
+                  </p>
+                )}
               </div>
+
+              {onQuickAdvanceLesson && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onQuickAdvanceLesson(activeNowSession.classInfo);
+                  }}
+                  className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 px-3 text-xs font-bold text-white shadow-2xs transition-colors shrink-0 cursor-pointer w-full sm:w-auto"
+                  title="Mark this partial lesson completed and advance to the next syllabus topic"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Mark Done & Advance →</span>
+                </button>
+              )}
             </div>
           )}
 
-          {/* Clean Notes from Last Class in Live Banner */}
+          {/* Clean Notes from Last Class in Live Banner (Never Erased) */}
           {activeProgress.latestNote && (
             <div className="bg-white/95 border border-emerald-300/80 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-zinc-900 w-full min-w-0 box-border">
               <FileText className="h-3.5 w-3.5 text-emerald-700 shrink-0 mt-0.5" />
               <div className="min-w-0 flex-1">
-                <span className="font-bold text-emerald-950 uppercase text-[10px] tracking-wider block">
-                  Notes & Actions from Last Meeting:
-                </span>
-                <p className="text-xs text-zinc-900 font-medium break-words mt-0.5 leading-relaxed">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-bold text-emerald-950 uppercase text-[10px] tracking-wider block">
+                    Notes & Actions from Last Meeting {activeProgress.latestNoteDate && `(${format(activeProgress.latestNoteDate, 'MMM d')})`}:
+                  </span>
+                  {activeProgress.isLatestNoteDone && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200">
+                      ✓ Done
+                    </span>
+                  )}
+                </div>
+                <p className={`text-xs mt-0.5 leading-relaxed break-words ${activeProgress.isLatestNoteDone ? 'line-through text-zinc-600' : 'text-zinc-900 font-medium'}`}>
                   {activeProgress.latestNote}
                 </p>
               </div>
@@ -391,25 +418,47 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       </p>
                     )}
 
-                    {/* Unfinished / In-Progress Topic Badge */}
+                    {/* Unfinished / In-Progress Topic Badge with 1-Click Done & Proceed */}
                     {progress.isContinuingPartial && progress.partialTopics.length > 0 ? (
-                      <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2.5 flex items-start gap-2.5 text-xs text-amber-950 w-full min-w-0 box-border">
-                        <div className="mt-0.5 p-1 rounded bg-amber-200/80 text-amber-800 shrink-0">
-                          <Hourglass className="h-3.5 w-3.5" />
-                        </div>
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <div className="min-w-0">
+                      <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-3 space-y-2 text-xs text-amber-950 w-full min-w-0 box-border">
+                        <div className="flex items-start gap-2.5">
+                          <div className="mt-0.5 p-1 rounded bg-amber-200/80 text-amber-800 shrink-0">
+                            <Hourglass className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="space-y-0.5 min-w-0 flex-1">
                             <span className="font-bold text-amber-900 uppercase text-[10px] tracking-wider block">
                               Unfinished Lesson (Resume Today):
                             </span>
                             <p className="font-semibold text-zinc-950 text-xs leading-snug break-words">
                               {progress.partialTopics[0].topic}
                             </p>
+                            {progress.partialTopics[0].note && (
+                              <p className="text-[11px] font-medium text-amber-900 bg-white/90 px-2 py-0.5 rounded border border-amber-200 inline-block break-words max-w-full">
+                                📍 Cut-off: "{progress.partialTopics[0].note}"
+                              </p>
+                            )}
                           </div>
-                          {progress.partialTopics[0].note && (
-                            <p className="text-[11px] font-medium text-amber-900 bg-white/90 px-2 py-0.5 rounded border border-amber-200 inline-block break-words max-w-full">
-                              📍 Cut-off: "{progress.partialTopics[0].note}"
-                            </p>
+                        </div>
+
+                        {/* Quick 1-Click Done & Proceed Button */}
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-amber-200/80 flex-wrap">
+                          <span className="text-[11px] text-amber-950 font-medium truncate">
+                            Next topic: <span className="font-bold text-zinc-950">{progress.nextLessonTopic || 'Next lesson'}</span>
+                          </span>
+
+                          {onQuickAdvanceLesson && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onQuickAdvanceLesson(cls);
+                              }}
+                              className="inline-flex items-center gap-1 bg-emerald-700 hover:bg-emerald-800 text-white px-2.5 py-1 rounded text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+                              title="Mark this partial lesson completed and advance to the next syllabus topic"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              <span>Mark Done & Advance →</span>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -422,15 +471,22 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       )
                     )}
 
-                    {/* Notes from Last Session Box (High-Visibility Next Class Context) */}
+                    {/* Notes from Last Session Box (Never Erased) */}
                     {progress.latestNote && (
                       <div className="rounded-lg border border-zinc-200 bg-zinc-50/90 p-2.5 flex items-start gap-2 text-xs text-zinc-800 w-full min-w-0 box-border">
                         <FileText className="h-3.5 w-3.5 text-zinc-500 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
-                          <span className="font-bold text-zinc-700 uppercase text-[10px] tracking-wider block">
-                            Notes from Last Class:
-                          </span>
-                          <p className="text-xs text-zinc-900 font-medium leading-relaxed break-words mt-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-zinc-700 uppercase text-[10px] tracking-wider">
+                              Notes from Last Class {progress.latestNoteDate && `(${format(progress.latestNoteDate, 'MMM d')})`}:
+                            </span>
+                            {progress.isLatestNoteDone && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200">
+                                ✓ Done
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-xs mt-0.5 leading-relaxed break-words ${progress.isLatestNoteDone ? 'line-through text-zinc-600' : 'text-zinc-900 font-medium'}`}>
                             {progress.latestNote}
                           </p>
                         </div>
@@ -539,7 +595,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
                       {/* Unfinished / In-Progress Topic Badge in All Courses */}
                       {progress.isContinuingPartial && progress.partialTopics.length > 0 ? (
-                        <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2 flex items-start gap-2 text-xs text-amber-950 w-full min-w-0 box-border">
+                        <div className="rounded-lg border border-amber-300 bg-amber-50/90 p-2.5 flex items-start gap-2 text-xs text-amber-950 w-full min-w-0 box-border">
                           <Hourglass className="h-3.5 w-3.5 text-amber-700 shrink-0 mt-0.5" />
                           <div className="min-w-0 flex-1">
                             <span className="font-bold text-amber-900 text-[10px] uppercase block">Unfinished Lesson:</span>
