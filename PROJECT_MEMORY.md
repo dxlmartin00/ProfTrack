@@ -9,15 +9,16 @@
 - **Application Name**: ProfTrack (Instructor Daily Academic Timetable & Topic Accomplishment Tracker PWA)
 - **Repository**: `dxlmartin00/ProfTrack`
 - **Target Platform**: Progressive Web App (PWA) optimized for Laptops, Tablets, and Mobile Smartphones (iOS / Android).
-- **Core Design Principle**: 100% Offline-First, private local storage, zero mandatory external API calls, clean error-free console.
+- **Core Design Principle**: 100% Offline-First, multi-tenant isolated local storage, zero mandatory external API calls, clean error-free console.
 - **Tech Stack**:
   - **Framework**: React 19 / 18, TypeScript, Vite
   - **Styling**: Tailwind CSS (Monochromatic, clean typography, zinc neutral palette, outline buttons)
-  - **Icons**: `lucide-react` (Camera outline, Smartphone, Clock, BookOpen, FileDown, etc.)
+  - **Icons**: `lucide-react` (Camera outline, Smartphone, Clock, BookOpen, FileDown, ShieldCheck, etc.)
   - **Date Utilities**: `date-fns`
   - **Document Parsing**: `mammoth` (Clientside Word `.docx` table and text extraction)
   - **Reporting & Export**: `html2canvas` & `jspdf` (High-resolution tabular accomplishment reports)
   - **Offline Sync & QR**: `qrcode-generator` (Level L high-density SVG), `lz-string` (URI-safe compression)
+  - **Security & Sanitization**: `dompurify` (SVG/HTML sanitization), Pure TS RFC 6234 SHA-256 engine
   - **PWA Service Worker**: `vite-plugin-pwa` with `generateSW` Workbox precaching
 
 ---
@@ -106,6 +107,7 @@
 ### 2. Post-Class Topic Logging (`PostClassUpdateModal.tsx`)
 - Misclick-aware checklist: unchecking older topics cleans older records safely.
 - Quick topic coverage selection, partial progress recording, slide/page notes, and engagement rating (`High`, `Medium`, `Low`).
+- Non-destructive note management: completing a partial class session preserves prior notes while advancing to the next syllabus lesson.
 
 ### 3. Word Syllabus Uploader (`SyllabusUploadModal.tsx` & `docxParser.ts`)
 - Upload Word `.docx` or paste text directly.
@@ -131,7 +133,69 @@
 
 ---
 
-## 5. Offline Resilience & Console Cleanliness
+## 5. Multi-Tenant Faculty & Dedicated Administrator Architecture
+
+### Master Administrator (`admin.admin`):
+- **Credentials**: Username `admin.admin` • PIN `0000` • Role `admin` • Status `approved`.
+- **Purpose**: Strictly manages faculty accounts, approvals, PIN resets, and account deactivations.
+- **Isolation**: Has zero classes, timetables, or course logs assigned. Upon login, renders the dedicated `AdminAccountManagementView.tsx` workspace.
+
+### Faculty Teaching Accounts:
+- **Username Convention**: `<lastname>.<firstname>` (e.g., `martin.dan`).
+- **Default PIN**: `1234`.
+- **Prof. Dan Martin**: Initialized as a normal instructor account (`martin.dan`) with full 8 courses, syllabi, notes, and session logs.
+- **Registration Workflow**:
+  - New instructors register via `AuthModal.tsx` with First Name, Last Name, College, and PIN.
+  - Account is created with `status: 'pending'` awaiting administrator approval.
+  - Administrators review pending registrations in `AdminAccountManagementView.tsx` or `AdminDashboardModal.tsx` and can Approve or Reject.
+  - Unregistered sign-in attempts offer an instant **`[ Create Account Now → ]`** helper that pre-populates name fields from the entered username.
+
+### Administrative Console Controls:
+- **Live Status Switching**: Approve, Reject, or set to Pending with instant UI feedback.
+- **PIN Reset**: Administrators can reset an instructor's forgotten PIN to default `1234` without ever seeing the instructor's private PIN.
+- **Account Deletion & Tombstones**: Safely removes an account and cleans its storage keys. Uses tombstone flags (`proftrack_dan_martin_deleted`) so deleted accounts are never resurrected on page reload.
+- **Live Synchronization**: Broadcasts `proftrack_accounts_updated` events across components and tabs so newly registered accounts appear immediately under Pending Approvals.
+
+### Data Isolation Scheme:
+- `proftrack_classes_<userId>`: Isolated active course matrix.
+- `proftrack_session_logs_<userId>`: Isolated session logs and accomplishment history.
+- `proftrack_profile_<userId>`: Isolated instructor faculty profile.
+
+---
+
+## 6. Cross-Device Synchronization Engine (`sync.ts`)
+- **"Latest Device Wins" Conflict Resolution**:
+  - Compares microsecond timestamps (`updatedAt`) on state snapshots across devices.
+  - Identifies originating device via unique `deviceId` and user-friendly `deviceLabel` (e.g., `"Windows Laptop"`, `"iPhone"`).
+  - Automatically resolves sync conflicts when scanning QR codes, importing backup files, or syncing via cloud Firestore.
+- **Navigation Sync Status**: Mounts live `[ ⇄ Sync ]` indicator in the header with full status inspection via `DeviceSyncModal.tsx`.
+
+---
+
+## 7. Security Architecture & Cryptographic Fortifications (`crypto.ts`)
+- **Salted SHA-256 PIN Hashing**:
+  - Implements an RFC 6234 compliant pure TypeScript SHA-256 digest engine.
+  - Each account receives a unique 16-byte cryptographically secure random salt (`crypto.getRandomValues`).
+  - Stored credentials use salted hashes: `hashPinWithSalt(pin, salt)`. Plaintext PINs are never stored in `localStorage` or displayed anywhere in the UI.
+  - Existing legacy plaintext accounts are automatically and transparently upgraded to salted SHA-256 hashes upon startup.
+- **Brute-Force Rate Limiting & Temporary Lockout**:
+  - Monitors consecutive failed login attempts per account.
+  - Warns users with remaining attempt counts: `Incorrect credentials. (X attempts remaining before lockout)`.
+  - Automatically locks out authentication for **5 minutes** after 5 consecutive failed attempts (`proftrack_sec_lockout_<username>`).
+  - Uses generic responses to prevent user enumeration attacks.
+- **Prototype Pollution Defense**:
+  - All JSON unpacking operations (QR transfers, backup file imports, registry reads) use `safeJsonParse`, which recursively rejects hazardous keys (`__proto__`, `constructor`, `prototype`).
+- **Payload Length & ReDoS Mitigation**:
+  - Enforces a 500 KB limit on imported transit payloads to prevent memory exhaustion and ReDoS attacks.
+  - Sanitizes transit strings via `sanitizeString` to strip HTML tags and invisible control characters.
+- **XSS & DOM Sanitization**:
+  - Uses `DOMPurify` to sanitize all rendered SVG markup generated for QR code scanning (`USE_PROFILES: { svg: true, svgFilters: true }`).
+- **Administrative Permission Verification**:
+  - All administrative mutations (`updateUserStatus`, `resetUserPin`, `deleteUser`) verify authorization via `verifyAdminSession(callerId)` against authenticated admin state.
+
+---
+
+## 8. Offline Resilience & Console Cleanliness
 - **No Console Errors**: Firebase initialization and queries are fully guarded behind `isFirebaseConfigured`. The app operates in standalone local mode without throwing `400 Bad Request` or auth errors.
 - **No Page Refresh Loops**: Single consolidated service worker registered via `VitePWA`. Initial load effects run once with empty dependency arrays (`[]`).
-- **All State Persisted**: `classes`, `logs`, and `profile` are synchronized continuously to browser `localStorage`.
+- **All State Persisted**: `classes`, `logs`, and `profile` are synchronized continuously to isolated browser `localStorage`.

@@ -29,6 +29,7 @@ import { getCourseProgressDetails } from './utils/courseProgress';
 import { AuthModal } from './components/AuthModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { AdminAccountManagementView } from './components/AdminAccountManagementView';
+import { CalendarView } from './components/CalendarView';
 import { 
   initializeAuth, 
   getUserStorageKeys, 
@@ -53,7 +54,9 @@ import {
   Camera,
   ShieldCheck,
   LogOut,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Calendar,
+  Clock
 } from 'lucide-react';
 
 export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
@@ -402,6 +405,7 @@ export function App() {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isDeviceSyncModalOpen, setIsDeviceSyncModalOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<UserAccount[]>(() => getStoredUsers());
+  const [viewMode, setViewMode] = useState<'daily' | 'calendar'>('daily');
 
   // Listen to accounts updates across tabs and modals
   useEffect(() => {
@@ -818,13 +822,32 @@ export function App() {
                 </span>
               ) : (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => {}}
-                    className="text-zinc-950 font-semibold transition-colors hover:text-zinc-700 cursor-pointer"
-                  >
-                    Overview
-                  </button>
+                  <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 border border-zinc-200 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('daily')}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        viewMode === 'daily'
+                          ? 'bg-white text-zinc-950 shadow-2xs'
+                          : 'text-zinc-600 hover:text-zinc-950'
+                      }`}
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Daily</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('calendar')}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        viewMode === 'calendar'
+                          ? 'bg-white text-zinc-950 shadow-2xs'
+                          : 'text-zinc-600 hover:text-zinc-950'
+                      }`}
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Monthly Calendar</span>
+                    </button>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setIsScanModalOpen(true)}
@@ -993,6 +1016,21 @@ export function App() {
             onLogout={handleLogout}
             onAccountsUpdated={handleAccountsUpdated}
           />
+        ) : viewMode === 'calendar' ? (
+          <CalendarView
+            classes={classes}
+            logs={logs}
+            profile={profile}
+            onClassClick={(cls, sch) => {
+              setSelectedClassForLog(cls);
+              setSelectedScheduleForLog(sch);
+            }}
+            onSwitchToDaily={() => setViewMode('daily')}
+            onAddClassClick={() => {
+              setEditingCourse(null);
+              setIsAddClassOpen(true);
+            }}
+          />
         ) : (
           <DailyTimetable
             classes={classes}
@@ -1012,6 +1050,7 @@ export function App() {
             onOpenTransfer={() => setIsTransferModalOpen(true)}
             onOpenScanModal={() => setIsScanModalOpen(true)}
             onQuickAdvanceLesson={handleQuickAdvanceLesson}
+            onSwitchToCalendar={() => setViewMode('calendar')}
           />
         )}
       </main>
