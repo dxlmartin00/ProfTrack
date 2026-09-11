@@ -30,6 +30,15 @@ import { AuthModal } from './components/AuthModal';
 import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { AdminAccountManagementView } from './components/AdminAccountManagementView';
 import { CalendarView } from './components/CalendarView';
+import { AccessibilityModal } from './components/AccessibilityModal';
+import { 
+  getStoredTheme, 
+  setStoredTheme, 
+  getStoredA11y, 
+  setStoredA11y, 
+  applyThemeAndA11y 
+} from './services/theme';
+import type { ThemeMode, AccessibilitySettings } from './services/theme';
 import { 
   initializeAuth, 
   getUserStorageKeys, 
@@ -56,7 +65,10 @@ import {
   LogOut,
   ArrowRightLeft,
   Calendar,
-  Clock
+  Clock,
+  Sun,
+  Moon,
+  Eye
 } from 'lucide-react';
 
 export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
@@ -406,6 +418,24 @@ export function App() {
   const [isDeviceSyncModalOpen, setIsDeviceSyncModalOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<UserAccount[]>(() => getStoredUsers());
   const [viewMode, setViewMode] = useState<'daily' | 'calendar'>('daily');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => getStoredTheme());
+  const [a11ySettings, setA11ySettings] = useState<AccessibilitySettings>(() => getStoredA11y());
+  const [isA11yModalOpen, setIsA11yModalOpen] = useState(false);
+
+  // Apply Theme & Accessibility configuration to document root
+  useEffect(() => {
+    applyThemeAndA11y(themeMode, a11ySettings);
+  }, [themeMode, a11ySettings]);
+
+  const handleThemeChange = (newTheme: ThemeMode) => {
+    setThemeMode(newTheme);
+    setStoredTheme(newTheme);
+  };
+
+  const handleA11yChange = (newSettings: AccessibilitySettings) => {
+    setA11ySettings(newSettings);
+    setStoredA11y(newSettings);
+  };
 
   // Listen to accounts updates across tabs and modals
   useEffect(() => {
@@ -800,36 +830,36 @@ export function App() {
   const userInitials = getInitials(profile.fullName);
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-950 flex flex-col font-sans">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 flex flex-col font-sans transition-colors">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 w-full border-b border-zinc-200 bg-white/95 backdrop-blur-xs">
-        <div className="max-w-5xl mx-auto flex h-14 sm:h-16 items-center justify-between px-3.5 sm:px-6">
+      <header className="sticky top-0 z-40 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xs transition-colors">
+        <div className="max-w-7xl mx-auto flex h-14 sm:h-16 items-center justify-between px-3.5 sm:px-6">
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-zinc-950 text-white shadow-2xs shrink-0">
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-zinc-950 dark:bg-zinc-800 text-white shadow-2xs shrink-0">
                 <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
-              <span className="font-bold text-sm sm:text-base tracking-tight text-zinc-950">
+              <span className="font-bold text-sm sm:text-base tracking-tight text-zinc-950 dark:text-white">
                 ProfTrack
               </span>
             </div>
 
             <nav className="hidden md:flex items-center gap-5 text-sm">
               {currentUser?.role === 'admin' ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 text-xs font-bold text-zinc-800">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                   Administrator Account Portal
                 </span>
               ) : (
                 <>
-                  <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 border border-zinc-200 shrink-0">
+                  <div className="inline-flex p-0.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shrink-0">
                     <button
                       type="button"
                       onClick={() => setViewMode('daily')}
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                         viewMode === 'daily'
-                          ? 'bg-white text-zinc-950 shadow-2xs'
-                          : 'text-zinc-600 hover:text-zinc-950'
+                          ? 'bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white shadow-2xs'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                       }`}
                     >
                       <Clock className="w-3.5 h-3.5" />
@@ -840,33 +870,33 @@ export function App() {
                       onClick={() => setViewMode('calendar')}
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                         viewMode === 'calendar'
-                          ? 'bg-white text-zinc-950 shadow-2xs'
-                          : 'text-zinc-600 hover:text-zinc-950'
+                          ? 'bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white shadow-2xs'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                       }`}
                     >
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>Weekly Schedule</span>
+                      <span>Weekly Time-Grid</span>
                     </button>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsScanModalOpen(true)}
-                    className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer flex items-center gap-1.5"
+                    className="text-zinc-600 dark:text-zinc-400 transition-colors hover:text-zinc-950 dark:hover:text-white cursor-pointer flex items-center gap-1.5"
                   >
-                    <Camera className="h-3.5 w-3.5 text-zinc-700" />
+                    <Camera className="h-3.5 w-3.5 text-zinc-700 dark:text-zinc-300" />
                     Scan Image
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsReportOpen(true)}
-                    className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer"
+                    className="text-zinc-600 dark:text-zinc-400 transition-colors hover:text-zinc-950 dark:hover:text-white cursor-pointer"
                   >
                     Accomplishment Reports
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsTransferModalOpen(true)}
-                    className="text-zinc-600 transition-colors hover:text-zinc-950 cursor-pointer flex items-center gap-1.5"
+                    className="text-zinc-600 dark:text-zinc-400 transition-colors hover:text-zinc-950 dark:hover:text-white cursor-pointer flex items-center gap-1.5"
                   >
                     <Smartphone className="h-3.5 w-3.5" />
                     Transfer to Phone
@@ -881,12 +911,12 @@ export function App() {
             <span
               className={`inline-flex items-center gap-1.5 rounded-full p-1.5 sm:px-3 sm:py-1 text-xs font-semibold border shrink-0 ${
                 isOnline
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
-                  : 'border-amber-300 bg-amber-50 text-amber-900'
+                  ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200'
+                  : 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200'
               }`}
               title={isOnline ? 'Network Connected • Local Mode Active' : 'Offline Mode • Local Cache Active'}
             >
-              {isOnline ? <Wifi className="h-3.5 w-3.5 text-emerald-700" /> : <WifiOff className="h-3.5 w-3.5 text-amber-700" />}
+              {isOnline ? <Wifi className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" /> : <WifiOff className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />}
               <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
             </span>
 
@@ -894,12 +924,29 @@ export function App() {
             <button
               type="button"
               onClick={() => setIsDeviceSyncModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 p-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold text-zinc-800 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 p-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer shrink-0 shadow-2xs"
               title="Device & Account Sync: Tap to view connected devices and synchronization status"
             >
-              <ArrowRightLeft className="h-3.5 w-3.5 text-zinc-600" />
+              <ArrowRightLeft className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-400" />
               <span className="hidden md:inline">Sync</span>
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </button>
+
+            {/* Display & Accessibility Preferences Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsA11yModalOpen(true)}
+              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              title={`Theme: ${themeMode.toUpperCase()} • Display & Accessibility Preferences`}
+              aria-label="Display and Accessibility Preferences"
+            >
+              {themeMode === 'light' ? (
+                <Sun className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500" />
+              ) : themeMode === 'dark' ? (
+                <Moon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-300" />
+              ) : (
+                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400" />
+              )}
             </button>
 
             {/* Notification Bell / Test Trigger button */}
@@ -908,7 +955,7 @@ export function App() {
               onClick={handleToggleNotifications}
               className={`inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 ${
                 notificationGranted
-                  ? 'border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700'
+                  ? 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
                   : 'border-zinc-950 bg-zinc-950 text-white shadow-2xs hover:bg-zinc-800'
               }`}
               aria-label={notificationGranted ? 'Web Push Active' : 'Enable Web Push Reminders'}
@@ -928,7 +975,7 @@ export function App() {
                 }
                 window.location.reload();
               }}
-              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-600 hover:text-zinc-950 transition-colors cursor-pointer shrink-0"
+              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
               title="Refresh / Check for Updates"
               aria-label="Refresh / Check for Updates"
             >
@@ -1024,9 +1071,6 @@ export function App() {
             onClassClick={(cls, sch) => {
               setSelectedClassForLog(cls);
               setSelectedScheduleForLog(sch);
-            }}
-            onManageCourse={(cls) => {
-              setInspectedCourse(cls);
             }}
             onSwitchToDaily={() => setViewMode('daily')}
             onAddClassClick={() => {
@@ -1217,6 +1261,16 @@ export function App() {
           callerId={currentUser?.id}
         />
       )}
+
+      {/* Display & Accessibility Preferences Modal */}
+      <AccessibilityModal
+        isOpen={isA11yModalOpen}
+        onClose={() => setIsA11yModalOpen(false)}
+        currentTheme={themeMode}
+        onThemeChange={handleThemeChange}
+        a11ySettings={a11ySettings}
+        onA11yChange={handleA11yChange}
+      />
 
     </div>
   );

@@ -28,11 +28,49 @@
     letter-spacing: -0.015em;
     background-color: #fafafa;
     color: #09090b;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   code, kbd, samp, pre {
     font-family: 'Geist Mono', monospace;
   }
+}
+
+/* Dark Mode (Muted Slate / Zinc - Easy on Eyes) */
+html.dark body {
+  background-color: #0f1013;
+  color: #f4f4f5;
+}
+
+/* Night Mode (OLED Midnight Deep Black + Warm Tone) */
+html.dark.night-theme body {
+  background-color: #040507;
+  color: #edecec;
+}
+
+/* Accessibility: Font Scaling */
+html.a11y-font-large {
+  font-size: 108%;
+}
+html.a11y-font-xlarge {
+  font-size: 120%;
+}
+
+/* Accessibility: High Contrast Mode */
+html.a11y-high-contrast * {
+  border-color: #52525b !important;
+}
+html.dark.a11y-high-contrast * {
+  border-color: #a1a1aa !important;
+}
+
+/* Accessibility: Reduced Motion */
+html.a11y-reduce-motion *,
+html.a11y-reduce-motion *::before,
+html.a11y-reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
 }
 
 /* Subtle scrollbars */
@@ -49,4 +87,32 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1aa;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #27272a;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Calendar Hatched Pattern for Off-Schedule / Free Slots */
+.bg-hatched {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(0, 0, 0, 0.03),
+    rgba(0, 0, 0, 0.03) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+html.dark .bg-hatched {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.025),
+    rgba(255, 255, 255, 0.025) 6px,
+    transparent 6px,
+    transparent 12px
+  );
 }

@@ -19,13 +19,9 @@ import {
   Printer, 
   CheckCircle2, 
   Clock, 
-  MapPin, 
   ListFilter,
   Plus,
-  BookOpen,
-  GraduationCap,
-  FlaskConical,
-  ExternalLink
+  BookOpen
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -35,10 +31,16 @@ interface CalendarViewProps {
   logs: (SessionLog & { classInfo: ClassSession })[];
   profile?: InstructorProfile;
   onClassClick: (cls: ClassSession, sch?: ClassSchedule, targetDate?: Date) => void;
-  onManageCourse?: (cls: ClassSession) => void;
   onSwitchToDaily: () => void;
   onAddClassClick?: () => void;
 }
+
+// Grid start and end hours (07:00 AM to 06:00 PM)
+const START_HOUR = 7;
+const END_HOUR = 18;
+const TOTAL_HOURS = END_HOUR - START_HOUR; // 11 hours
+const SLOT_HEIGHT_PX = 42; // Height per 30 minutes
+const HOUR_HEIGHT_PX = SLOT_HEIGHT_PX * 2; // 84px per hour
 
 // Philippine Holidays & Academic Milestones
 const PHILIPPINE_HOLIDAYS: Record<string, string> = {
@@ -64,7 +66,6 @@ export const CalendarView: FC<CalendarViewProps> = ({
   logs,
   profile,
   onClassClick,
-  onManageCourse,
   onSwitchToDaily,
   onAddClassClick
 }) => {
@@ -72,20 +73,19 @@ export const CalendarView: FC<CalendarViewProps> = ({
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [selectedMobileDayIdx, setSelectedMobileDayIdx] = useState<number>(() => {
     const day = new Date().getDay();
-    // Default to today if Mon-Sat, else Monday
     return day >= 1 && day <= 6 ? day - 1 : 0;
   });
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('all');
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const calendarPrintRef = useRef<HTMLDivElement>(null);
 
-  // Live clock for "Active Now" indicators
+  // Live timer for active class tracking
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 30000);
     return () => clearInterval(timer);
   }, []);
 
-  // Week navigation
+  // Navigation
   const nextWeek = () => setCurrentWeekDate(addWeeks(currentWeekDate, 1));
   const prevWeek = () => setCurrentWeekDate(subWeeks(currentWeekDate, 1));
   const goToCurrentWeek = () => {
@@ -95,22 +95,20 @@ export const CalendarView: FC<CalendarViewProps> = ({
     setSelectedMobileDayIdx(day >= 1 && day <= 6 ? day - 1 : 0);
   };
 
-  // Check if any loaded class has a Saturday schedule
+  // Check if Saturday has any scheduled classes
   const hasSaturdayClasses = useMemo(() => {
     return classes.some(c => c.schedule.some(s => s.dayOfWeek === 6));
   }, [classes]);
 
-  // Compute academic days for the week: Monday to Friday (or Saturday if loaded)
+  // Compute academic days for the week: Mon to Fri (or Sat if classes exist)
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Monday
     const end = endOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Sunday
     const allDays = eachDayOfInterval({ start, end });
-    
-    // Academic work days: Monday(0) to Friday(4), or Saturday(5)
     return hasSaturdayClasses ? allDays.slice(0, 6) : allDays.slice(0, 5);
   }, [currentWeekDate, hasSaturdayClasses]);
 
-  // Week display label
+  // Week range label (e.g. September 7 – 12, 2026)
   const weekRangeLabel = useMemo(() => {
     if (weekDays.length === 0) return '';
     const first = weekDays[0];
@@ -121,13 +119,13 @@ export const CalendarView: FC<CalendarViewProps> = ({
     return `${format(first, 'MMM d')} – ${format(last, 'MMM d, yyyy')}`;
   }, [weekDays]);
 
-  // Filtered classes based on course dropdown
+  // Course filtering
   const filteredClasses = useMemo(() => {
     if (selectedCourseFilter === 'all') return classes;
     return classes.filter(c => c.id === selectedCourseFilter);
   }, [classes, selectedCourseFilter]);
 
-  // Format 24h to 12h time (e.g. 08:00 -> 8:00 AM)
+  // Format 24h to 12h time (08:00 -> 8:00 AM)
   const formatTimeSlot = (timeStr: string) => {
     try {
       const parsed = parse(timeStr, 'HH:mm', new Date());
@@ -137,27 +135,38 @@ export const CalendarView: FC<CalendarViewProps> = ({
     }
   };
 
-  // Compute duration in hours
-  const computeDurationHours = (startStr: string, endStr: string): number => {
+  // Convert time "HH:mm" to minutes from START_HOUR
+  const timeToMinutesFromStart = (timeStr: string): number => {
     try {
-      const [sh, sm] = startStr.split(':').map(Number);
-      const [eh, em] = endStr.split(':').map(Number);
-      const totalMinutes = (eh * 60 + em) - (sh * 60 + sm);
-      return Math.max(0, totalMinutes / 60);
+      const [h, m] = timeStr.split(':').map(Number);
+      return (h - START_HOUR) * 60 + m;
     } catch {
-      return 1;
+      return 0;
     }
   };
 
-  // Map classes to each day of the week
+  // Calculate duration in minutes
+  const computeDurationMinutes = (startStr: string, endStr: string): number => {
+    try {
+      const [sh, sm] = startStr.split(':').map(Number);
+      const [eh, em] = endStr.split(':').map(Number);
+      return Math.max(30, (eh * 60 + em) - (sh * 60 + sm));
+    } catch {
+      return 60;
+    }
+  };
+
+  // Map classes to each day
   const getDaySchedule = (dayDate: Date) => {
-    const dayOfWeek = dayDate.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+    const dayOfWeek = dayDate.getDay();
     const items: Array<{
       cls: ClassSession;
       sch: ClassSchedule;
       isLogged: boolean;
       isLiveNow: boolean;
-      duration: number;
+      topPx: number;
+      heightPx: number;
+      durationMinutes: number;
       matchingLog?: SessionLog & { classInfo: ClassSession };
       nextTopic?: string;
     }> = [];
@@ -165,13 +174,11 @@ export const CalendarView: FC<CalendarViewProps> = ({
     filteredClasses.forEach(cls => {
       cls.schedule.forEach(sch => {
         if (sch.dayOfWeek === dayOfWeek) {
-          // Check if session was logged for this date
           const matchingLog = logs.find(l => 
             l.classInfo.id === cls.id && 
             isSameDay(new Date(l.date), dayDate)
           );
 
-          // Check if active live right now
           let isLiveNow = false;
           if (isToday(dayDate)) {
             const todayStr = format(currentTime, 'yyyy-MM-dd');
@@ -180,18 +187,25 @@ export const CalendarView: FC<CalendarViewProps> = ({
             isLiveNow = currentTime >= start && currentTime <= end;
           }
 
-          // Calculate next topic
           const loggedCount = logs.filter(l => l.classInfo.id === cls.id).length;
           const nextTopic = cls.masterSyllabus && cls.masterSyllabus.length > loggedCount 
             ? cls.masterSyllabus[loggedCount]
             : undefined;
+
+          const startMinutes = timeToMinutesFromStart(sch.startTime);
+          const duration = computeDurationMinutes(sch.startTime, sch.endTime);
+
+          const topPx = (startMinutes / 30) * SLOT_HEIGHT_PX;
+          const heightPx = (duration / 30) * SLOT_HEIGHT_PX - 4; // slight gap
 
           items.push({
             cls,
             sch,
             isLogged: !!matchingLog,
             isLiveNow,
-            duration: computeDurationHours(sch.startTime, sch.endTime),
+            topPx,
+            heightPx,
+            durationMinutes: duration,
             matchingLog,
             nextTopic
           });
@@ -199,9 +213,22 @@ export const CalendarView: FC<CalendarViewProps> = ({
       });
     });
 
-    // Sort chronologically by start time
     return items.sort((a, b) => a.sch.startTime.localeCompare(b.sch.startTime));
   };
+
+  // Generate 30-minute time intervals for Y-axis
+  const timeSlots = useMemo(() => {
+    const slots: Array<{ label: string; hour: number; isHalf: boolean }> = [];
+    for (let h = START_HOUR; h <= END_HOUR; h++) {
+      const displayHour = h > 12 ? h - 12 : h === 0 ? 12 : h;
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      slots.push({ label: `${displayHour}:00 ${ampm}`, hour: h, isHalf: false });
+      if (h < END_HOUR) {
+        slots.push({ label: `${displayHour}:30`, hour: h, isHalf: true });
+      }
+    }
+    return slots;
+  }, []);
 
   // Overall weekly metrics
   const weeklyMetrics = useMemo(() => {
@@ -213,7 +240,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
       const schedule = getDaySchedule(day);
       totalClasses += schedule.length;
       schedule.forEach(item => {
-        totalHours += item.duration;
+        totalHours += item.durationMinutes / 60;
         if (item.isLogged) loggedSessions++;
       });
     });
@@ -221,7 +248,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
     return { totalClasses, totalHours, loggedSessions };
   }, [weekDays, filteredClasses, logs]);
 
-  // High-resolution Printable PDF Export
+  // Export PDF
   const handleExportPDF = async () => {
     if (!calendarPrintRef.current) return;
     try {
@@ -251,75 +278,77 @@ export const CalendarView: FC<CalendarViewProps> = ({
     }
   };
 
+  const totalGridHeightPx = TOTAL_HOURS * HOUR_HEIGHT_PX;
+
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-4">
-      {/* Top Toolbar: View Switcher, Week Navigation & Controls */}
-      <div className="bg-white rounded-2xl border border-zinc-200 p-3 sm:p-4 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        {/* Left: View Mode Segmented Switcher & Current Week */}
+      {/* Top Controls Toolbar */}
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3 sm:p-4 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 transition-colors">
+        {/* Left: View Switcher & Current Week */}
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="inline-flex p-1 rounded-xl bg-zinc-100 border border-zinc-200">
+          <div className="inline-flex p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
             <button
               type="button"
               onClick={onSwitchToDaily}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-zinc-600 hover:text-zinc-950 transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all cursor-pointer"
             >
               <Clock className="w-3.5 h-3.5" />
               <span>Daily Timetable</span>
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-zinc-950 shadow-2xs transition-all cursor-default"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white shadow-2xs transition-all cursor-default"
             >
-              <CalendarIcon className="w-3.5 h-3.5 text-zinc-900" />
-              <span>Weekly Schedule</span>
+              <CalendarIcon className="w-3.5 h-3.5 text-zinc-900 dark:text-white" />
+              <span>Weekly Time-Grid</span>
             </button>
           </div>
 
           <button
             type="button"
             onClick={goToCurrentWeek}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-800 transition-colors shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors shadow-2xs cursor-pointer"
             title="Jump to current week"
           >
             This Week
           </button>
         </div>
 
-        {/* Center: Week Navigator */}
+        {/* Center: Week Navigator (Matches Sample Image header) */}
         <div className="flex items-center justify-center gap-2">
           <button
             type="button"
             onClick={prevWeek}
-            className="p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 transition-colors cursor-pointer shadow-2xs"
+            className="p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer shadow-2xs"
             aria-label="Previous Week"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           
-          <h2 className="text-sm sm:text-base font-black text-zinc-950 tracking-tight min-w-[210px] text-center">
+          <h2 className="text-sm sm:text-base font-black text-zinc-950 dark:text-zinc-100 tracking-tight min-w-[210px] text-center">
             {weekRangeLabel}
           </h2>
 
           <button
             type="button"
             onClick={nextWeek}
-            className="p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 transition-colors cursor-pointer shadow-2xs"
+            className="p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer shadow-2xs"
             aria-label="Next Week"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Right: Actions, Course Filter & PDF */}
+        {/* Right: Course Filter, Add Course & PDF */}
         <div className="flex items-center gap-2 justify-end flex-wrap">
           {onAddClassClick && (
             <button
               type="button"
               onClick={onAddClassClick}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-800 transition-colors shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors shadow-2xs cursor-pointer"
               title="Add a new course"
             >
-              <Plus className="w-3.5 h-3.5 text-zinc-700" />
+              <Plus className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
               <span className="hidden sm:inline">Add Course</span>
             </button>
           )}
@@ -329,7 +358,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
             <select
               value={selectedCourseFilter}
               onChange={(e) => setSelectedCourseFilter(e.target.value)}
-              className="appearance-none rounded-xl border border-zinc-200 bg-white pl-3 pr-8 py-1.5 text-xs font-bold text-zinc-900 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 cursor-pointer"
+              className="appearance-none rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-3 pr-8 py-1.5 text-xs font-bold text-zinc-900 dark:text-zinc-100 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-white cursor-pointer"
             >
               <option value="all">All Courses ({classes.length})</option>
               {classes.map(c => (
@@ -341,13 +370,13 @@ export const CalendarView: FC<CalendarViewProps> = ({
             <ListFilter className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Export PDF button */}
+          {/* Export PDF */}
           <button
             type="button"
             onClick={handleExportPDF}
             disabled={isExporting}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-950 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-            title="Download printable PDF weekly schedule"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-950 dark:border-zinc-700 bg-zinc-950 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+            title="Download printable PDF weekly time grid"
           >
             {isExporting ? (
               <span className="animate-spin text-xs">⏳</span>
@@ -360,28 +389,28 @@ export const CalendarView: FC<CalendarViewProps> = ({
       </div>
 
       {/* Weekly Stats Header Pill Bar */}
-      <div className="bg-zinc-50 rounded-xl border border-zinc-200/80 px-4 py-2.5 flex items-center justify-between gap-4 text-xs flex-wrap">
+      <div className="bg-zinc-50 dark:bg-zinc-900/60 rounded-xl border border-zinc-200/80 dark:border-zinc-800 px-4 py-2.5 flex items-center justify-between gap-4 text-xs flex-wrap transition-colors">
         <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-zinc-500">Weekly Total:</span>
-            <span className="font-extrabold text-zinc-900">{weeklyMetrics.totalClasses} Sessions</span>
+            <span className="font-semibold text-zinc-500 dark:text-zinc-400">Weekly Total:</span>
+            <span className="font-extrabold text-zinc-900 dark:text-zinc-100">{weeklyMetrics.totalClasses} Sessions</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-zinc-500">Teaching Hours:</span>
-            <span className="font-extrabold text-zinc-900">{weeklyMetrics.totalHours} hrs</span>
+            <span className="font-semibold text-zinc-500 dark:text-zinc-400">Teaching Hours:</span>
+            <span className="font-extrabold text-zinc-900 dark:text-zinc-100">{weeklyMetrics.totalHours} hrs</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-zinc-500">Accomplished:</span>
-            <span className="font-extrabold text-emerald-800">{weeklyMetrics.loggedSessions} logged</span>
+            <span className="font-semibold text-zinc-500 dark:text-zinc-400">Accomplished:</span>
+            <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{weeklyMetrics.loggedSessions} logged</span>
           </div>
         </div>
 
-        <div className="text-[11px] font-mono text-zinc-500 hidden md:block">
+        <div className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 hidden md:block">
           {profile?.fullName || 'Faculty Schedule'} • {profile?.position || 'Instructor'}
         </div>
       </div>
 
-      {/* Mobile Day Selector Tabs (Only visible on small mobile screens) */}
+      {/* Mobile Day Selector Tabs */}
       <div className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
         {weekDays.map((dayDate, idx) => {
           const isSelected = selectedMobileDayIdx === idx;
@@ -394,10 +423,10 @@ export const CalendarView: FC<CalendarViewProps> = ({
               onClick={() => setSelectedMobileDayIdx(idx)}
               className={`flex-1 min-w-[70px] py-2 px-2.5 rounded-xl border text-center transition-all cursor-pointer ${
                 isSelected
-                  ? 'bg-zinc-950 border-zinc-950 text-white shadow-sm'
+                  ? 'bg-zinc-950 dark:bg-white border-zinc-950 dark:border-white text-white dark:text-zinc-950 shadow-sm'
                   : isCurrentDay
-                  ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
-                  : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200'
+                  : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50'
               }`}
             >
               <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
@@ -414,178 +443,198 @@ export const CalendarView: FC<CalendarViewProps> = ({
         })}
       </div>
 
-      {/* Weekly Schedule Planner Container */}
+      {/* Hourly Time-Grid Calendar Container (Matches Sample Image Layout) */}
       <div 
         ref={calendarPrintRef}
-        className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden"
+        className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden transition-colors"
       >
-        {/* Desktop & Tablet Multi-Column View (Hidden on mobile, uses grid-cols-5 or 6) */}
-        <div className={`hidden md:grid divide-x divide-zinc-200 ${
-          hasSaturdayClasses ? 'grid-cols-6' : 'grid-cols-5'
-        }`}>
-          {weekDays.map((dayDate) => {
-            const isCurrentDay = isToday(dayDate);
-            const holidayName = PHILIPPINE_HOLIDAYS[format(dayDate, 'MM-dd')];
-            const schedule = getDaySchedule(dayDate);
-            const dayTotalHours = schedule.reduce((sum, item) => sum + item.duration, 0);
+        {/* Desktop & Tablet Hourly Time-Grid */}
+        <div className="hidden md:block overflow-x-auto">
+          {/* Day Headers Bar */}
+          <div className="grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-950 divide-x divide-zinc-200 dark:divide-zinc-800">
+            {/* Time label corner */}
+            <div className="p-2.5 text-center text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-400 dark:text-zinc-500 flex items-center justify-center">
+              Time
+            </div>
 
-            return (
-              <div key={dayDate.toISOString()} className="flex flex-col min-h-[480px] bg-zinc-50/40">
-                {/* Day Header Column */}
-                <div className={`p-3 border-b border-zinc-200 transition-colors ${
-                  isCurrentDay 
-                    ? 'bg-zinc-950 text-white' 
-                    : holidayName 
-                    ? 'bg-rose-50/90 text-rose-950 border-rose-200' 
-                    : 'bg-zinc-100/70 text-zinc-900'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-xs font-black tracking-wider uppercase ${
-                      isCurrentDay ? 'text-zinc-200' : 'text-zinc-600'
-                    }`}>
-                      {format(dayDate, 'EEEE')}
-                    </span>
+            {/* Day Column Headers */}
+            {weekDays.map((dayDate) => {
+              const isCurrentDay = isToday(dayDate);
+              const holidayName = PHILIPPINE_HOLIDAYS[format(dayDate, 'MM-dd')];
+              const schedule = getDaySchedule(dayDate);
+
+              return (
+                <div 
+                  key={dayDate.toISOString()}
+                  className={`p-2.5 text-center transition-all ${
+                    isCurrentDay
+                      ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-xs'
+                      : holidayName
+                      ? 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-950 dark:text-rose-200'
+                      : 'text-zinc-800 dark:text-zinc-200'
+                  }`}
+                >
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${
+                    isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-400'
+                  }`}>
+                    {format(dayDate, 'EEEE')}
+                  </div>
+                  <div className="text-base font-black tracking-tight mt-0.5 flex items-center justify-center gap-1.5">
+                    <span>{format(dayDate, 'MMM d')}</span>
                     {isCurrentDay && (
-                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" title="Today" />
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-600 animate-pulse" />
                     )}
                   </div>
-
-                  <div className="flex items-baseline justify-between mt-1">
-                    <span className={`text-lg font-black tracking-tight ${
-                      isCurrentDay ? 'text-white' : 'text-zinc-950'
-                    }`}>
-                      {format(dayDate, 'MMM d')}
-                    </span>
-                    <span className={`text-[10px] font-bold ${
-                      isCurrentDay ? 'text-zinc-300' : 'text-zinc-500'
-                    }`}>
-                      {schedule.length} {schedule.length === 1 ? 'class' : 'classes'} • {dayTotalHours}h
-                    </span>
+                  <div className={`text-[10px] font-medium mt-0.5 ${
+                    isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-400 dark:text-zinc-500'
+                  }`}>
+                    {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
                   </div>
-
-                  {/* Holiday Banner if present */}
                   {holidayName && (
-                    <div className="mt-1.5 text-[10px] font-bold text-rose-800 bg-rose-100/80 px-1.5 py-0.5 rounded border border-rose-200 truncate">
+                    <div className="text-[9px] font-bold text-rose-800 dark:text-rose-300 bg-rose-100/90 dark:bg-rose-900/40 rounded px-1 mt-1 truncate">
                       {holidayName}
                     </div>
                   )}
                 </div>
+              );
+            })}
+          </div>
 
-                {/* Day Schedule Stack */}
-                <div className="flex-1 p-2 space-y-2.5 overflow-y-auto">
-                  {schedule.length === 0 ? (
-                    <div className="h-48 flex flex-col items-center justify-center text-center p-4">
-                      <div className="h-8 w-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-400 mb-1.5">
-                        <CalendarIcon className="w-4 h-4" />
-                      </div>
-                      <span className="text-xs font-semibold text-zinc-400">No classes scheduled</span>
-                    </div>
-                  ) : (
-                    schedule.map((item, itemIdx) => {
-                      const isLab = item.sch.type === 'Laboratory';
-                      return (
-                        <div
-                          key={`${item.cls.id}_${item.sch.dayOfWeek}_${itemIdx}`}
-                          onClick={() => onClassClick(item.cls, item.sch, dayDate)}
-                          className={`rounded-xl border p-3 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] group flex flex-col justify-between gap-2 ${
-                            item.isLiveNow
-                              ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/50'
-                              : isLab
-                              ? 'border-blue-200 bg-blue-50/70 hover:border-blue-300'
-                              : 'border-zinc-200 bg-white hover:border-zinc-300'
-                          }`}
-                        >
-                          {/* Top Row: Time, Type Badge & Status */}
-                          <div className="flex items-start justify-between gap-1.5">
-                            <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-950 font-mono">
-                              <Clock className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                              <span>{formatTimeSlot(item.sch.startTime)}</span>
-                            </div>
+          {/* Time-Grid Body */}
+          <div className="relative grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] divide-x divide-zinc-200 dark:divide-zinc-800" style={{ height: `${totalGridHeightPx}px` }}>
+            {/* Left Y-Axis Time Labels */}
+            <div className="relative bg-zinc-50/70 dark:bg-zinc-950/60 select-none">
+              {timeSlots.map((slot, sIdx) => (
+                <div 
+                  key={sIdx} 
+                  className={`absolute w-full px-2 text-right text-[10px] font-mono leading-none ${
+                    slot.isHalf ? 'text-zinc-400/80 dark:text-zinc-600' : 'font-bold text-zinc-600 dark:text-zinc-400'
+                  }`}
+                  style={{ top: `${sIdx * SLOT_HEIGHT_PX}px` }}
+                >
+                  {slot.label}
+                </div>
+              ))}
+            </div>
 
-                            <div className="flex items-center gap-1">
-                              {/* Live indicator */}
-                              {item.isLiveNow && (
-                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-600 text-white uppercase tracking-wider animate-pulse">
-                                  Live
-                                </span>
-                              )}
+            {/* Day Columns with Proportional Absolute-Positioned Class Blocks */}
+            {weekDays.map((dayDate) => {
+              const schedule = getDaySchedule(dayDate);
+              const isCurrentDay = isToday(dayDate);
 
-                              {/* Completed checkmark */}
-                              {item.isLogged ? (
-                                <span className="text-emerald-700" title="Session accomplishment logged">
-                                  <CheckCircle2 className="w-4 h-4" />
-                                </span>
-                              ) : (
-                                <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                                  isLab ? 'bg-blue-100 text-blue-900' : 'bg-zinc-100 text-zinc-700'
-                                }`}>
-                                  {isLab ? <FlaskConical className="w-3 h-3 mr-0.5" /> : <GraduationCap className="w-3 h-3 mr-0.5" />}
-                                  {isLab ? 'Lab' : 'Lec'}
-                                </span>
-                              )}
+              return (
+                <div 
+                  key={dayDate.toISOString()} 
+                  className={`relative bg-hatched transition-colors ${
+                    isCurrentDay ? 'bg-zinc-50/30 dark:bg-zinc-800/10' : ''
+                  }`}
+                  style={{ height: `${totalGridHeightPx}px` }}
+                >
+                  {/* Horizontal 30-min Grid Guide Lines */}
+                  {timeSlots.map((slot, sIdx) => (
+                    <div
+                      key={sIdx}
+                      className={`absolute left-0 right-0 border-t pointer-events-none ${
+                        slot.isHalf 
+                          ? 'border-zinc-100 dark:border-zinc-800/50 border-dashed' 
+                          : 'border-zinc-200 dark:border-zinc-800'
+                      }`}
+                      style={{ top: `${sIdx * SLOT_HEIGHT_PX}px` }}
+                    />
+                  ))}
 
-                              {onManageCourse && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onManageCourse(item.cls);
-                                  }}
-                                  className="p-1 rounded hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-800 transition-colors"
-                                  title="Inspect Course Syllabus & Notes"
-                                >
-                                  <ExternalLink className="w-3 h-3" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
+                  {/* Scheduled Class Blocks (Matching Sample Image Layout & Eye-Care Colors) */}
+                  {schedule.map((item, itemIdx) => {
+                    const isLab = item.sch.type === 'Laboratory';
 
-                          {/* Middle: Subject Code & Title */}
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm font-black text-zinc-950 group-hover:text-zinc-800">
+                    // Non-oversaturated, easy-on-the-eyes palette:
+                    // Lecture: Soft slate blue/gray
+                    // Laboratory: Soft cyan/teal
+                    // Accomplished: Soft emerald
+                    let cardColorClasses = isLab
+                      ? 'bg-cyan-50/95 dark:bg-cyan-950/60 border-cyan-200 dark:border-cyan-800/80 text-cyan-950 dark:text-cyan-100 hover:border-cyan-400 dark:hover:border-cyan-600'
+                      : 'bg-white dark:bg-zinc-800/90 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500';
+
+                    if (item.isLogged) {
+                      cardColorClasses = 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-100 hover:border-emerald-400';
+                    }
+
+                    if (item.isLiveNow) {
+                      cardColorClasses += ' ring-2 ring-emerald-500 shadow-md animate-pulse';
+                    }
+
+                    return (
+                      <div
+                        key={`${item.cls.id}_${itemIdx}`}
+                        onClick={() => onClassClick(item.cls, item.sch, dayDate)}
+                        style={{
+                          top: `${item.topPx}px`,
+                          height: `${item.heightPx}px`,
+                        }}
+                        className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] flex flex-col justify-between overflow-hidden z-10 ${cardColorClasses}`}
+                        title={`${item.cls.subjectCode} (${item.cls.section}) - ${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} – ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to log topics or view syllabus.`}
+                      >
+                        {/* Block Header: Subject Code, Section & Status */}
+                        <div>
+                          <div className="flex items-center justify-between gap-1 leading-tight">
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className="text-xs font-black truncate">
                                 {item.cls.subjectCode}
                               </span>
-                              <span className="text-xs font-bold px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-800 border border-zinc-200">
+                              <span className="text-[10px] font-bold px-1 rounded bg-zinc-200/70 dark:bg-zinc-700/80 shrink-0">
                                 {item.cls.section}
                               </span>
                             </div>
-                            <p className="text-[11px] font-medium text-zinc-600 line-clamp-1 mt-0.5">
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              {item.isLiveNow && (
+                                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" title="Live Now" />
+                              )}
+                              {item.isLogged ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                              ) : (
+                                <span className="text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-100 dark:bg-zinc-700/60 opacity-80">
+                                  {isLab ? 'Lab' : 'Lec'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Subject Title (Shown if block height permits) */}
+                          {item.heightPx > 50 && (
+                            <p className="text-[10px] opacity-80 truncate mt-0.5 font-medium">
                               {item.cls.subjectTitle}
                             </p>
-                          </div>
-
-                          {/* Next topic syllabus preview */}
-                          {item.nextTopic && !item.isLogged && (
-                            <div className="p-1.5 rounded-lg bg-zinc-100/70 border border-zinc-200/60 text-[10px] text-zinc-700 flex items-center gap-1.5">
-                              <BookOpen className="w-3 h-3 text-zinc-500 shrink-0" />
-                              <span className="truncate"><span className="font-bold text-zinc-900">Next:</span> {item.nextTopic}</span>
-                            </div>
                           )}
-
-                          {/* Bottom Row: Room & Duration */}
-                          <div className="flex items-center justify-between pt-1.5 border-t border-zinc-200/60 text-[10px] text-zinc-500 font-medium">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-zinc-400" />
-                              <span className="font-bold text-zinc-700">
-                                Room {item.sch.room || item.cls.room || 'CL'}
-                              </span>
-                            </div>
-                            <span className="text-zinc-400 font-mono">
-                              {formatTimeSlot(item.sch.endTime)} ({item.duration}h)
-                            </span>
-                          </div>
                         </div>
-                      );
-                    })
-                  )}
+
+                        {/* Next Topic Preview (Shown for longer 2-3h lab blocks) */}
+                        {item.heightPx > 80 && item.nextTopic && !item.isLogged && (
+                          <div className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-100/80 dark:bg-zinc-800/80 opacity-90 truncate flex items-center gap-1">
+                            <BookOpen className="w-2.5 h-2.5 shrink-0" />
+                            <span className="truncate"><span className="font-bold">Next:</span> {item.nextTopic}</span>
+                          </div>
+                        )}
+
+                        {/* Block Footer: Time & Room */}
+                        <div className="flex items-center justify-between text-[9px] font-mono opacity-85 pt-1 border-t border-zinc-200/50 dark:border-zinc-700/50">
+                          <span>
+                            {formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}
+                          </span>
+                          <span className="font-bold px-1 rounded bg-zinc-100/90 dark:bg-zinc-700/70">
+                            {item.sch.room || item.cls.room || 'CL'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
-        {/* Mobile Single Day View (Rendered only on mobile screen for selected day) */}
+        {/* Mobile Single Day Time-Grid View */}
         <div className="md:hidden">
           {(() => {
             const currentDay = weekDays[selectedMobileDayIdx] || weekDays[0];
@@ -598,10 +647,10 @@ export const CalendarView: FC<CalendarViewProps> = ({
                 {/* Mobile Day Header Banner */}
                 <div className={`p-3 rounded-xl border flex items-center justify-between ${
                   isCurrentDay 
-                    ? 'bg-zinc-950 text-white border-zinc-950' 
+                    ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white' 
                     : holidayName 
-                    ? 'bg-rose-50 border-rose-200 text-rose-950' 
-                    : 'bg-zinc-50 border-zinc-200 text-zinc-900'
+                    ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-200' 
+                    : 'bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100'
                 }`}>
                   <div>
                     <span className="text-xs font-bold uppercase tracking-wider opacity-80">
@@ -616,7 +665,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                       {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
                     </span>
                     {isCurrentDay && (
-                      <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mt-0.5">
+                      <div className="text-[10px] font-bold text-emerald-400 dark:text-emerald-600 uppercase tracking-wider mt-0.5">
                         • Today
                       </div>
                     )}
@@ -624,15 +673,15 @@ export const CalendarView: FC<CalendarViewProps> = ({
                 </div>
 
                 {holidayName && (
-                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-900">
-                    🎉 Holiday / Observance: {holidayName}
+                  <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-900 dark:text-rose-200">
+                    🎉 Holiday: {holidayName}
                   </div>
                 )}
 
-                {/* Mobile Cards */}
+                {/* Mobile Class Cards */}
                 <div className="space-y-2.5">
                   {schedule.length === 0 ? (
-                    <div className="py-12 text-center text-zinc-400 text-xs font-semibold">
+                    <div className="py-12 text-center text-zinc-400 dark:text-zinc-500 text-xs font-semibold">
                       No classes scheduled for {format(currentDay, 'EEEE')}.
                     </div>
                   ) : (
@@ -644,38 +693,38 @@ export const CalendarView: FC<CalendarViewProps> = ({
                           onClick={() => onClassClick(item.cls, item.sch, currentDay)}
                           className={`rounded-xl border p-3.5 cursor-pointer shadow-2xs space-y-2 ${
                             item.isLiveNow
-                              ? 'border-emerald-500 bg-emerald-50/50'
+                              ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40'
                               : isLab
-                              ? 'border-blue-200 bg-blue-50/70'
-                              : 'border-zinc-200 bg-white'
+                              ? 'border-cyan-200 dark:border-cyan-800/80 bg-cyan-50/70 dark:bg-cyan-950/40'
+                              : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
-                              <span className="text-sm font-black text-zinc-950">
+                              <span className="text-sm font-black text-zinc-950 dark:text-zinc-100">
                                 {item.cls.subjectCode}
                               </span>
-                              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600">
                                 {item.cls.section}
                               </span>
                             </div>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
-                              isLab ? 'bg-blue-100 text-blue-900' : 'bg-zinc-100 text-zinc-700'
+                              isLab ? 'bg-cyan-100 dark:bg-cyan-900/60 text-cyan-900 dark:text-cyan-200' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
                             }`}>
                               {item.sch.type}
                             </span>
                           </div>
 
-                          <div className="text-xs text-zinc-600 font-medium">
+                          <div className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                             {item.cls.subjectTitle}
                           </div>
 
-                          <div className="flex items-center justify-between text-xs text-zinc-700 pt-2 border-t border-zinc-200/60 font-mono">
+                          <div className="flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 font-mono">
                             <div className="flex items-center gap-1.5">
                               <Clock className="w-3.5 h-3.5 text-zinc-500" />
                               <span>{formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}</span>
                             </div>
-                            <span className="font-bold bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200">
+                            <span className="font-bold bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-600">
                               {item.sch.room || item.cls.room || 'CL'}
                             </span>
                           </div>
@@ -689,30 +738,30 @@ export const CalendarView: FC<CalendarViewProps> = ({
           })()}
         </div>
 
-        {/* Calendar Footer Legend */}
-        <div className="bg-zinc-50 p-3.5 border-t border-zinc-200 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600">
+        {/* Legend Bar (Matching Sample Image bottom row) */}
+        <div className="bg-zinc-50 dark:bg-zinc-950 p-3.5 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600 dark:text-zinc-400 transition-colors">
           <div className="flex items-center gap-4 flex-wrap">
-            <span className="font-bold text-zinc-900 text-[11px] uppercase tracking-wider">Legend:</span>
+            <span className="font-bold text-zinc-900 dark:text-zinc-200 text-[11px] uppercase tracking-wider">Legend:</span>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded bg-white border border-zinc-300 shadow-2xs" />
+              <span className="h-3 w-3 rounded bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 shadow-2xs" />
               <span className="text-[11px]">Lecture Class</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded bg-blue-50 border border-blue-300 shadow-2xs" />
+              <span className="h-3 w-3 rounded bg-cyan-100 dark:bg-cyan-900/60 border border-cyan-300 dark:border-cyan-700 shadow-2xs" />
               <span className="text-[11px]">Laboratory Class</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px]">Active Class Live Now</span>
+              <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 shadow-2xs" />
+              <span className="text-[11px]">Accomplished Log</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-[11px]">Topic Accomplishment Logged</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px]">Active Live Now</span>
             </div>
           </div>
 
-          <div className="text-[11px] text-zinc-500 font-medium">
-            Tip: Click any class card to record lesson accomplishment or inspect syllabus progress.
+          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+            Tip: Click any class block to view syllabus topics, log session accomplishments, or inspect course details.
           </div>
         </div>
       </div>
