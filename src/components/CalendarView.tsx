@@ -1,15 +1,12 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import type { FC } from 'react';
 import { 
   format, 
-  addMonths, 
-  subMonths, 
-  startOfMonth, 
-  endOfMonth, 
+  addWeeks, 
+  subWeeks, 
   startOfWeek, 
   endOfWeek, 
   eachDayOfInterval, 
-  isSameMonth, 
   isSameDay, 
   isToday,
   parse
@@ -22,8 +19,13 @@ import {
   Printer, 
   CheckCircle2, 
   Clock, 
+  MapPin, 
   ListFilter,
-  Plus
+  Plus,
+  BookOpen,
+  GraduationCap,
+  FlaskConical,
+  ExternalLink
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -33,11 +35,12 @@ interface CalendarViewProps {
   logs: (SessionLog & { classInfo: ClassSession })[];
   profile?: InstructorProfile;
   onClassClick: (cls: ClassSession, sch?: ClassSchedule, targetDate?: Date) => void;
+  onManageCourse?: (cls: ClassSession) => void;
   onSwitchToDaily: () => void;
   onAddClassClick?: () => void;
 }
 
-// Philippine National & Academic Calendar Holidays
+// Philippine Holidays & Academic Milestones
 const PHILIPPINE_HOLIDAYS: Record<string, string> = {
   '01-01': "New Year's Day",
   '01-23': 'First Philippine Republic Day',
@@ -56,44 +59,73 @@ const PHILIPPINE_HOLIDAYS: Record<string, string> = {
   '12-31': "New Year's Eve"
 };
 
-const DAY_LABELS = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-
 export const CalendarView: FC<CalendarViewProps> = ({
   classes,
   logs,
   profile,
   onClassClick,
+  onManageCourse,
   onSwitchToDaily,
   onAddClassClick
 }) => {
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [currentWeekDate, setCurrentWeekDate] = useState<Date>(new Date());
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [selectedMobileDayIdx, setSelectedMobileDayIdx] = useState<number>(() => {
+    const day = new Date().getDay();
+    // Default to today if Mon-Sat, else Monday
+    return day >= 1 && day <= 6 ? day - 1 : 0;
+  });
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('all');
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const calendarPrintRef = useRef<HTMLDivElement>(null);
 
-  // Month navigation
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
-  const goToToday = () => setCurrentMonth(new Date());
+  // Live clock for "Active Now" indicators
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
-  // Formatted display
-  const monthYearDisplay = format(currentMonth, 'MMMM yyyy');
+  // Week navigation
+  const nextWeek = () => setCurrentWeekDate(addWeeks(currentWeekDate, 1));
+  const prevWeek = () => setCurrentWeekDate(subWeeks(currentWeekDate, 1));
+  const goToCurrentWeek = () => {
+    const now = new Date();
+    setCurrentWeekDate(now);
+    const day = now.getDay();
+    setSelectedMobileDayIdx(day >= 1 && day <= 6 ? day - 1 : 0);
+  };
 
-  // Filtered classes based on dropdown
+  // Check if any loaded class has a Saturday schedule
+  const hasSaturdayClasses = useMemo(() => {
+    return classes.some(c => c.schedule.some(s => s.dayOfWeek === 6));
+  }, [classes]);
+
+  // Compute academic days for the week: Monday to Friday (or Saturday if loaded)
+  const weekDays = useMemo(() => {
+    const start = startOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Monday
+    const end = endOfWeek(currentWeekDate, { weekStartsOn: 1 }); // Sunday
+    const allDays = eachDayOfInterval({ start, end });
+    
+    // Academic work days: Monday(0) to Friday(4), or Saturday(5)
+    return hasSaturdayClasses ? allDays.slice(0, 6) : allDays.slice(0, 5);
+  }, [currentWeekDate, hasSaturdayClasses]);
+
+  // Week display label
+  const weekRangeLabel = useMemo(() => {
+    if (weekDays.length === 0) return '';
+    const first = weekDays[0];
+    const last = weekDays[weekDays.length - 1];
+    if (format(first, 'MMM') === format(last, 'MMM')) {
+      return `${format(first, 'MMMM d')} – ${format(last, 'd, yyyy')}`;
+    }
+    return `${format(first, 'MMM d')} – ${format(last, 'MMM d, yyyy')}`;
+  }, [weekDays]);
+
+  // Filtered classes based on course dropdown
   const filteredClasses = useMemo(() => {
     if (selectedCourseFilter === 'all') return classes;
     return classes.filter(c => c.id === selectedCourseFilter);
   }, [classes, selectedCourseFilter]);
-
-  // Compute 7-column month grid days
-  const calendarDays = useMemo(() => {
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(monthStart);
-    const startDate = startOfWeek(monthStart, { weekStartsOn: 0 }); // Sunday start
-    const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
-
-    return eachDayOfInterval({ start: startDate, end: endDate });
-  }, [currentMonth]);
 
   // Format 24h to 12h time (e.g. 08:00 -> 8:00 AM)
   const formatTimeSlot = (timeStr: string) => {
@@ -105,29 +137,63 @@ export const CalendarView: FC<CalendarViewProps> = ({
     }
   };
 
-  // Map classes to each date based on day of week
-  const getDaySchedule = (date: Date) => {
-    const dayOfWeek = date.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+  // Compute duration in hours
+  const computeDurationHours = (startStr: string, endStr: string): number => {
+    try {
+      const [sh, sm] = startStr.split(':').map(Number);
+      const [eh, em] = endStr.split(':').map(Number);
+      const totalMinutes = (eh * 60 + em) - (sh * 60 + sm);
+      return Math.max(0, totalMinutes / 60);
+    } catch {
+      return 1;
+    }
+  };
+
+  // Map classes to each day of the week
+  const getDaySchedule = (dayDate: Date) => {
+    const dayOfWeek = dayDate.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
     const items: Array<{
       cls: ClassSession;
       sch: ClassSchedule;
       isLogged: boolean;
-      loggedTopics?: string[];
+      isLiveNow: boolean;
+      duration: number;
+      matchingLog?: SessionLog & { classInfo: ClassSession };
+      nextTopic?: string;
     }> = [];
 
     filteredClasses.forEach(cls => {
       cls.schedule.forEach(sch => {
         if (sch.dayOfWeek === dayOfWeek) {
-          // Check if session was logged for this exact date
+          // Check if session was logged for this date
           const matchingLog = logs.find(l => 
             l.classInfo.id === cls.id && 
-            isSameDay(new Date(l.date), date)
+            isSameDay(new Date(l.date), dayDate)
           );
+
+          // Check if active live right now
+          let isLiveNow = false;
+          if (isToday(dayDate)) {
+            const todayStr = format(currentTime, 'yyyy-MM-dd');
+            const start = parse(`${todayStr} ${sch.startTime}`, 'yyyy-MM-dd HH:mm', new Date());
+            const end = parse(`${todayStr} ${sch.endTime}`, 'yyyy-MM-dd HH:mm', new Date());
+            isLiveNow = currentTime >= start && currentTime <= end;
+          }
+
+          // Calculate next topic
+          const loggedCount = logs.filter(l => l.classInfo.id === cls.id).length;
+          const nextTopic = cls.masterSyllabus && cls.masterSyllabus.length > loggedCount 
+            ? cls.masterSyllabus[loggedCount]
+            : undefined;
+
           items.push({
             cls,
             sch,
             isLogged: !!matchingLog,
-            loggedTopics: matchingLog?.topicsCovered
+            isLiveNow,
+            duration: computeDurationHours(sch.startTime, sch.endTime),
+            matchingLog,
+            nextTopic
           });
         }
       });
@@ -137,7 +203,25 @@ export const CalendarView: FC<CalendarViewProps> = ({
     return items.sort((a, b) => a.sch.startTime.localeCompare(b.sch.startTime));
   };
 
-  // Export calendar as high-resolution printable PDF
+  // Overall weekly metrics
+  const weeklyMetrics = useMemo(() => {
+    let totalClasses = 0;
+    let totalHours = 0;
+    let loggedSessions = 0;
+
+    weekDays.forEach(day => {
+      const schedule = getDaySchedule(day);
+      totalClasses += schedule.length;
+      schedule.forEach(item => {
+        totalHours += item.duration;
+        if (item.isLogged) loggedSessions++;
+      });
+    });
+
+    return { totalClasses, totalHours, loggedSessions };
+  }, [weekDays, filteredClasses, logs]);
+
+  // High-resolution Printable PDF Export
   const handleExportPDF = async () => {
     if (!calendarPrintRef.current) return;
     try {
@@ -158,7 +242,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
       pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
-      pdf.save(`ProfTrack_Calendar_${format(currentMonth, 'yyyy_MM')}.pdf`);
+      pdf.save(`ProfTrack_Weekly_Schedule_${format(currentWeekDate, 'yyyy_MM_dd')}.pdf`);
     } catch (err) {
       console.error('Failed to export calendar PDF:', err);
       window.print();
@@ -169,9 +253,9 @@ export const CalendarView: FC<CalendarViewProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6 space-y-4">
-      {/* Calendar Top Control Toolbar */}
+      {/* Top Toolbar: View Switcher, Week Navigation & Controls */}
       <div className="bg-white rounded-2xl border border-zinc-200 p-3 sm:p-4 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        {/* Left: View Mode Segmented Switcher & Today */}
+        {/* Left: View Mode Segmented Switcher & Current Week */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="inline-flex p-1 rounded-xl bg-zinc-100 border border-zinc-200">
             <button
@@ -187,19 +271,47 @@ export const CalendarView: FC<CalendarViewProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-zinc-950 shadow-2xs transition-all cursor-default"
             >
               <CalendarIcon className="w-3.5 h-3.5 text-zinc-900" />
-              <span>Monthly Calendar</span>
+              <span>Weekly Schedule</span>
             </button>
           </div>
 
           <button
             type="button"
-            onClick={goToToday}
+            onClick={goToCurrentWeek}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-800 transition-colors shadow-2xs cursor-pointer"
-            title="Jump to today"
+            title="Jump to current week"
           >
-            Today
+            This Week
           </button>
+        </div>
 
+        {/* Center: Week Navigator */}
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={prevWeek}
+            className="p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 transition-colors cursor-pointer shadow-2xs"
+            aria-label="Previous Week"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          
+          <h2 className="text-sm sm:text-base font-black text-zinc-950 tracking-tight min-w-[210px] text-center">
+            {weekRangeLabel}
+          </h2>
+
+          <button
+            type="button"
+            onClick={nextWeek}
+            className="p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 transition-colors cursor-pointer shadow-2xs"
+            aria-label="Next Week"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Right: Actions, Course Filter & PDF */}
+        <div className="flex items-center gap-2 justify-end flex-wrap">
           {onAddClassClick && (
             <button
               type="button"
@@ -211,35 +323,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
               <span className="hidden sm:inline">Add Course</span>
             </button>
           )}
-        </div>
 
-        {/* Center: Month & Year Navigator */}
-        <div className="flex items-center justify-center gap-2">
-          <button
-            type="button"
-            onClick={prevMonth}
-            className="p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 transition-colors cursor-pointer shadow-2xs"
-            aria-label="Previous Month"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          
-          <h2 className="text-base sm:text-lg font-black text-zinc-950 tracking-tight min-w-[170px] text-center">
-            {monthYearDisplay}
-          </h2>
-
-          <button
-            type="button"
-            onClick={nextMonth}
-            className="p-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 transition-colors cursor-pointer shadow-2xs"
-            aria-label="Next Month"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Right: Course Filter & Print / Export Action */}
-        <div className="flex items-center gap-2 justify-end flex-wrap">
           {/* Course filter */}
           <div className="relative">
             <select
@@ -257,13 +341,13 @@ export const CalendarView: FC<CalendarViewProps> = ({
             <ListFilter className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Export / Print PDF */}
+          {/* Export PDF button */}
           <button
             type="button"
             onClick={handleExportPDF}
             disabled={isExporting}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-950 bg-zinc-950 hover:bg-zinc-800 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-            title="Download printable PDF calendar"
+            title="Download printable PDF weekly schedule"
           >
             {isExporting ? (
               <span className="animate-spin text-xs">⏳</span>
@@ -275,178 +359,338 @@ export const CalendarView: FC<CalendarViewProps> = ({
         </div>
       </div>
 
-      {/* Printable Wall Calendar Enclosure (Styling matches user reference photo & ProfTrack) */}
+      {/* Weekly Stats Header Pill Bar */}
+      <div className="bg-zinc-50 rounded-xl border border-zinc-200/80 px-4 py-2.5 flex items-center justify-between gap-4 text-xs flex-wrap">
+        <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-zinc-500">Weekly Total:</span>
+            <span className="font-extrabold text-zinc-900">{weeklyMetrics.totalClasses} Sessions</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-zinc-500">Teaching Hours:</span>
+            <span className="font-extrabold text-zinc-900">{weeklyMetrics.totalHours} hrs</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="font-semibold text-zinc-500">Accomplished:</span>
+            <span className="font-extrabold text-emerald-800">{weeklyMetrics.loggedSessions} logged</span>
+          </div>
+        </div>
+
+        <div className="text-[11px] font-mono text-zinc-500 hidden md:block">
+          {profile?.fullName || 'Faculty Schedule'} • {profile?.position || 'Instructor'}
+        </div>
+      </div>
+
+      {/* Mobile Day Selector Tabs (Only visible on small mobile screens) */}
+      <div className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+        {weekDays.map((dayDate, idx) => {
+          const isSelected = selectedMobileDayIdx === idx;
+          const isCurrentDay = isToday(dayDate);
+          const schedule = getDaySchedule(dayDate);
+          return (
+            <button
+              key={dayDate.toISOString()}
+              type="button"
+              onClick={() => setSelectedMobileDayIdx(idx)}
+              className={`flex-1 min-w-[70px] py-2 px-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                isSelected
+                  ? 'bg-zinc-950 border-zinc-950 text-white shadow-sm'
+                  : isCurrentDay
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+                  : 'bg-white border-zinc-200 text-zinc-700 hover:bg-zinc-50'
+              }`}
+            >
+              <div className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+                {format(dayDate, 'EEE')}
+              </div>
+              <div className="text-sm font-extrabold">
+                {format(dayDate, 'd')}
+              </div>
+              <div className="text-[9px] font-medium mt-0.5 opacity-75">
+                {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Weekly Schedule Planner Container */}
       <div 
         ref={calendarPrintRef}
-        className="bg-white rounded-2xl border-2 border-zinc-950 ring-1 ring-zinc-300 shadow-xl overflow-hidden print:m-0 print:border-none print:shadow-none"
+        className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden"
       >
-        {/* Academic Header Band for Print / Branding */}
-        <div className="bg-zinc-900 text-white px-4 py-2 border-b border-zinc-800 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold tracking-wide uppercase text-zinc-100">
-              {profile?.institution || 'University of Makati'}
-            </span>
-            <span className="text-zinc-400">•</span>
-            <span className="text-zinc-300">{profile?.fullName || 'Faculty Schedule'}</span>
-          </div>
-          <div className="text-[11px] font-mono text-zinc-400 hidden sm:block">
-            Academic Calendar Planner • 1st Semester A.Y. 2026–2027
-          </div>
-        </div>
-
-        {/* Navy Header Days of Week Bar (Matches photo reference) */}
-        <div className="bg-zinc-950 text-white grid grid-cols-7 text-center divide-x divide-zinc-800 border-b border-zinc-950">
-          {DAY_LABELS.map((dayName, idx) => {
-            const isWeekend = idx === 0 || idx === 6;
-            return (
-              <div 
-                key={dayName}
-                className={`py-2 text-[10px] sm:text-xs font-black tracking-wider ${
-                  isWeekend ? 'text-zinc-400' : 'text-white'
-                }`}
-              >
-                <span className="hidden md:inline">{dayName}</span>
-                <span className="md:hidden">{dayName.slice(0, 3)}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* 7-Column Wall Calendar Grid */}
-        <div className="grid grid-cols-7 divide-x divide-y divide-zinc-200 bg-zinc-200">
-          {calendarDays.map((dayDate) => {
-            const isCurrentMonth = isSameMonth(dayDate, currentMonth);
-            const isTodayDate = isToday(dayDate);
-            const dayNumber = format(dayDate, 'd');
-            const monthDayKey = format(dayDate, 'MM-dd');
-            const holidayName = PHILIPPINE_HOLIDAYS[monthDayKey];
-            const scheduleItems = getDaySchedule(dayDate);
-            const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
-            const hasClasses = scheduleItems.length > 0;
-
-            // Background logic matching reference photo:
-            // - Class days: cool soft slate-blue (work week)
-            // - Holidays: soft rose / peach accent
-            // - Weekends / Off days: clean white
-            let cellBg = 'bg-white';
-            if (holidayName) {
-              cellBg = 'bg-rose-50/75 border-rose-100';
-            } else if (hasClasses && isCurrentMonth) {
-              cellBg = 'bg-slate-50/90 hover:bg-slate-100/90';
-            } else if (!isCurrentMonth) {
-              cellBg = 'bg-zinc-50/60 opacity-40';
-            }
+        {/* Desktop & Tablet Multi-Column View (Hidden on mobile, uses grid-cols-5 or 6) */}
+        <div className={`hidden md:grid divide-x divide-zinc-200 ${
+          hasSaturdayClasses ? 'grid-cols-6' : 'grid-cols-5'
+        }`}>
+          {weekDays.map((dayDate) => {
+            const isCurrentDay = isToday(dayDate);
+            const holidayName = PHILIPPINE_HOLIDAYS[format(dayDate, 'MM-dd')];
+            const schedule = getDaySchedule(dayDate);
+            const dayTotalHours = schedule.reduce((sum, item) => sum + item.duration, 0);
 
             return (
-              <div
-                key={dayDate.toISOString()}
-                className={`min-h-[115px] sm:min-h-[145px] md:min-h-[165px] p-1.5 sm:p-2 flex flex-col justify-between transition-colors relative group ${cellBg} ${
-                  isTodayDate ? 'ring-2 ring-inset ring-zinc-950 bg-amber-50/20' : ''
-                }`}
-              >
-                {/* Cell Header: Day Number & Status Badges */}
-                <div className="flex items-start justify-between gap-1 mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <span 
-                      className={`text-xs sm:text-sm font-black tracking-tight ${
-                        isTodayDate 
-                          ? 'bg-zinc-950 text-white rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center shadow-2xs' 
-                          : isCurrentMonth 
-                          ? 'text-zinc-900' 
-                          : 'text-zinc-400'
-                      }`}
-                    >
-                      {dayNumber}
+              <div key={dayDate.toISOString()} className="flex flex-col min-h-[480px] bg-zinc-50/40">
+                {/* Day Header Column */}
+                <div className={`p-3 border-b border-zinc-200 transition-colors ${
+                  isCurrentDay 
+                    ? 'bg-zinc-950 text-white' 
+                    : holidayName 
+                    ? 'bg-rose-50/90 text-rose-950 border-rose-200' 
+                    : 'bg-zinc-100/70 text-zinc-900'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-black tracking-wider uppercase ${
+                      isCurrentDay ? 'text-zinc-200' : 'text-zinc-600'
+                    }`}>
+                      {format(dayDate, 'EEEE')}
                     </span>
-                    {isTodayDate && (
-                      <span className="hidden sm:inline-block text-[9px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-1 rounded">
-                        Today
-                      </span>
+                    {isCurrentDay && (
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" title="Today" />
                     )}
                   </div>
 
-                  {/* Holiday / Event Label */}
-                  {holidayName && (
-                    <span 
-                      className="text-[9px] sm:text-[10px] font-bold text-rose-800 bg-rose-100/90 border border-rose-200 px-1 sm:px-1.5 py-0.2 rounded truncate max-w-[85px] sm:max-w-[120px]"
-                      title={holidayName}
-                    >
-                      {holidayName}
+                  <div className="flex items-baseline justify-between mt-1">
+                    <span className={`text-lg font-black tracking-tight ${
+                      isCurrentDay ? 'text-white' : 'text-zinc-950'
+                    }`}>
+                      {format(dayDate, 'MMM d')}
                     </span>
-                  )}
-                </div>
+                    <span className={`text-[10px] font-bold ${
+                      isCurrentDay ? 'text-zinc-300' : 'text-zinc-500'
+                    }`}>
+                      {schedule.length} {schedule.length === 1 ? 'class' : 'classes'} • {dayTotalHours}h
+                    </span>
+                  </div>
 
-                {/* Scheduled Classes Stack */}
-                <div className="flex-1 space-y-1 overflow-y-auto max-h-[110px] sm:max-h-[125px] pr-0.5 scrollbar-none">
-                  {scheduleItems.map((item, itemIdx) => {
-                    const isLab = item.sch.type === 'Laboratory';
-                    return (
-                      <div
-                        key={`${item.cls.id}_${item.sch.dayOfWeek}_${itemIdx}`}
-                        onClick={() => onClassClick(item.cls, item.sch, dayDate)}
-                        className={`p-1 sm:p-1.5 rounded-lg border text-left cursor-pointer transition-all shadow-2xs group/card hover:scale-[1.01] ${
-                          isLab
-                            ? 'bg-blue-50/90 border-blue-200 text-blue-950 hover:border-blue-400'
-                            : 'bg-white border-zinc-200 text-zinc-900 hover:border-zinc-400'
-                        }`}
-                        title={`${item.cls.subjectCode} (${item.cls.section}) - ${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} - ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to view topics or log accomplishments.`}
-                      >
-                        <div className="flex items-center justify-between gap-1 leading-tight">
-                          <span className="font-extrabold text-[10px] sm:text-[11px] truncate text-zinc-950">
-                            {item.cls.subjectCode} <span className="font-semibold text-zinc-600">({item.cls.section})</span>
-                          </span>
-
-                          {/* Completion / Log status badge */}
-                          {item.isLogged ? (
-                            <span className="text-emerald-700 shrink-0" title="Class accomplishment logged for this date">
-                              <CheckCircle2 className="w-3 h-3" />
-                            </span>
-                          ) : (
-                            <span 
-                              className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-wider px-1 py-0.2 rounded shrink-0 ${
-                                isLab ? 'bg-blue-200/80 text-blue-900' : 'bg-zinc-100 text-zinc-700'
-                              }`}
-                            >
-                              {isLab ? 'Lab' : 'Lec'}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Time & Room line */}
-                        <div className="flex items-center justify-between text-[9px] text-zinc-500 font-mono mt-0.5">
-                          <span>{formatTimeSlot(item.sch.startTime)}</span>
-                          <span className="font-bold text-zinc-700 bg-zinc-100 px-1 rounded border border-zinc-200">
-                            {item.sch.room || item.cls.room || 'CL'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Empty state for weekdays without loaded classes */}
-                  {!hasClasses && isCurrentMonth && !isWeekend && !holidayName && (
-                    <div className="h-full flex items-center justify-center">
-                      <span className="text-[10px] text-zinc-400 italic">No classes</span>
+                  {/* Holiday Banner if present */}
+                  {holidayName && (
+                    <div className="mt-1.5 text-[10px] font-bold text-rose-800 bg-rose-100/80 px-1.5 py-0.5 rounded border border-rose-200 truncate">
+                      {holidayName}
                     </div>
                   )}
                 </div>
 
-                {/* Day Footer: Quick Summary Count */}
-                {hasClasses && (
-                  <div className="pt-1 text-[9px] text-zinc-400 font-medium flex items-center justify-between border-t border-zinc-200/60 mt-1">
-                    <span>{scheduleItems.length} {scheduleItems.length === 1 ? 'class' : 'classes'}</span>
-                    <span className="text-zinc-600 font-mono">
-                      {scheduleItems.filter(s => s.isLogged).length}/{scheduleItems.length} logged
-                    </span>
-                  </div>
-                )}
+                {/* Day Schedule Stack */}
+                <div className="flex-1 p-2 space-y-2.5 overflow-y-auto">
+                  {schedule.length === 0 ? (
+                    <div className="h-48 flex flex-col items-center justify-center text-center p-4">
+                      <div className="h-8 w-8 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-400 mb-1.5">
+                        <CalendarIcon className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-semibold text-zinc-400">No classes scheduled</span>
+                    </div>
+                  ) : (
+                    schedule.map((item, itemIdx) => {
+                      const isLab = item.sch.type === 'Laboratory';
+                      return (
+                        <div
+                          key={`${item.cls.id}_${item.sch.dayOfWeek}_${itemIdx}`}
+                          onClick={() => onClassClick(item.cls, item.sch, dayDate)}
+                          className={`rounded-xl border p-3 cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] group flex flex-col justify-between gap-2 ${
+                            item.isLiveNow
+                              ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/50'
+                              : isLab
+                              ? 'border-blue-200 bg-blue-50/70 hover:border-blue-300'
+                              : 'border-zinc-200 bg-white hover:border-zinc-300'
+                          }`}
+                        >
+                          {/* Top Row: Time, Type Badge & Status */}
+                          <div className="flex items-start justify-between gap-1.5">
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-950 font-mono">
+                              <Clock className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                              <span>{formatTimeSlot(item.sch.startTime)}</span>
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              {/* Live indicator */}
+                              {item.isLiveNow && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-600 text-white uppercase tracking-wider animate-pulse">
+                                  Live
+                                </span>
+                              )}
+
+                              {/* Completed checkmark */}
+                              {item.isLogged ? (
+                                <span className="text-emerald-700" title="Session accomplishment logged">
+                                  <CheckCircle2 className="w-4 h-4" />
+                                </span>
+                              ) : (
+                                <span className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                  isLab ? 'bg-blue-100 text-blue-900' : 'bg-zinc-100 text-zinc-700'
+                                }`}>
+                                  {isLab ? <FlaskConical className="w-3 h-3 mr-0.5" /> : <GraduationCap className="w-3 h-3 mr-0.5" />}
+                                  {isLab ? 'Lab' : 'Lec'}
+                                </span>
+                              )}
+
+                              {onManageCourse && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onManageCourse(item.cls);
+                                  }}
+                                  className="p-1 rounded hover:bg-zinc-200/60 text-zinc-400 hover:text-zinc-800 transition-colors"
+                                  title="Inspect Course Syllabus & Notes"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Middle: Subject Code & Title */}
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-black text-zinc-950 group-hover:text-zinc-800">
+                                {item.cls.subjectCode}
+                              </span>
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded-md bg-zinc-100 text-zinc-800 border border-zinc-200">
+                                {item.cls.section}
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-medium text-zinc-600 line-clamp-1 mt-0.5">
+                              {item.cls.subjectTitle}
+                            </p>
+                          </div>
+
+                          {/* Next topic syllabus preview */}
+                          {item.nextTopic && !item.isLogged && (
+                            <div className="p-1.5 rounded-lg bg-zinc-100/70 border border-zinc-200/60 text-[10px] text-zinc-700 flex items-center gap-1.5">
+                              <BookOpen className="w-3 h-3 text-zinc-500 shrink-0" />
+                              <span className="truncate"><span className="font-bold text-zinc-900">Next:</span> {item.nextTopic}</span>
+                            </div>
+                          )}
+
+                          {/* Bottom Row: Room & Duration */}
+                          <div className="flex items-center justify-between pt-1.5 border-t border-zinc-200/60 text-[10px] text-zinc-500 font-medium">
+                            <div className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-zinc-400" />
+                              <span className="font-bold text-zinc-700">
+                                Room {item.sch.room || item.cls.room || 'CL'}
+                              </span>
+                            </div>
+                            <span className="text-zinc-400 font-mono">
+                              {formatTimeSlot(item.sch.endTime)} ({item.duration}h)
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
 
+        {/* Mobile Single Day View (Rendered only on mobile screen for selected day) */}
+        <div className="md:hidden">
+          {(() => {
+            const currentDay = weekDays[selectedMobileDayIdx] || weekDays[0];
+            const holidayName = PHILIPPINE_HOLIDAYS[format(currentDay, 'MM-dd')];
+            const schedule = getDaySchedule(currentDay);
+            const isCurrentDay = isToday(currentDay);
+
+            return (
+              <div className="p-3 space-y-3">
+                {/* Mobile Day Header Banner */}
+                <div className={`p-3 rounded-xl border flex items-center justify-between ${
+                  isCurrentDay 
+                    ? 'bg-zinc-950 text-white border-zinc-950' 
+                    : holidayName 
+                    ? 'bg-rose-50 border-rose-200 text-rose-950' 
+                    : 'bg-zinc-50 border-zinc-200 text-zinc-900'
+                }`}>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider opacity-80">
+                      {format(currentDay, 'EEEE')}
+                    </span>
+                    <h3 className="text-base font-extrabold">
+                      {format(currentDay, 'MMMM d, yyyy')}
+                    </h3>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold">
+                      {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
+                    </span>
+                    {isCurrentDay && (
+                      <div className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider mt-0.5">
+                        • Today
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {holidayName && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-900">
+                    🎉 Holiday / Observance: {holidayName}
+                  </div>
+                )}
+
+                {/* Mobile Cards */}
+                <div className="space-y-2.5">
+                  {schedule.length === 0 ? (
+                    <div className="py-12 text-center text-zinc-400 text-xs font-semibold">
+                      No classes scheduled for {format(currentDay, 'EEEE')}.
+                    </div>
+                  ) : (
+                    schedule.map((item, itemIdx) => {
+                      const isLab = item.sch.type === 'Laboratory';
+                      return (
+                        <div
+                          key={`${item.cls.id}_mobile_${itemIdx}`}
+                          onClick={() => onClassClick(item.cls, item.sch, currentDay)}
+                          className={`rounded-xl border p-3.5 cursor-pointer shadow-2xs space-y-2 ${
+                            item.isLiveNow
+                              ? 'border-emerald-500 bg-emerald-50/50'
+                              : isLab
+                              ? 'border-blue-200 bg-blue-50/70'
+                              : 'border-zinc-200 bg-white'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-black text-zinc-950">
+                                {item.cls.subjectCode}
+                              </span>
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">
+                                {item.cls.section}
+                              </span>
+                            </div>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                              isLab ? 'bg-blue-100 text-blue-900' : 'bg-zinc-100 text-zinc-700'
+                            }`}>
+                              {item.sch.type}
+                            </span>
+                          </div>
+
+                          <div className="text-xs text-zinc-600 font-medium">
+                            {item.cls.subjectTitle}
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs text-zinc-700 pt-2 border-t border-zinc-200/60 font-mono">
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-zinc-500" />
+                              <span>{formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}</span>
+                            </div>
+                            <span className="font-bold bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200">
+                              {item.sch.room || item.cls.room || 'CL'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
         {/* Calendar Footer Legend */}
-        <div className="bg-zinc-50 p-3 border-t border-zinc-200 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600">
+        <div className="bg-zinc-50 p-3.5 border-t border-zinc-200 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="font-bold text-zinc-900 text-[11px] uppercase tracking-wider">Legend:</span>
             <div className="flex items-center gap-1.5">
@@ -458,17 +702,17 @@ export const CalendarView: FC<CalendarViewProps> = ({
               <span className="text-[11px]">Laboratory Class</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded bg-rose-100 border border-rose-300 shadow-2xs" />
-              <span className="text-[11px]">Holiday / Observance</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px]">Active Class Live Now</span>
             </div>
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-[11px]">Accomplishment Logged</span>
+              <span className="text-[11px]">Topic Accomplishment Logged</span>
             </div>
           </div>
 
-          <div className="text-[11px] text-zinc-500">
-            Tip: Click any class session box to view covered topics or record accomplishments.
+          <div className="text-[11px] text-zinc-500 font-medium">
+            Tip: Click any class card to record lesson accomplishment or inspect syllabus progress.
           </div>
         </div>
       </div>

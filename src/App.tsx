@@ -845,7 +845,7 @@ export function App() {
                       }`}
                     >
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>Monthly Calendar</span>
+                      <span>Weekly Schedule</span>
                     </button>
                   </div>
                   <button
@@ -1024,6 +1024,9 @@ export function App() {
             onClassClick={(cls, sch) => {
               setSelectedClassForLog(cls);
               setSelectedScheduleForLog(sch);
+            }}
+            onManageCourse={(cls) => {
+              setInspectedCourse(cls);
             }}
             onSwitchToDaily={() => setViewMode('daily')}
             onAddClassClick={() => {

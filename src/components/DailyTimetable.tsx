@@ -164,10 +164,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
               type="button"
               onClick={onSwitchToCalendar}
               className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 bg-white px-3 text-xs sm:text-sm font-semibold text-zinc-800 shadow-2xs hover:bg-zinc-50 hover:text-zinc-950 transition-colors cursor-pointer min-w-0"
-              title="Open Monthly Wall Calendar View"
+              title="Open Weekly Academic Schedule View"
             >
               <Calendar className="w-4 h-4 mr-1.5 text-zinc-700 shrink-0" aria-hidden="true" />
-              <span className="truncate">Monthly Calendar</span>
+              <span className="truncate">Weekly Schedule</span>
             </button>
           )}
 
