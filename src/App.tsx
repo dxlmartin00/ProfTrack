@@ -1004,18 +1004,18 @@ export function App() {
             <button
               type="button"
               onClick={() => setIsProfileOpen(true)}
-              className="flex items-center gap-2 rounded-full border border-zinc-300 bg-white p-0.5 sm:pr-2.5 sm:pl-0.5 text-zinc-900 hover:border-zinc-400 hover:bg-zinc-50 transition-colors cursor-pointer shrink-0 shadow-2xs group"
+              className="flex items-center gap-2 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5 sm:pr-2.5 sm:pl-0.5 text-zinc-900 dark:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-2xs group"
               aria-label={`Profile: ${profile.fullName} (${profile.position})`}
               title="View & Edit Instructor Profile"
             >
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-zinc-950 text-white text-xs font-bold shrink-0">
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-zinc-950 dark:bg-zinc-700 text-white text-xs font-bold shrink-0">
                 {userInitials}
               </div>
               <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
-                <span className="text-xs font-bold text-zinc-950 group-hover:text-zinc-800 truncate max-w-[130px]">
+                <span className="text-xs font-bold text-zinc-950 dark:text-zinc-100 group-hover:text-zinc-800 dark:group-hover:text-white truncate max-w-[130px]">
                   {currentUser?.username || profile.fullName}
                 </span>
-                <span className="text-[10px] text-zinc-500 font-medium truncate max-w-[130px]">
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium truncate max-w-[130px]">
                   {currentUser?.role === 'admin' ? 'Administrator' : 'Instructor'}
                 </span>
               </div>
@@ -1025,7 +1025,7 @@ export function App() {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-600 hover:text-zinc-950 transition-colors cursor-pointer shrink-0"
+              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
               title="Switch Account / Sign Out"
               aria-label="Switch Account / Sign Out"
             >

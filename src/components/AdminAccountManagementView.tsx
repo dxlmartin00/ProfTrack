@@ -210,23 +210,23 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
           onClick={() => setFilterTab('pending')}
           className={`rounded-2xl border p-5 transition-all cursor-pointer ${
             pendingCount > 0 
-              ? 'border-amber-300 bg-amber-50/60 shadow-xs hover:border-amber-400' 
-              : 'border-zinc-200 bg-white hover:border-zinc-300'
+              ? 'border-amber-300 dark:border-amber-700/80 bg-amber-50/60 dark:bg-amber-950/30 shadow-xs hover:border-amber-400' 
+              : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:border-zinc-300 dark:hover:border-zinc-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-600 uppercase tracking-wider">
+            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
               Pending Approvals
             </span>
-            <span className={`p-2 rounded-xl ${pendingCount > 0 ? 'bg-amber-200 text-amber-900' : 'bg-zinc-100 text-zinc-500'}`}>
+            <span className={`p-2 rounded-xl ${pendingCount > 0 ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'}`}>
               <Clock className="w-4 h-4" />
             </span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className={`text-3xl font-black ${pendingCount > 0 ? 'text-amber-950' : 'text-zinc-950'}`}>
+            <span className={`text-3xl font-black ${pendingCount > 0 ? 'text-amber-950 dark:text-amber-200' : 'text-zinc-950 dark:text-zinc-100'}`}>
               {pendingCount}
             </span>
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
               {pendingCount === 1 ? 'instructor awaiting review' : 'instructors awaiting review'}
             </span>
           </div>
@@ -235,21 +235,21 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
         {/* Approved Instructors */}
         <div 
           onClick={() => setFilterTab('approved')}
-          className="rounded-2xl border border-zinc-200 bg-white p-5 hover:border-zinc-300 transition-all cursor-pointer"
+          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-600 uppercase tracking-wider">
+            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
               Active Faculty Instructors
             </span>
-            <span className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+            <span className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
               <UserCheck className="w-4 h-4" />
             </span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-zinc-950">
+            <span className="text-3xl font-black text-zinc-950 dark:text-zinc-100">
               {approvedCount}
             </span>
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
               approved & active accounts
             </span>
           </div>
@@ -258,21 +258,21 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
         {/* Total Registered Accounts */}
         <div 
           onClick={() => setFilterTab('all')}
-          className="rounded-2xl border border-zinc-200 bg-white p-5 hover:border-zinc-300 transition-all cursor-pointer"
+          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-600 uppercase tracking-wider">
+            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
               Total Faculty Directory
             </span>
-            <span className="p-2 rounded-xl bg-zinc-100 text-zinc-800">
+            <span className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
               <Users className="w-4 h-4" />
             </span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-zinc-950">
+            <span className="text-3xl font-black text-zinc-950 dark:text-zinc-100">
               {totalInstructors}
             </span>
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
               registered instructor profiles
             </span>
           </div>
@@ -280,18 +280,18 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
       </div>
 
       {/* Main Account Management Card */}
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
         {/* Controls Bar */}
-        <div className="p-4 sm:p-5 border-b border-zinc-200 bg-zinc-50/70 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-850/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Filter Tabs */}
-          <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-zinc-200 shadow-2xs">
+          <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-2xs">
             <button
               type="button"
               onClick={() => setFilterTab('pending')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 filterTab === 'pending'
-                  ? 'bg-zinc-950 text-white shadow-2xs'
-                  : 'text-zinc-600 hover:text-zinc-950'
+                  ? 'bg-zinc-950 dark:bg-zinc-700 text-white dark:text-zinc-100 shadow-2xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
               <span>Pending</span>
@@ -307,8 +307,8 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
               onClick={() => setFilterTab('approved')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 filterTab === 'approved'
-                  ? 'bg-zinc-950 text-white shadow-2xs'
-                  : 'text-zinc-600 hover:text-zinc-950'
+                  ? 'bg-zinc-950 dark:bg-zinc-700 text-white dark:text-zinc-100 shadow-2xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
               Approved ({approvedCount})
@@ -319,8 +319,8 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
               onClick={() => setFilterTab('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 filterTab === 'all'
-                  ? 'bg-zinc-950 text-white shadow-2xs'
-                  : 'text-zinc-600 hover:text-zinc-950'
+                  ? 'bg-zinc-950 dark:bg-zinc-700 text-white dark:text-zinc-100 shadow-2xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
               All Accounts ({users.length})
@@ -335,7 +335,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
               placeholder="Search by name, username, or college..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-zinc-200 bg-white placeholder:text-zinc-400 focus:border-zinc-950 focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-zinc-950 dark:focus:border-zinc-400 focus:outline-none"
             />
           </div>
         </div>
@@ -343,10 +343,10 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
         {/* Instructors List */}
         <div className="p-4 sm:p-6 space-y-3">
           {filteredUsers.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-300 p-12 text-center text-zinc-600 space-y-2">
-              <Users className="h-10 w-10 mx-auto text-zinc-400" />
-              <p className="text-sm font-bold text-zinc-950">No accounts found</p>
-              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+            <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-12 text-center text-zinc-600 dark:text-zinc-400 space-y-2">
+              <Users className="h-10 w-10 mx-auto text-zinc-400 dark:text-zinc-500" />
+              <p className="text-sm font-bold text-zinc-950 dark:text-zinc-100">No accounts found</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
                 {filterTab === 'pending' 
                   ? 'Great job! There are currently no instructor accounts pending approval.' 
                   : 'No accounts match the current filter or search criteria.'}
@@ -365,8 +365,8 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                   key={u.id}
                   className={`rounded-xl border p-4 sm:p-5 transition-all ${
                     isPending 
-                      ? 'border-amber-300 bg-amber-50/40' 
-                      : 'border-zinc-200 bg-white hover:border-zinc-300'
+                      ? 'border-amber-300 dark:border-amber-700/80 bg-amber-50/40 dark:bg-amber-950/30' 
+                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                   }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -375,64 +375,64 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                     <div className="flex items-start gap-3.5 min-w-0 flex-1">
                       <div className={`h-11 w-11 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
                         isAdmin 
-                          ? 'bg-zinc-950 text-white' 
+                          ? 'bg-zinc-950 dark:bg-zinc-800 text-white dark:text-zinc-100' 
                           : isPending 
-                          ? 'bg-amber-200 text-amber-950 border border-amber-300' 
-                          : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
+                          ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-700' 
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700'
                       }`}>
                         {u.firstName?.[0] || 'I'}{u.lastName?.[0] || 'U'}
                       </div>
 
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-sm sm:text-base text-zinc-950 truncate">
+                          <span className="font-bold text-sm sm:text-base text-zinc-950 dark:text-zinc-100 truncate">
                             {u.fullName}
                           </span>
 
                           {/* Role Tag */}
                           {isAdmin ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-zinc-950 text-white px-2 py-0.5 text-[10px] font-bold">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-zinc-950 dark:bg-zinc-800 text-white px-2 py-0.5 text-[10px] font-bold">
                               <ShieldCheck className="h-3 w-3 text-emerald-400" />
                               Administrator
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 px-2 py-0.5 text-[10px] font-bold">
-                              <GraduationCap className="h-3 w-3 text-blue-700" />
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-2 py-0.5 text-[10px] font-bold">
+                              <GraduationCap className="h-3 w-3 text-blue-700 dark:text-blue-400" />
                               Instructor
                             </span>
                           )}
 
                           {/* Status Tag */}
                           {isPending && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 text-[10px] font-bold">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2 py-0.5 text-[10px] font-bold">
                               <Clock className="h-3 w-3" />
                               Pending Approval
                             </span>
                           )}
                           {isApproved && !isAdmin && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 px-2 py-0.5 text-[10px] font-bold">
-                              <CheckCircle2 className="h-3 w-3 text-emerald-700" />
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-2 py-0.5 text-[10px] font-bold">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-700 dark:text-emerald-400" />
                               Approved
                             </span>
                           )}
                           {isRejected && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 text-red-900 border border-red-300 px-2 py-0.5 text-[10px] font-bold">
-                              <XCircle className="h-3 w-3 text-red-700" />
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-50 dark:bg-red-950/60 text-red-900 dark:text-red-300 border border-red-300 dark:border-red-800 px-2 py-0.5 text-[10px] font-bold">
+                              <XCircle className="h-3 w-3 text-red-700 dark:text-red-400" />
                               Rejected
                             </span>
                           )}
                         </div>
 
                         {/* Username & Security & College */}
-                        <div className="flex items-center gap-3 text-xs text-zinc-600 flex-wrap">
+                        <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400 flex-wrap">
                           <span>
-                            Username: <code className="font-mono font-bold text-zinc-900 bg-zinc-100 px-1 py-0.2 rounded border border-zinc-200">{u.username}</code>
+                            Username: <code className="font-mono font-bold text-zinc-900 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 px-1 py-0.2 rounded border border-zinc-200 dark:border-zinc-700">{u.username}</code>
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded">
                             <ShieldCheck className="h-3 w-3" />
                             Salted SHA-256
                           </span>
-                          <span className="flex items-center gap-1 text-zinc-500">
+                          <span className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400">
                             <Building2 className="h-3 w-3" />
                             {u.department}
                           </span>
@@ -440,12 +440,12 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
 
                         {/* Isolated Data Counts (For Instructors) */}
                         {!isAdmin && (
-                          <div className="flex items-center gap-3 text-[11px] text-zinc-500 pt-1 flex-wrap">
+                          <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400 pt-1 flex-wrap">
                             <span className="flex items-center gap-1 font-medium">
                               <BookOpen className="h-3 w-3 text-zinc-400" />
                               {dataCounts.coursesCount} active courses
                             </span>
-                            <span className="text-zinc-300">•</span>
+                            <span className="text-zinc-300 dark:text-zinc-700">•</span>
                             <span className="flex items-center gap-1 font-medium">
                               <FileText className="h-3 w-3 text-zinc-400" />
                               {dataCounts.logsCount} session logs
@@ -470,7 +470,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                           <button
                             type="button"
                             onClick={() => handleStatusChange(u.id, 'rejected', u.fullName)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-bold transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold transition-colors cursor-pointer"
                           >
                             <XCircle className="h-3.5 w-3.5 text-zinc-500" />
                             <span>Reject</span>
@@ -483,7 +483,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                           <button
                             type="button"
                             onClick={() => handleResetPin(u.id, u.fullName)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-medium transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
                             title="Reset PIN back to default 1234"
                           >
                             <KeyRound className="h-3.5 w-3.5 text-zinc-500" />
@@ -492,7 +492,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                           <button
                             type="button"
                             onClick={() => handleStatusChange(u.id, 'pending', u.fullName)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 text-xs font-medium transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-medium transition-colors cursor-pointer"
                             title="Revoke access and set back to Pending"
                           >
                             <Clock className="h-3.5 w-3.5 text-zinc-500" />
@@ -505,7 +505,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                         <button
                           type="button"
                           onClick={() => handleStatusChange(u.id, 'approved', u.fullName)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-750 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white text-xs font-bold transition-colors cursor-pointer"
                         >
                           <UserCheck className="h-3.5 w-3.5" />
                           <span>Re-approve</span>
@@ -516,7 +516,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                         <button
                           type="button"
                           onClick={() => handleDelete(u.id, u.fullName)}
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
                           title={`Delete account for ${u.fullName}`}
                           aria-label={`Delete account for ${u.fullName}`}
                         >

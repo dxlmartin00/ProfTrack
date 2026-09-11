@@ -39,10 +39,10 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
       aria-labelledby="a11y-modal-title"
     >
       <div 
-        className="w-full max-w-lg rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors"
+        className="w-full max-w-lg rounded-2xl border border-zinc-200 dark:border-zinc-800 night:border-zinc-800/80 bg-white dark:bg-zinc-900 night:bg-[#0b0d11] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:px-6 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-950/70">
+        <div className="flex items-center justify-between p-4 sm:px-6 border-b border-zinc-200 dark:border-zinc-800 night:border-zinc-800/80 bg-zinc-50/70 dark:bg-zinc-950/70 night:bg-[#0c0d12]">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-zinc-950 dark:bg-zinc-800 text-white shadow-2xs">
               <Sliders className="w-4 h-4 text-emerald-400" />
@@ -239,7 +239,7 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-3.5 sm:px-6 bg-zinc-50 dark:bg-zinc-950/70 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end">
+        <div className="p-3.5 sm:px-6 bg-zinc-50 dark:bg-zinc-950/70 night:bg-[#0c0d12] border-t border-zinc-200 dark:border-zinc-800 night:border-zinc-800/80 flex items-center justify-end">
           <button
             type="button"
             onClick={onClose}

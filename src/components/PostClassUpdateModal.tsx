@@ -287,20 +287,20 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-xs p-4 sm:p-6 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="log-session-title">
-      <div className="bg-white text-zinc-950 rounded-xl border border-zinc-200 w-full max-w-lg shadow-xl flex flex-col max-h-[90vh] my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 rounded-xl border border-zinc-200 dark:border-zinc-800 w-full max-w-lg shadow-xl flex flex-col max-h-[90vh] my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
         {/* Dialog Header */}
-        <div className="flex items-start justify-between border-b border-zinc-200 p-5 shrink-0 bg-white">
+        <div className="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 p-5 shrink-0 bg-white dark:bg-zinc-900">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <h2 id="log-session-title" className="text-xl font-bold tracking-tight text-zinc-950">
+              <h2 id="log-session-title" className="text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100">
                 Log Session — {classSession.subjectCode}
               </h2>
-              <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-700">
+              <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 {classSession.section}
               </span>
             </div>
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               {classSession.subjectTitle || 'Check off covered topics, write cut-off notes for unfinished lessons, and set engagement.'}
             </p>
           </div>
@@ -308,31 +308,31 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {/* Dialog Body */}
-        <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-white">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-white dark:bg-zinc-900">
           
           {/* Quick Action: Mark Partial Lesson as Done & Proceed to Next Lesson */}
           {courseProgress.isContinuingPartial && courseProgress.currentActiveTopic && (
-            <div className="rounded-xl border border-amber-300 bg-amber-50/90 p-4 space-y-3 shadow-2xs animate-in fade-in duration-150">
+            <div className="rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/90 dark:bg-amber-950/40 p-4 space-y-3 shadow-2xs animate-in fade-in duration-150">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-1 min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1 rounded bg-amber-200/80 px-2 py-0.5 text-[10px] font-bold text-amber-950 uppercase tracking-wider">
-                      <Hourglass className="h-3 w-3 text-amber-800" />
+                    <span className="inline-flex items-center gap-1 rounded bg-amber-200/80 dark:bg-amber-900/60 px-2 py-0.5 text-[10px] font-bold text-amber-950 dark:text-amber-200 uppercase tracking-wider">
+                      <Hourglass className="h-3 w-3 text-amber-800 dark:text-amber-300" />
                       Unfinished Lesson From Last Meeting
                     </span>
                   </div>
-                  <p className="font-bold text-zinc-950 text-sm leading-snug break-words">
+                  <p className="font-bold text-zinc-950 dark:text-zinc-100 text-sm leading-snug break-words">
                     {courseProgress.currentActiveTopic}
                   </p>
                   {courseProgress.partialTopics[0]?.note && (
-                    <p className="text-xs text-amber-900 font-medium break-words">
+                    <p className="text-xs text-amber-900 dark:text-amber-300 font-medium break-words">
                       📍 Cut-off point: "{courseProgress.partialTopics[0].note}"
                     </p>
                   )}
@@ -341,7 +341,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                 <button
                   type="button"
                   onClick={handleMarkPartialDoneAndProceed}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 px-3.5 text-xs font-bold text-white shadow-sm transition-all shrink-0 cursor-pointer w-full sm:w-auto"
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 px-3.5 text-xs font-bold text-white shadow-sm transition-all shrink-0 cursor-pointer w-full sm:w-auto"
                   title="Mark this partial lesson completed and advance to the next syllabus topic"
                 >
                   <CheckCircle2 className="h-4 w-4" />
@@ -350,9 +350,9 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
               </div>
 
               {courseProgress.nextLessonTopic && (
-                <div className="pt-2 border-t border-amber-200/80 flex items-center gap-1.5 text-xs text-zinc-700">
-                  <span className="text-zinc-500 font-medium">Next topic in line:</span>
-                  <span className="font-bold text-zinc-950">{courseProgress.nextLessonTopic}</span>
+                <div className="pt-2 border-t border-amber-200/80 dark:border-amber-800/60 flex items-center gap-1.5 text-xs text-zinc-700 dark:text-zinc-300">
+                  <span className="text-zinc-500 dark:text-zinc-400 font-medium">Next topic in line:</span>
+                  <span className="font-bold text-zinc-950 dark:text-zinc-100">{courseProgress.nextLessonTopic}</span>
                 </div>
               )}
             </div>
@@ -360,10 +360,10 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
           {/* Notes from Previous Meeting Banner (Preserved & Never Erased) */}
           {courseProgress.latestNote && (
-            <div className="rounded-xl border border-sky-200 bg-sky-50/90 p-3.5 text-xs text-sky-950 space-y-2 shadow-2xs">
+            <div className="rounded-xl border border-sky-200 dark:border-sky-800/80 bg-sky-50/90 dark:bg-sky-950/40 p-3.5 text-xs text-sky-950 dark:text-sky-200 space-y-2 shadow-2xs">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 text-sky-900">
-                  <FileText className="h-4 w-4 text-sky-700 shrink-0" />
+                <div className="flex items-center gap-2 text-sky-900 dark:text-sky-300">
+                  <FileText className="h-4 w-4 text-sky-700 dark:text-sky-400 shrink-0" />
                   <span className="font-bold uppercase tracking-wider text-[11px]">
                     Notes from Last Class {courseProgress.latestNoteDate && `(${format(courseProgress.latestNoteDate, 'MMM d')})`}:
                   </span>
@@ -374,8 +374,8 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                   onClick={() => setIsNoteDone(prev => !prev)}
                   className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-bold border transition-colors cursor-pointer ${
                     isNoteDone
-                      ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                      : 'bg-white text-sky-800 border-sky-300 hover:bg-sky-100'
+                      ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700'
+                      : 'bg-white dark:bg-zinc-800 text-sky-800 dark:text-sky-300 border-sky-300 dark:border-sky-700 hover:bg-sky-100 dark:hover:bg-zinc-700'
                   }`}
                   title="Toggle whether this note's action item was fulfilled"
                 >
@@ -384,7 +384,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                 </button>
               </div>
 
-              <p className={`text-xs font-medium pl-6 leading-relaxed break-words ${isNoteDone ? 'line-through text-zinc-600' : 'text-zinc-900'}`}>
+              <p className={`text-xs font-medium pl-6 leading-relaxed break-words ${isNoteDone ? 'line-through text-zinc-500 dark:text-zinc-400' : 'text-zinc-900 dark:text-zinc-100'}`}>
                 {courseProgress.latestNote}
               </p>
 
@@ -396,7 +396,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                       setNextActions(prev => prev ? `${prev} • ${courseProgress.latestNote}` : (courseProgress.latestNote || ''));
                     }
                   }}
-                  className="text-[10px] font-semibold text-sky-800 hover:text-sky-950 underline cursor-pointer"
+                  className="text-[10px] font-semibold text-sky-800 dark:text-sky-400 hover:text-sky-950 dark:hover:text-sky-200 underline cursor-pointer"
                 >
                   + Keep / Copy note into today's log
                 </button>
@@ -406,17 +406,17 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
           {/* Session Type Toggle */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
               Session Format
             </label>
-            <div className="inline-flex h-10 w-full items-center rounded-lg bg-zinc-100 p-1 text-zinc-700">
+            <div className="inline-flex h-10 w-full items-center rounded-lg bg-zinc-100 dark:bg-zinc-800 p-1 text-zinc-700 dark:text-zinc-300">
               <button
                 type="button"
                 onClick={() => setSessionType('Lecture')}
                 className={`flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-md px-3 text-xs font-bold transition-all cursor-pointer ${
                   !isLab
-                    ? 'bg-white text-zinc-950 shadow-2xs'
-                    : 'hover:text-zinc-950'
+                    ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 shadow-2xs'
+                    : 'hover:text-zinc-950 dark:hover:text-white text-zinc-600 dark:text-zinc-400'
                 }`}
               >
                 <GraduationCap className="h-4 w-4" aria-hidden="true" />
@@ -427,8 +427,8 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                 onClick={() => setSessionType('Laboratory')}
                 className={`flex-1 h-8 inline-flex items-center justify-center gap-1.5 rounded-md px-3 text-xs font-bold transition-all cursor-pointer ${
                   isLab
-                    ? 'bg-white text-zinc-950 shadow-2xs'
-                    : 'hover:text-zinc-950'
+                    ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 shadow-2xs'
+                    : 'hover:text-zinc-950 dark:hover:text-white text-zinc-600 dark:text-zinc-400'
                 }`}
               >
                 <FlaskConical className="h-4 w-4" aria-hidden="true" />
@@ -441,10 +441,10 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-sm font-bold text-zinc-950">
+                <label className="text-sm font-bold text-zinc-950 dark:text-zinc-100">
                   Course Syllabus Checklist ({completedCount}/{classSession.masterSyllabus.length} Completed)
                 </label>
-                <p className="text-xs text-zinc-600">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
                   Click any topic to check or mark finished. Tap "In Progress" to record a cut-off point.
                 </p>
               </div>
@@ -452,7 +452,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
               <button
                 type="button"
                 onClick={handleResetChecklist}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-red-700 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
                 title="Uncheck all topics"
               >
                 <RotateCcw className="h-3 w-3" />
@@ -485,12 +485,12 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                     }}
                     className={`flex flex-col gap-2 rounded-xl border p-3.5 cursor-pointer transition-all ${
                       isCompleted
-                        ? 'border-emerald-300 bg-emerald-50/50 text-zinc-950 shadow-2xs'
+                        ? 'border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 text-zinc-950 dark:text-zinc-100 shadow-2xs'
                         : isInProgress
-                        ? 'border-amber-300 bg-amber-50/60 text-zinc-950 shadow-2xs'
+                        ? 'border-amber-300 dark:border-amber-800/80 bg-amber-50/60 dark:bg-amber-950/30 text-zinc-950 dark:text-zinc-100 shadow-2xs'
                         : isSuggested
-                        ? 'border-zinc-400 bg-zinc-50 hover:bg-zinc-100 text-zinc-950'
-                        : 'border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700'
+                        ? 'border-zinc-400 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/80 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100'
+                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -501,7 +501,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                             ? 'bg-emerald-600 border-emerald-600 text-white'
                             : isInProgress
                             ? 'bg-amber-600 border-amber-600 text-white'
-                            : 'border-zinc-300 bg-white'
+                            : 'border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800'
                         }`}>
                           {isCompleted && <Check className="h-3.5 w-3.5 stroke-[3]" />}
                           {isInProgress && <Hourglass className="h-3 w-3" />}
@@ -509,28 +509,28 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`text-sm font-semibold leading-snug ${isCompleted ? 'text-zinc-950' : 'text-zinc-800'}`}>
+                            <span className={`text-sm font-semibold leading-snug ${isCompleted ? 'text-zinc-950 dark:text-zinc-100' : 'text-zinc-800 dark:text-zinc-200'}`}>
                               {index + 1}. {topic}
                             </span>
                             
                             {/* Badges */}
                             {wasPreviouslyDone && isCompleted && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                                <CheckCircle2 className="h-3 w-3 text-emerald-700" />
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-700 dark:text-emerald-400" />
                                 Completed
                               </span>
                             )}
 
                             {isInProgress && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
-                                <Hourglass className="h-3 w-3 text-amber-700" />
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700">
+                                <Hourglass className="h-3 w-3 text-amber-700 dark:text-amber-400" />
                                 {priorCutoff ? `In Progress: ${priorCutoff}` : 'In Progress'}
                               </span>
                             )}
 
                             {isSuggested && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-900 bg-zinc-200 px-2 py-0.5 rounded-full border border-zinc-300">
-                                <Sparkles className="h-3 w-3 text-zinc-700" />
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-900 dark:text-zinc-100 bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-600">
+                                <Sparkles className="h-3 w-3 text-zinc-700 dark:text-zinc-300" />
                                 Next Topic (Click to check)
                               </span>
                             )}
@@ -542,22 +542,22 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                     {/* Completion Status Selector when checked */}
                     {isChecked && (
                       <div 
-                        className="pt-2 border-t border-zinc-200/80 flex flex-col gap-2.5" 
+                        className="pt-2 border-t border-zinc-200/80 dark:border-zinc-750 flex flex-col gap-2.5" 
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-zinc-700">
+                          <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
                             Status for this topic:
                           </span>
                           
-                          <div className="inline-flex rounded-lg bg-white border border-zinc-300 p-0.5 text-xs font-bold shadow-2xs">
+                          <div className="inline-flex rounded-lg bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-0.5 text-xs font-bold shadow-2xs">
                             <button
                               type="button"
                               onClick={(e) => handleSetTopicStatus(topic, 'completed', e)}
                               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
                                 isCompleted
                                   ? 'bg-emerald-600 text-white shadow-2xs'
-                                  : 'text-zinc-700 hover:text-zinc-950'
+                                  : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
                               }`}
                             >
                               <Check className="h-3 w-3" />
@@ -570,7 +570,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
                                 isInProgress
                                   ? 'bg-amber-600 text-white shadow-2xs'
-                                  : 'text-zinc-700 hover:text-zinc-950'
+                                  : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
                               }`}
                             >
                               <Hourglass className="h-3 w-3" />
@@ -581,12 +581,12 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
                         {/* Cut-off notes input box if In-Progress */}
                         {isInProgress && (
-                          <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-2 animate-in fade-in duration-150">
+                          <div className="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-lg border border-amber-200 dark:border-amber-800/80 space-y-2 animate-in fade-in duration-150">
                             <div className="flex items-center justify-between">
-                              <label className="text-xs font-bold text-amber-950">
+                              <label className="text-xs font-bold text-amber-950 dark:text-amber-200">
                                 📍 Lesson Cut-off Point / Slide Number:
                               </label>
-                              <span className="text-[10px] text-amber-800 font-medium">Where did you stop?</span>
+                              <span className="text-[10px] text-amber-800 dark:text-amber-300 font-medium">Where did you stop?</span>
                             </div>
 
                             <input
@@ -594,7 +594,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                               value={cutoffNotes.get(topic) || ''}
                               onChange={(e) => handleUpdateCutoffNote(topic, e.target.value)}
                               placeholder="e.g. Stopped at Slide #24, Chapter 2 Example 3..."
-                              className="w-full rounded-md border border-amber-300 bg-white px-3 py-1.5 text-xs text-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500"
+                              className="w-full rounded-md border border-amber-300 dark:border-amber-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500"
                             />
 
                             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
@@ -603,7 +603,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                                   key={chip}
                                   type="button"
                                   onClick={() => handleAppendCutoffChip(topic, chip)}
-                                  className="text-[10px] font-semibold bg-white text-amber-900 px-2 py-0.5 rounded border border-amber-300 hover:bg-amber-100 transition-colors cursor-pointer"
+                                  className="text-[10px] font-semibold bg-white dark:bg-zinc-800 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                                 >
                                   + {chip}
                                 </button>
@@ -621,10 +621,10 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
           {/* Next Actions & General Notes */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-zinc-950">
+            <label className="text-sm font-bold text-zinc-950 dark:text-zinc-100">
               Next Class Action Items & Follow-ups
             </label>
-            <p className="text-xs text-zinc-600">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
               Notes recorded here will appear on your timetable and modal as a reminder before your next meeting.
             </p>
 
@@ -633,7 +633,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
               onChange={(e) => setNextActions(e.target.value)}
               placeholder="e.g. Prepare quiz on SQLite CRUD, bring sample Android devices..."
               rows={2}
-              className="w-full rounded-lg border border-zinc-300 bg-white p-3 text-xs text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950"
+              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-3 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
             />
 
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -642,7 +642,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                   key={prompt}
                   type="button"
                   onClick={() => handlePromptChipClick(prompt)}
-                  className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[11px] font-medium text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950 transition-colors cursor-pointer"
+                  className="rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 px-2.5 py-1 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
                 >
                   + {prompt}
                 </button>
@@ -652,7 +652,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
 
           {/* Student Engagement Rating */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+            <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
               Class Engagement Rating
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -663,8 +663,8 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
                   onClick={() => setEngagement(level)}
                   className={`h-9 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
                     engagement === level
-                      ? 'border-zinc-950 bg-zinc-950 text-white shadow-2xs'
-                      : 'border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50'
+                      ? 'border-zinc-950 dark:border-white bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-2xs'
+                      : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-750'
                   }`}
                 >
                   {level} Engagement
@@ -676,11 +676,11 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
         </div>
 
         {/* Dialog Footer */}
-        <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 p-4 shrink-0">
+        <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-4 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer shadow-2xs"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
           >
             Cancel
           </button>
@@ -688,7 +688,7 @@ export const PostClassUpdateModal: FC<PostClassUpdateModalProps> = ({
           <button
             type="button"
             onClick={handleSubmit}
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 px-5 text-xs font-bold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-5 text-xs font-bold text-white dark:text-zinc-950 shadow-sm hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors cursor-pointer"
           >
             Save Session Progress
           </button>

@@ -135,20 +135,20 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/70 backdrop-blur-xs p-4 sm:p-6 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="admin-title">
-      <div className="bg-white text-zinc-950 rounded-2xl border border-zinc-200 w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh] my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 rounded-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh] my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-zinc-200 p-5 shrink-0 bg-white">
+        <div className="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 p-5 shrink-0 bg-white dark:bg-zinc-900">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-zinc-900 text-white">
+              <div className="p-1.5 rounded-lg bg-zinc-900 dark:bg-zinc-800 text-white">
                 <ShieldCheck className="h-5 w-5 text-emerald-400" />
               </div>
-              <h2 id="admin-title" className="text-lg sm:text-xl font-bold tracking-tight text-zinc-950">
+              <h2 id="admin-title" className="text-lg sm:text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100">
                 Administrator Console — Instructor Accounts
               </h2>
             </div>
-            <p className="text-xs text-zinc-600">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
               Review and approve pending instructor registrations, manage user access, and maintain data isolation.
             </p>
           </div>
@@ -157,7 +157,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors cursor-pointer"
+            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -167,31 +167,31 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
         {actionNotice && (
           <div className={`border-b px-5 py-2.5 text-xs font-semibold flex items-center gap-2 ${
             actionNotice.type === 'error'
-              ? 'bg-rose-50 border-rose-200 text-rose-950'
-              : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-950 dark:text-rose-300'
+              : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-950 dark:text-emerald-300'
           }`}>
             {actionNotice.type === 'error' ? (
-              <AlertCircle className="h-4 w-4 text-rose-700 shrink-0" />
+              <AlertCircle className="h-4 w-4 text-rose-700 dark:text-rose-400 shrink-0" />
             ) : (
-              <CheckCircle2 className="h-4 w-4 text-emerald-700 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
             )}
             <span>{actionNotice.message}</span>
           </div>
         )}
 
         {/* Filter Toolbar */}
-        <div className="p-4 sm:px-6 bg-zinc-50 border-b border-zinc-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-1.5 p-1 bg-zinc-200/80 rounded-lg text-xs font-bold">
+        <div className="p-4 sm:px-6 bg-zinc-50 dark:bg-zinc-850/80 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 p-1 bg-zinc-200/80 dark:bg-zinc-800 rounded-lg text-xs font-bold">
             <button
               type="button"
               onClick={() => setFilterTab('pending')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                 filterTab === 'pending'
-                  ? 'bg-white text-zinc-950 shadow-2xs'
-                  : 'text-zinc-700 hover:text-zinc-950'
+                  ? 'bg-white dark:bg-zinc-700 text-zinc-950 dark:text-zinc-100 shadow-2xs'
+                  : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
-              <Clock className="h-3.5 w-3.5 text-amber-600" />
+              <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
               <span>Pending Approvals</span>
               {pendingCount > 0 && (
                 <span className="bg-amber-500 text-white rounded-full px-1.5 py-0.2 text-[10px] font-mono">
@@ -205,11 +205,11 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
               onClick={() => setFilterTab('approved')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                 filterTab === 'approved'
-                  ? 'bg-white text-zinc-950 shadow-2xs'
-                  : 'text-zinc-700 hover:text-zinc-950'
+                  ? 'bg-white dark:bg-zinc-700 text-zinc-950 dark:text-zinc-100 shadow-2xs'
+                  : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
-              <UserCheck className="h-3.5 w-3.5 text-emerald-600" />
+              <UserCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Approved ({approvedCount})</span>
             </button>
 
@@ -218,11 +218,11 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
               onClick={() => setFilterTab('all')}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                 filterTab === 'all'
-                  ? 'bg-white text-zinc-950 shadow-2xs'
-                  : 'text-zinc-700 hover:text-zinc-950'
+                  ? 'bg-white dark:bg-zinc-700 text-zinc-950 dark:text-zinc-100 shadow-2xs'
+                  : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
-              <Users className="h-3.5 w-3.5 text-zinc-600" />
+              <Users className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-400" />
               <span>All ({users.length})</span>
             </button>
           </div>
@@ -234,18 +234,18 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
               placeholder="Search by name, username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 shadow-2xs placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950"
+              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-8 pr-3 py-1.5 text-xs text-zinc-950 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
             />
           </div>
         </div>
 
         {/* Instructors List */}
-        <div className="p-4 sm:p-6 space-y-3 overflow-y-auto flex-1 bg-white">
+        <div className="p-4 sm:p-6 space-y-3 overflow-y-auto flex-1 bg-white dark:bg-zinc-900">
           {filteredUsers.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-300 p-8 text-center text-zinc-600 space-y-1">
-              <Users className="h-8 w-8 mx-auto text-zinc-400" />
-              <p className="text-sm font-bold text-zinc-950">No instructor accounts found</p>
-              <p className="text-xs text-zinc-500">
+            <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-600 dark:text-zinc-400 space-y-1">
+              <Users className="h-8 w-8 mx-auto text-zinc-400 dark:text-zinc-500" />
+              <p className="text-sm font-bold text-zinc-950 dark:text-zinc-100">No instructor accounts found</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
                 {filterTab === 'pending' 
                   ? 'There are no instructor accounts currently pending approval.' 
                   : 'No accounts match the selected filter.'}
@@ -264,8 +264,8 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                   key={u.id}
                   className={`rounded-xl border p-4 transition-all ${
                     isPending 
-                      ? 'border-amber-300 bg-amber-50/40' 
-                      : 'border-zinc-200 bg-white hover:border-zinc-300'
+                      ? 'border-amber-300 dark:border-amber-700/80 bg-amber-50/40 dark:bg-amber-950/30' 
+                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -274,26 +274,26 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                     <div className="flex items-start gap-3 min-w-0 flex-1">
                       <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
                         isAdmin 
-                          ? 'bg-zinc-950 text-white' 
+                          ? 'bg-zinc-950 dark:bg-zinc-800 text-white dark:text-zinc-100' 
                           : isPending 
-                          ? 'bg-amber-200 text-amber-900 border border-amber-300' 
-                          : 'bg-zinc-100 text-zinc-800 border border-zinc-200'
+                          ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700' 
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700'
                       }`}>
                         {u.firstName?.[0] || 'I'}{u.lastName?.[0] || 'U'}
                       </div>
 
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-sm text-zinc-950 truncate">
+                          <span className="font-bold text-sm text-zinc-950 dark:text-zinc-100 truncate">
                             {u.fullName}
                           </span>
 
-                          <span className="font-mono text-xs font-semibold text-zinc-700 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
+                          <span className="font-mono text-xs font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
                             {u.username}
                           </span>
 
                           {isAdmin && (
-                            <span className="inline-flex items-center gap-1 rounded bg-zinc-900 text-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
+                            <span className="inline-flex items-center gap-1 rounded bg-zinc-900 dark:bg-zinc-750 text-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                               <ShieldCheck className="h-3 w-3 text-emerald-400" />
                               System Admin
                             </span>
@@ -301,16 +301,16 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
 
                           <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                             isApproved
-                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                              ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                               : isPending
-                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                              : 'bg-rose-100 text-rose-900 border border-rose-300'
+                              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800'
+                              : 'bg-rose-100 dark:bg-rose-950/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-800'
                           }`}>
                             {u.status}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-xs text-zinc-600 flex-wrap">
+                        <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400 flex-wrap">
                           <span className="flex items-center gap-1">
                             <Building2 className="w-3 h-3 text-zinc-400" />
                             {u.department}
@@ -348,7 +348,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleStatusChange(u.id, 'rejected', u.fullName)}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-zinc-300 hover:bg-zinc-100 text-zinc-700 px-3 text-xs font-semibold transition-colors cursor-pointer"
+                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-3 text-xs font-semibold transition-colors cursor-pointer"
                           >
                             <XCircle className="h-3.5 w-3.5 text-zinc-500" />
                             <span>Reject</span>
@@ -361,7 +361,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleResetPin(u.id, u.fullName)}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-700 px-2.5 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 px-2.5 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                             title="Reset 4-digit PIN to 1234"
                           >
                             <KeyRound className="h-3 w-3 text-zinc-500" />
@@ -371,7 +371,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleStatusChange(u.id, 'rejected', u.fullName)}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-zinc-300 bg-white hover:bg-rose-50 hover:text-rose-700 text-zinc-700 px-2.5 text-xs font-semibold transition-colors cursor-pointer"
+                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700 dark:hover:text-rose-300 text-zinc-700 dark:text-zinc-200 px-2.5 text-xs font-semibold transition-colors cursor-pointer"
                             title="Deactivate instructor account"
                           >
                             <span>Deactivate</span>
@@ -393,7 +393,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleDelete(u.id, u.fullName)}
-                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 px-2.5 text-xs font-semibold transition-colors cursor-pointer"
+                            className="inline-flex h-8 items-center justify-center gap-1 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 px-2.5 text-xs font-semibold transition-colors cursor-pointer"
                             title="Permanently remove account"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -411,15 +411,15 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 p-4 shrink-0">
-          <div className="text-xs text-zinc-500 font-medium">
+        <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/80 p-4 shrink-0">
+          <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
             Data Isolation Active • Each instructor's courses and logs are stored privately in their own sandbox.
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 px-4 text-xs font-bold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 dark:bg-zinc-100 px-4 text-xs font-bold text-white dark:text-zinc-950 shadow-sm hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors cursor-pointer"
           >
             Done
           </button>

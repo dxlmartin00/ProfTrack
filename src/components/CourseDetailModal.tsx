@@ -73,30 +73,30 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/60 backdrop-blur-xs p-4 sm:p-6 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="course-detail-title">
-      <div className="bg-white text-zinc-950 rounded-xl border border-zinc-200 w-full max-w-2xl shadow-xl flex flex-col max-h-[90vh] my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 rounded-xl border border-zinc-200 dark:border-zinc-800 w-full max-w-2xl shadow-xl flex flex-col max-h-[90vh] my-auto overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-zinc-200 p-5 shrink-0 bg-white">
+        <div className="flex items-start justify-between border-b border-zinc-200 dark:border-zinc-800 p-5 shrink-0 bg-white dark:bg-zinc-900">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h2 id="course-detail-title" className="text-xl font-bold tracking-tight text-zinc-950">
+              <h2 id="course-detail-title" className="text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100">
                 {classSession.subjectCode}
               </h2>
-              <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-700">
+              <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 {classSession.section}
               </span>
-              <span className="inline-flex items-center rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+              <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
                 {classSession.year}
               </span>
               {classSession.room && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600">
-                  <MapPin className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                  <MapPin className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
                   {classSession.room}
                 </span>
               )}
             </div>
             {classSession.subjectTitle && (
-              <p className="text-sm font-medium text-zinc-600">
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
                 {classSession.subjectTitle}
               </p>
             )}
@@ -107,7 +107,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={() => onEdit(classSession)}
               aria-label="Edit course details"
-              className="rounded-lg p-2 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-100 transition-colors cursor-pointer"
+              className="rounded-lg p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               title="Edit Course Details"
             >
               <Edit3 className="h-4 w-4" aria-hidden="true" />
@@ -116,7 +116,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={handleDelete}
               aria-label="Delete course"
-              className="rounded-lg p-2 text-zinc-500 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+              className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
               title="Delete Course"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -125,7 +125,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close dialog"
-              className="rounded-lg p-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors ml-1 cursor-pointer"
+              className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ml-1 cursor-pointer"
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -133,19 +133,19 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
         </div>
 
         {/* Schedule & Syllabus Progress Ribbon */}
-        <div className="bg-zinc-50/80 p-5 border-b border-zinc-200 space-y-3">
+        <div className="bg-zinc-50/80 dark:bg-zinc-850/80 p-5 border-b border-zinc-200 dark:border-zinc-800 space-y-3">
           {/* Progress bar */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-zinc-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-zinc-500" aria-hidden="true" />
+              <span className="text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
                 Syllabus Accomplishment
               </span>
-              <span className="text-zinc-950 font-mono">{courseProgress.completedCount} of {courseProgress.totalTopics} Topics ({courseProgress.percent}%)</span>
+              <span className="text-zinc-950 dark:text-zinc-100 font-mono">{courseProgress.completedCount} of {courseProgress.totalTopics} Topics ({courseProgress.percent}%)</span>
             </div>
-            <div className="w-full bg-zinc-200 h-2 rounded-full overflow-hidden">
+            <div className="w-full bg-zinc-200 dark:bg-zinc-700 h-2 rounded-full overflow-hidden">
               <div 
-                className="bg-zinc-950 h-full rounded-full transition-all duration-300"
+                className="bg-zinc-950 dark:bg-zinc-100 h-full rounded-full transition-all duration-300"
                 style={{ width: `${courseProgress.percent}%` }}
               />
             </div>
@@ -153,24 +153,24 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
 
           {/* Unfinished / In Progress Current Status Callout */}
           {courseProgress.isContinuingPartial && courseProgress.partialTopics.length > 0 ? (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 flex items-start gap-2.5 text-xs text-amber-950 font-medium">
-              <Hourglass className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+            <div className="rounded-lg border border-amber-300 dark:border-amber-800/80 bg-amber-50 dark:bg-amber-950/40 p-3 flex items-start gap-2.5 text-xs text-amber-950 dark:text-amber-200 font-medium">
+              <Hourglass className="h-4 w-4 text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-amber-900">Current Unfinished Lesson: </span>
-                <span className="font-semibold text-zinc-950">{courseProgress.partialTopics[0].topic}</span>
+                <span className="font-bold text-amber-900 dark:text-amber-300">Current Unfinished Lesson: </span>
+                <span className="font-semibold text-zinc-950 dark:text-zinc-100">{courseProgress.partialTopics[0].topic}</span>
                 {courseProgress.partialTopics[0].note && (
-                  <span className="block text-amber-800 text-[11px] font-semibold mt-0.5">
+                  <span className="block text-amber-800 dark:text-amber-300 text-[11px] font-semibold mt-0.5">
                     Cut-off point: "{courseProgress.partialTopics[0].note}" — to be resumed next meeting.
                   </span>
                 )}
               </div>
             </div>
           ) : courseProgress.latestNote ? (
-            <div className="rounded-lg border border-zinc-200 bg-white p-2.5 flex items-start gap-2 text-xs text-zinc-800">
-              <FileText className="h-3.5 w-3.5 text-zinc-600 shrink-0 mt-0.5" />
+            <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2.5 flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200">
+              <FileText className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-zinc-900">Notes from Last Class: </span>
-                <span className="text-zinc-700 font-medium">{courseProgress.latestNote}</span>
+                <span className="font-bold text-zinc-900 dark:text-zinc-100">Notes from Last Class: </span>
+                <span className="text-zinc-700 dark:text-zinc-300 font-medium">{courseProgress.latestNote}</span>
               </div>
             </div>
           ) : null}
@@ -180,16 +180,16 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
             {classSession.schedule.map((sch, i) => {
               const isLab = sch.type === 'Laboratory';
               return (
-                <div key={i} className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs">
+                <div key={i} className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-1.5 text-xs">
                   <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 font-bold uppercase ${
-                    isLab ? 'bg-purple-100 text-purple-900' : 'bg-zinc-100 text-zinc-900'
+                    isLab ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-200'
                   }`}>
-                    {isLab ? <FlaskConical className="w-3 h-3 text-purple-700" aria-hidden="true" /> : <GraduationCap className="w-3 h-3 text-zinc-700" aria-hidden="true" />}
+                    {isLab ? <FlaskConical className="w-3 h-3 text-purple-700 dark:text-purple-300" aria-hidden="true" /> : <GraduationCap className="w-3 h-3 text-zinc-700 dark:text-zinc-300" aria-hidden="true" />}
                     {sch.type || 'Lecture'}
                   </span>
-                  <span className="font-bold text-zinc-950">{DAY_NAMES[sch.dayOfWeek]}</span>
-                  <span className="font-mono text-zinc-700">{sch.startTime} – {sch.endTime}</span>
-                  {sch.room && <span className="text-zinc-500 font-medium">({sch.room})</span>}
+                  <span className="font-bold text-zinc-950 dark:text-zinc-100">{DAY_NAMES[sch.dayOfWeek]}</span>
+                  <span className="font-mono text-zinc-700 dark:text-zinc-300">{sch.startTime} – {sch.endTime}</span>
+                  {sch.room && <span className="text-zinc-500 dark:text-zinc-400 font-medium">({sch.room})</span>}
                 </div>
               );
             })}
@@ -197,14 +197,14 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
         </div>
 
         {/* Tab switcher */}
-        <div className="px-5 pt-4 bg-white border-b border-zinc-200 flex gap-4">
+        <div className="px-5 pt-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex gap-4">
           <button
             type="button"
             onClick={() => setActiveTab('syllabus')}
             className={`pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
               activeTab === 'syllabus'
-                ? 'border-zinc-950 text-zinc-950'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
+                ? 'border-zinc-950 dark:border-zinc-100 text-zinc-950 dark:text-zinc-100'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
             Master Syllabus ({classSession.masterSyllabus.length})
@@ -214,8 +214,8 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
             onClick={() => setActiveTab('history')}
             className={`pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
               activeTab === 'history'
-                ? 'border-zinc-950 text-zinc-950'
-                : 'border-transparent text-zinc-500 hover:text-zinc-900'
+                ? 'border-zinc-950 dark:border-zinc-100 text-zinc-950 dark:text-zinc-100'
+                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
             Logged Sessions ({courseLogs.length})
@@ -223,21 +223,21 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
         </div>
 
         {/* Content area */}
-        <div className="p-5 space-y-3 overflow-y-auto flex-1 bg-white">
+        <div className="p-5 space-y-3 overflow-y-auto flex-1 bg-white dark:bg-zinc-900">
           {activeTab === 'syllabus' ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between pb-1">
-                <span className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
                   Course Outline & Master Syllabus
                 </span>
                 {onOpenSyllabusUpload && (
                   <button
                     type="button"
                     onClick={() => onOpenSyllabusUpload(classSession.id)}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-800 bg-zinc-100 hover:bg-zinc-200 border border-zinc-300 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 px-2.5 py-1 rounded-md transition-colors cursor-pointer"
                     title="Upload syllabus from Microsoft Word (.docx)"
                   >
-                    <FileText className="w-3.5 h-3.5 text-zinc-700" />
+                    <FileText className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
                     Upload Word Syllabus (.docx)
                   </button>
                 )}
@@ -254,12 +254,12 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                     key={index}
                     className={`flex items-start gap-3 rounded-lg border p-3.5 transition-all ${
                       isCovered
-                        ? 'border-emerald-300 bg-emerald-50/50 text-zinc-950'
+                        ? 'border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 text-zinc-950 dark:text-zinc-100'
                         : isPartial
-                        ? 'border-amber-300 bg-amber-50/70 text-zinc-950'
+                        ? 'border-amber-300 dark:border-amber-800/80 bg-amber-50/70 dark:bg-amber-950/30 text-zinc-950 dark:text-zinc-100'
                         : isNext
-                        ? 'border-zinc-400 bg-zinc-50'
-                        : 'border-zinc-200 bg-zinc-50/50 text-zinc-700'
+                        ? 'border-zinc-400 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-950 dark:text-zinc-100'
+                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-850/50 text-zinc-700 dark:text-zinc-300'
                     }`}
                   >
                     <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
@@ -267,7 +267,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                         ? 'bg-emerald-600 border-emerald-600 text-white'
                         : isPartial
                         ? 'bg-amber-600 border-amber-600 text-white'
-                        : 'border-zinc-300 bg-white text-zinc-400'
+                        : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500'
                     }`}>
                       {isCovered ? (
                         <Check className="h-3.5 w-3.5 stroke-[3]" aria-hidden="true" />
@@ -280,33 +280,33 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                     
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className={`text-sm leading-normal ${isCovered ? 'text-zinc-950 font-semibold' : 'text-zinc-800 font-medium'}`}>
+                        <p className={`text-sm leading-normal ${isCovered ? 'text-zinc-950 dark:text-zinc-100 font-semibold' : 'text-zinc-800 dark:text-zinc-200 font-medium'}`}>
                           {topic}
                         </p>
 
                         {isCovered && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">
                             ✓ Completed
                           </span>
                         )}
 
                         {isPartial && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
-                            <Hourglass className="h-3 w-3 text-amber-700" />
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700">
+                            <Hourglass className="h-3 w-3 text-amber-700 dark:text-amber-400" />
                             In Progress (Unfinished)
                           </span>
                         )}
 
                         {isNext && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-900 bg-zinc-200 px-2 py-0.5 rounded-full border border-zinc-300">
-                            <Sparkles className="h-3 w-3 text-zinc-700" />
+                          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-900 dark:text-zinc-100 bg-zinc-200 dark:bg-zinc-700 px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-600">
+                            <Sparkles className="h-3 w-3 text-zinc-700 dark:text-zinc-300" />
                             Next Up
                           </span>
                         )}
                       </div>
 
                       {isPartial && partialNote && partialNote !== 'In progress' && (
-                        <p className="text-xs text-amber-900 font-semibold mt-1 bg-white/80 p-2 rounded border border-amber-200">
+                        <p className="text-xs text-amber-900 dark:text-amber-200 font-semibold mt-1 bg-white/80 dark:bg-zinc-800/80 p-2 rounded border border-amber-200 dark:border-amber-700">
                           📌 Cut-off note: "{partialNote}"
                         </p>
                       )}
@@ -317,10 +317,10 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
             </div>
           ) : (
             courseLogs.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-zinc-300 p-8 text-center text-zinc-600 space-y-1.5">
-                <Calendar className="h-6 w-6 mx-auto text-zinc-400" aria-hidden="true" />
-                <p className="text-sm font-bold text-zinc-950">No sessions logged for this course yet</p>
-                <p className="text-xs text-zinc-500">Log class attendance and topic updates after your lectures.</p>
+              <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-600 dark:text-zinc-400 space-y-1.5">
+                <Calendar className="h-6 w-6 mx-auto text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
+                <p className="text-sm font-bold text-zinc-950 dark:text-zinc-100">No sessions logged for this course yet</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">Log class attendance and topic updates after your lectures.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -329,35 +329,35 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                   return (
                     <div
                       key={log.id || index}
-                      className="rounded-lg border border-zinc-200 bg-zinc-50/50 p-4 space-y-2.5 text-xs text-zinc-700"
+                      className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-850/50 p-4 space-y-2.5 text-xs text-zinc-700 dark:text-zinc-300"
                     >
-                      <div className="flex items-center justify-between gap-2 border-b border-zinc-200/80 pb-2">
+                      <div className="flex items-center justify-between gap-2 border-b border-zinc-200/80 dark:border-zinc-750 pb-2">
                         <div className="flex items-center gap-2">
                           <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-bold uppercase ${
-                            isLab ? 'bg-purple-100 text-purple-900' : 'bg-zinc-100 text-zinc-900'
+                            isLab ? 'bg-purple-100 dark:bg-purple-950/60 text-purple-900 dark:text-purple-200' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-200'
                           }`}>
-                            {isLab ? <FlaskConical className="w-3 h-3 text-purple-700" /> : <GraduationCap className="w-3 h-3 text-zinc-700" />}
+                            {isLab ? <FlaskConical className="w-3 h-3 text-purple-700 dark:text-purple-300" /> : <GraduationCap className="w-3 h-3 text-zinc-700 dark:text-zinc-300" />}
                             {log.sessionType || 'Lecture'}
                           </span>
-                          <span className="font-semibold text-zinc-950">
+                          <span className="font-semibold text-zinc-950 dark:text-zinc-100">
                             {format(new Date(log.date), 'EEEE, MMMM d, yyyy')}
                           </span>
                         </div>
 
                         <span className={`px-2 py-0.5 rounded font-bold ${
                           log.engagementLevel === 'High'
-                            ? 'bg-emerald-100 text-emerald-900'
+                            ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200'
                             : log.engagementLevel === 'Low'
-                            ? 'bg-rose-100 text-rose-900'
-                            : 'bg-zinc-100 text-zinc-800'
+                            ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-900 dark:text-rose-200'
+                            : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'
                         }`}>
                           {log.engagementLevel || 'Medium'} Engagement
                         </span>
                       </div>
 
                       <div>
-                        <span className="font-bold text-zinc-900 block mb-1">Topics Discussed:</span>
-                        <ul className="list-disc list-inside space-y-0.5 text-zinc-800 font-medium">
+                        <span className="font-bold text-zinc-900 dark:text-zinc-100 block mb-1">Topics Discussed:</span>
+                        <ul className="list-disc list-inside space-y-0.5 text-zinc-800 dark:text-zinc-200 font-medium">
                           {log.topicsCovered.map((t, idx) => (
                             <li key={idx} className="break-words">{t}</li>
                           ))}
@@ -365,9 +365,9 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                       </div>
 
                       {log.nextActions && (
-                        <div className="bg-white p-2.5 rounded border border-zinc-200 mt-1">
-                          <span className="font-bold text-zinc-900 block text-[11px] uppercase tracking-wider">Action Items / Cut-off:</span>
-                          <p className="text-zinc-700 mt-0.5 break-words font-medium">{log.nextActions}</p>
+                        <div className="bg-white dark:bg-zinc-800 p-2.5 rounded border border-zinc-200 dark:border-zinc-700 mt-1">
+                          <span className="font-bold text-zinc-900 dark:text-zinc-100 block text-[11px] uppercase tracking-wider">Action Items / Cut-off:</span>
+                          <p className="text-zinc-700 dark:text-zinc-300 mt-0.5 break-words font-medium">{log.nextActions}</p>
                         </div>
                       )}
                     </div>
@@ -379,11 +379,11 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-zinc-200 bg-zinc-50 p-4 shrink-0">
+        <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-4 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 bg-white px-4 text-xs font-semibold text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer shadow-2xs"
+            className="inline-flex h-9 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
           >
             Close
           </button>
@@ -394,7 +394,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               onClose();
               onLogNewSession(classSession);
             }}
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 px-4 text-xs font-bold text-white shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-4 text-xs font-bold text-white dark:text-zinc-950 shadow-sm hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors cursor-pointer"
           >
             <PlusCircle className="w-4 h-4 mr-1.5" />
             Log Class Progress

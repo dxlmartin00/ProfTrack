@@ -451,7 +451,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
         {/* Desktop & Tablet Hourly Time-Grid */}
         <div className="hidden md:block overflow-x-auto">
           {/* Day Headers Bar */}
-          <div className="grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-950 divide-x divide-zinc-200 dark:divide-zinc-800">
+          <div className="grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-[#161820] divide-x divide-zinc-200 dark:divide-zinc-800">
             {/* Time label corner */}
             <div className="p-2.5 text-center text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-400 dark:text-zinc-500 flex items-center justify-center">
               Time
@@ -465,10 +465,10 @@ export const CalendarView: FC<CalendarViewProps> = ({
 
               return (
                 <div 
-                  key={dayDate.toISOString()}
+                  key={dayDate.toISOString()} 
                   className={`p-2.5 text-center transition-all ${
                     isCurrentDay
-                      ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-xs'
+                      ? 'bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs'
                       : holidayName
                       ? 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-950 dark:text-rose-200'
                       : 'text-zinc-800 dark:text-zinc-200'
@@ -503,7 +503,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
           {/* Time-Grid Body */}
           <div className="relative grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] divide-x divide-zinc-200 dark:divide-zinc-800" style={{ height: `${totalGridHeightPx}px` }}>
             {/* Left Y-Axis Time Labels */}
-            <div className="relative bg-zinc-50/70 dark:bg-zinc-950/60 select-none">
+            <div className="relative bg-zinc-50/70 dark:bg-[#111318] select-none">
               {timeSlots.map((slot, sIdx) => (
                 <div 
                   key={sIdx} 
@@ -525,8 +525,8 @@ export const CalendarView: FC<CalendarViewProps> = ({
               return (
                 <div 
                   key={dayDate.toISOString()} 
-                  className={`relative bg-hatched transition-colors ${
-                    isCurrentDay ? 'bg-zinc-50/30 dark:bg-zinc-800/10' : ''
+                  className={`relative bg-hatched dark:bg-[#0f1116] transition-colors ${
+                    isCurrentDay ? 'bg-zinc-50/30 dark:bg-[#141720]' : ''
                   }`}
                   style={{ height: `${totalGridHeightPx}px` }}
                 >
@@ -543,24 +543,24 @@ export const CalendarView: FC<CalendarViewProps> = ({
                     />
                   ))}
 
-                  {/* Scheduled Class Blocks (Matching Sample Image Layout & Eye-Care Colors) */}
+                  {/* Scheduled Class Blocks (Eye-Care Desaturated Colors, Matte Contrast) */}
                   {schedule.map((item, itemIdx) => {
                     const isLab = item.sch.type === 'Laboratory';
 
                     // Non-oversaturated, easy-on-the-eyes palette:
-                    // Lecture: Soft slate blue/gray
-                    // Laboratory: Soft cyan/teal
-                    // Accomplished: Soft emerald
+                    // Lecture: Soft slate-blue
+                    // Laboratory: Soft teal/cyan
+                    // Accomplished: Soft forest green
                     let cardColorClasses = isLab
-                      ? 'bg-cyan-50/95 dark:bg-cyan-950/60 border-cyan-200 dark:border-cyan-800/80 text-cyan-950 dark:text-cyan-100 hover:border-cyan-400 dark:hover:border-cyan-600'
-                      : 'bg-white dark:bg-zinc-800/90 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-500';
+                      ? 'bg-teal-50/95 dark:bg-[#133235] border-teal-200/90 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0] hover:border-teal-400 dark:hover:border-[#2e747b]'
+                      : 'bg-sky-50/95 dark:bg-[#17273d] border-sky-200/90 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd] hover:border-sky-400 dark:hover:border-[#355f94]';
 
                     if (item.isLogged) {
-                      cardColorClasses = 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-100 hover:border-emerald-400';
+                      cardColorClasses = 'bg-emerald-50/95 dark:bg-[#143224] border-emerald-200/90 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0] hover:border-emerald-400 dark:hover:border-[#2f7353]';
                     }
 
                     if (item.isLiveNow) {
-                      cardColorClasses += ' ring-2 ring-emerald-500 shadow-md animate-pulse';
+                      cardColorClasses += ' ring-2 ring-emerald-400 dark:ring-emerald-400 shadow-md animate-pulse';
                     }
 
                     return (
@@ -581,7 +581,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                               <span className="text-xs font-black truncate">
                                 {item.cls.subjectCode}
                               </span>
-                              <span className="text-[10px] font-bold px-1 rounded bg-zinc-200/70 dark:bg-zinc-700/80 shrink-0">
+                              <span className="text-[10px] font-bold px-1 rounded bg-zinc-200/80 dark:bg-black/35 text-zinc-800 dark:text-zinc-200 shrink-0">
                                 {item.cls.section}
                               </span>
                             </div>
@@ -593,7 +593,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                               {item.isLogged ? (
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                               ) : (
-                                <span className="text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-100 dark:bg-zinc-700/60 opacity-80">
+                                <span className="text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-zinc-100/90 dark:bg-black/30 text-zinc-700 dark:text-zinc-300 opacity-90">
                                   {isLab ? 'Lab' : 'Lec'}
                                 </span>
                               )}
@@ -602,7 +602,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
 
                           {/* Subject Title (Shown if block height permits) */}
                           {item.heightPx > 50 && (
-                            <p className="text-[10px] opacity-80 truncate mt-0.5 font-medium">
+                            <p className="text-[10px] opacity-90 truncate mt-0.5 font-medium text-zinc-800 dark:text-zinc-200">
                               {item.cls.subjectTitle}
                             </p>
                           )}
@@ -610,18 +610,18 @@ export const CalendarView: FC<CalendarViewProps> = ({
 
                         {/* Next Topic Preview (Shown for longer 2-3h lab blocks) */}
                         {item.heightPx > 80 && item.nextTopic && !item.isLogged && (
-                          <div className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-100/80 dark:bg-zinc-800/80 opacity-90 truncate flex items-center gap-1">
+                          <div className="text-[9px] px-1.5 py-0.5 rounded bg-white/80 dark:bg-black/35 text-zinc-800 dark:text-zinc-200 opacity-90 truncate flex items-center gap-1">
                             <BookOpen className="w-2.5 h-2.5 shrink-0" />
                             <span className="truncate"><span className="font-bold">Next:</span> {item.nextTopic}</span>
                           </div>
                         )}
 
                         {/* Block Footer: Time & Room */}
-                        <div className="flex items-center justify-between text-[9px] font-mono opacity-85 pt-1 border-t border-zinc-200/50 dark:border-zinc-700/50">
-                          <span>
+                        <div className="flex items-center justify-between text-[9px] font-mono opacity-90 pt-1 border-t border-zinc-200/60 dark:border-white/10">
+                          <span className="text-zinc-700 dark:text-zinc-300">
                             {formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}
                           </span>
-                          <span className="font-bold px-1 rounded bg-zinc-100/90 dark:bg-zinc-700/70">
+                          <span className="font-bold px-1 rounded bg-zinc-100/90 dark:bg-black/35 text-zinc-900 dark:text-white">
                             {item.sch.room || item.cls.room || 'CL'}
                           </span>
                         </div>
@@ -693,10 +693,10 @@ export const CalendarView: FC<CalendarViewProps> = ({
                           onClick={() => onClassClick(item.cls, item.sch, currentDay)}
                           className={`rounded-xl border p-3.5 cursor-pointer shadow-2xs space-y-2 ${
                             item.isLiveNow
-                              ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40'
+                              ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40'
                               : isLab
-                              ? 'border-cyan-200 dark:border-cyan-800/80 bg-cyan-50/70 dark:bg-cyan-950/40'
-                              : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/80'
+                              ? 'border-teal-200/90 dark:border-[#1e4d52] bg-teal-50/80 dark:bg-[#133235]'
+                              : 'border-sky-200/90 dark:border-[#223d60] bg-sky-50/80 dark:bg-[#17273d]'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -704,27 +704,29 @@ export const CalendarView: FC<CalendarViewProps> = ({
                               <span className="text-sm font-black text-zinc-950 dark:text-zinc-100">
                                 {item.cls.subjectCode}
                               </span>
-                              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-600">
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-black/30 border border-zinc-200 dark:border-white/10 text-zinc-800 dark:text-zinc-200">
                                 {item.cls.section}
                               </span>
                             </div>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
-                              isLab ? 'bg-cyan-100 dark:bg-cyan-900/60 text-cyan-900 dark:text-cyan-200' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                              isLab 
+                                ? 'bg-teal-100/90 dark:bg-teal-900/60 text-teal-900 dark:text-teal-200' 
+                                : 'bg-sky-100/90 dark:bg-sky-900/60 text-sky-900 dark:text-sky-200'
                             }`}>
                               {item.sch.type}
                             </span>
                           </div>
 
-                          <div className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+                          <div className="text-xs text-zinc-700 dark:text-zinc-200 font-medium">
                             {item.cls.subjectTitle}
                           </div>
 
-                          <div className="flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 pt-2 border-t border-zinc-200/60 dark:border-zinc-700/60 font-mono">
+                          <div className="flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 pt-2 border-t border-zinc-200/60 dark:border-white/10 font-mono">
                             <div className="flex items-center gap-1.5">
-                              <Clock className="w-3.5 h-3.5 text-zinc-500" />
+                              <Clock className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
                               <span>{formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}</span>
                             </div>
-                            <span className="font-bold bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-600">
+                            <span className="font-bold bg-zinc-100 dark:bg-black/30 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white">
                               {item.sch.room || item.cls.room || 'CL'}
                             </span>
                           </div>
@@ -739,24 +741,24 @@ export const CalendarView: FC<CalendarViewProps> = ({
         </div>
 
         {/* Legend Bar (Matching Sample Image bottom row) */}
-        <div className="bg-zinc-50 dark:bg-zinc-950 p-3.5 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600 dark:text-zinc-400 transition-colors">
+        <div className="bg-zinc-50 dark:bg-[#111318] p-3.5 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600 dark:text-zinc-400 transition-colors">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="font-bold text-zinc-900 dark:text-zinc-200 text-[11px] uppercase tracking-wider">Legend:</span>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 shadow-2xs" />
-              <span className="text-[11px]">Lecture Class</span>
+              <span className="h-3 w-3 rounded bg-sky-100 dark:bg-[#17273d] border border-sky-300 dark:border-[#223d60] shadow-2xs" />
+              <span className="text-[11px] text-zinc-700 dark:text-zinc-300">Lecture Class</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded bg-cyan-100 dark:bg-cyan-900/60 border border-cyan-300 dark:border-cyan-700 shadow-2xs" />
-              <span className="text-[11px]">Laboratory Class</span>
+              <span className="h-3 w-3 rounded bg-teal-100 dark:bg-[#133235] border border-teal-300 dark:border-[#1e4d52] shadow-2xs" />
+              <span className="text-[11px] text-zinc-700 dark:text-zinc-300">Laboratory Class</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-emerald-900/60 border border-emerald-300 dark:border-emerald-700 shadow-2xs" />
-              <span className="text-[11px]">Accomplished Log</span>
+              <span className="h-3 w-3 rounded bg-emerald-100 dark:bg-[#143224] border border-emerald-300 dark:border-[#1f4c37] shadow-2xs" />
+              <span className="text-[11px] text-zinc-700 dark:text-zinc-300">Accomplished Log</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px]">Active Live Now</span>
+              <span className="text-[11px] text-zinc-700 dark:text-zinc-300">Active Live Now</span>
             </div>
           </div>
 
