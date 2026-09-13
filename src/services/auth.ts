@@ -425,7 +425,7 @@ export async function registerInstructor(data: {
   const cleanFirstName = sanitizeString(data.firstName, 40);
   const cleanLastName = sanitizeString(data.lastName, 40);
   const cleanDept = sanitizeString(data.department || 'College of Computer Studies', 80);
-  const cleanInst = sanitizeString(data.institution || 'University of Makati', 80);
+  const cleanInst = sanitizeString(data.institution || 'North Eastern Mindanao State University', 80);
 
   if (!cleanFirstName || !cleanLastName) {
     return { success: false, error: 'Please enter both your first and last name.' };

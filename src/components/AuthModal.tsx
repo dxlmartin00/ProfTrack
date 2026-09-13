@@ -49,9 +49,9 @@ export const AuthModal: FC<AuthModalProps> = ({
   // Register Form State
   const [regFirstName, setRegFirstName] = useState('');
   const [regLastName, setRegLastName] = useState('');
-  const [regDept, setRegDept] = useState('College of Computer Studies');
-  const [regInst, setRegInst] = useState('University of Makati');
-  const [regPin, setRegPin] = useState('1234');
+  const [regDept, setRegDept] = useState('');
+  const [regInst, setRegInst] = useState('');
+  const [regPin, setRegPin] = useState('');
   const [regSuccessUser, setRegSuccessUser] = useState<UserAccount | null>(null);
   const [regError, setRegError] = useState<string | null>(null);
 
@@ -129,7 +129,8 @@ export const AuthModal: FC<AuthModalProps> = ({
       return;
     }
 
-    if (regPin.trim().length !== 4) {
+    const pinToUse = regPin.trim() || '1234';
+    if (pinToUse.length !== 4) {
       setRegError('Please choose a 4-digit PIN.');
       return;
     }
@@ -137,19 +138,22 @@ export const AuthModal: FC<AuthModalProps> = ({
     setIsSubmitting(true);
     try {
       const res = await registerInstructor({
-        firstName: regFirstName,
-        lastName: regLastName,
-        department: regDept,
-        institution: regInst,
-        pin: regPin,
+        firstName: regFirstName.trim(),
+        lastName: regLastName.trim(),
+        department: regDept.trim() || 'College of Computer Studies',
+        institution: regInst.trim() || 'North Eastern Mindanao State University',
+        pin: pinToUse,
       });
 
       if (res.success && res.user) {
         setRegSuccessUser(res.user);
         if (onAccountsUpdated) onAccountsUpdated();
-        // Reset form
+        // Reset all form inputs to clean empty state
         setRegFirstName('');
         setRegLastName('');
+        setRegDept('');
+        setRegInst('');
+        setRegPin('');
       } else {
         setRegError(res.error || 'Failed to register account.');
       }
@@ -428,6 +432,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                         type="text"
                         value={regDept}
                         onChange={(e) => setRegDept(e.target.value)}
+                        placeholder="e.g. College of Computer Studies"
                         className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>
@@ -443,6 +448,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                         type="text"
                         value={regInst}
                         onChange={(e) => setRegInst(e.target.value)}
+                        placeholder="North Eastern Mindanao State University"
                         className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>
@@ -461,6 +467,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                         pattern="[0-9]{4}"
                         value={regPin}
                         onChange={(e) => setRegPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+                        placeholder="1234"
                         className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 font-mono tracking-widest shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>
