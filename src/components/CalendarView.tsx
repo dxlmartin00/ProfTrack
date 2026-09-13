@@ -20,11 +20,8 @@ import {
   Clock, 
   ListFilter, 
   Plus, 
-  BookOpen, 
   MapPin, 
-  CalendarDays, 
-  LayoutGrid, 
-  Check 
+  CalendarDays 
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -73,7 +70,6 @@ export const CalendarView: FC<CalendarViewProps> = ({
 }) => {
   const [currentWeekDate, setCurrentWeekDate] = useState<Date>(new Date());
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
-  const [calendarMode, setCalendarMode] = useState<'planner' | 'timeline'>('planner');
   const [selectedMobileDayIdx, setSelectedMobileDayIdx] = useState<number>(() => {
     const day = new Date().getDay();
     return day >= 1 && day <= 6 ? day - 1 : 0;
@@ -392,37 +388,6 @@ export const CalendarView: FC<CalendarViewProps> = ({
               <span className="hidden sm:inline">Daily Timetable</span>
             </button>
 
-            {/* View Mode Switcher: Planner Board vs Timeline Grid */}
-            <div className="inline-flex p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shrink-0">
-              <button
-                type="button"
-                onClick={() => setCalendarMode('planner')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  calendarMode === 'planner'
-                    ? 'bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white shadow-2xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
-                }`}
-                title="Weekly Planner Calendar View"
-              >
-                <CalendarDays className="w-3.5 h-3.5" />
-                <span>Weekly Planner</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setCalendarMode('timeline')}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  calendarMode === 'timeline'
-                    ? 'bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white shadow-2xs'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
-                }`}
-                title="Continuous Hourly Timeline Grid"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Hourly Timeline</span>
-              </button>
-            </div>
-
             {/* Course Filter Dropdown */}
             <div className="relative shrink-0">
               <select
@@ -618,471 +583,180 @@ export const CalendarView: FC<CalendarViewProps> = ({
         ref={calendarPrintRef} 
         className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden transition-colors"
       >
-        {calendarMode === 'planner' ? (
-          /* ========================================================= */
-          /* MODE A: WEEKLY PLANNER BOARD (Modern Weekly Calendar)     */
-          /* ========================================================= */
-          <div>
-            {/* Desktop 5/6 Column Grid */}
-            <div className="hidden md:grid grid-cols-5 lg:grid-cols-5 xl:grid-cols-6 divide-x divide-zinc-200/80 dark:divide-zinc-800 min-h-[600px]">
-              {weekDays.map((dayDate) => {
-                const isCurrentDay = isToday(dayDate);
-                const schedule = getDaySchedule(dayDate);
-                const holidayName = PHILIPPINE_HOLIDAYS[format(dayDate, 'MM-dd')];
-                const totalDayHours = schedule.reduce((acc, s) => acc + s.durationMinutes / 60, 0);
+        {/* Main Calendar: Responsive Continuous Hourly Timeline */}
+        <div>
+          {/* Desktop Multi-day Continuous Timeline Grid */}
+          <div className="hidden md:block overflow-x-auto">
+            <div className="min-w-[750px]">
+              {/* Day Column Headers */}
+              <div className="grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-[#161820] divide-x divide-zinc-200 dark:divide-zinc-800">
+                <div className="p-3 text-center text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-300 flex items-center justify-center">
+                  Time
+                </div>
 
-                return (
-                  <div 
-                    key={dayDate.toISOString()}
-                    className={`flex flex-col flex-1 transition-colors ${
-                      isCurrentDay 
-                        ? 'bg-zinc-50/50 dark:bg-zinc-900/40' 
-                        : 'bg-white dark:bg-zinc-900'
-                    }`}
-                  >
-                    {/* Column Header */}
-                    <div className={`p-3.5 border-b border-zinc-200/80 dark:border-zinc-800 transition-colors ${
-                      isCurrentDay 
-                        ? 'bg-zinc-100/90 dark:bg-zinc-800/90' 
-                        : 'bg-zinc-50/70 dark:bg-zinc-900/80'
-                    }`}>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-[11px] font-black uppercase tracking-wider ${
-                          isCurrentDay ? 'text-zinc-950 dark:text-white' : 'text-zinc-500 dark:text-zinc-300'
-                        }`}>
-                          {format(dayDate, 'EEEE')}
-                        </span>
+                {weekDays.map((dayDate) => {
+                  const isCurrentDay = isToday(dayDate);
+                  const holidayName = PHILIPPINE_HOLIDAYS[format(dayDate, 'MM-dd')];
+                  const schedule = getDaySchedule(dayDate);
+                  const totalDayHours = schedule.reduce((acc, s) => acc + s.durationMinutes / 60, 0);
+
+                  return (
+                    <div 
+                      key={dayDate.toISOString()} 
+                      className={`p-3 text-center transition-all ${
+                        isCurrentDay
+                          ? 'bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs'
+                          : holidayName
+                          ? 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-950 dark:text-rose-200'
+                          : 'text-zinc-800 dark:text-zinc-200'
+                      }`}
+                    >
+                      <div className={`text-[10px] font-black uppercase tracking-wider ${
+                        isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-300'
+                      }`}>
+                        {format(dayDate, 'EEEE')}
+                      </div>
+                      <div className="text-base font-black tracking-tight mt-0.5 flex items-center justify-center gap-1.5">
+                        <span>{format(dayDate, 'MMM d')}</span>
                         {isCurrentDay && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Today
-                          </span>
+                          <span className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-600 animate-pulse" />
                         )}
                       </div>
-
-                      <div className="flex items-baseline justify-between mt-1">
-                        <div className="flex items-center gap-2">
-                          <span className={`flex items-center justify-center h-7 w-7 rounded-full text-sm font-black ${
-                            isCurrentDay 
-                              ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950' 
-                              : 'bg-zinc-200/80 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-                          }`}>
-                            {format(dayDate, 'd')}
-                          </span>
-                          <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300">
-                            {format(dayDate, 'MMM')}
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-300">
-                          {schedule.length > 0 ? `${totalDayHours}h load` : 'No classes'}
-                        </span>
+                      <div className={`text-[10px] font-medium mt-0.5 ${
+                        isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-300'
+                      }`}>
+                        {schedule.length > 0 ? `${schedule.length} ${schedule.length === 1 ? 'class' : 'classes'} • ${totalDayHours}h` : 'No classes'}
                       </div>
-
                       {holidayName && (
-                        <div className="mt-2 text-[10px] font-bold text-rose-800 dark:text-rose-300 bg-rose-100/80 dark:bg-rose-950/40 px-2 py-1 rounded-md truncate">
+                        <div className={`text-[9px] font-bold mt-1 px-1.5 py-0.5 rounded truncate ${
+                          isCurrentDay
+                            ? 'bg-rose-500 text-white'
+                            : 'bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200'
+                        }`} title={holidayName}>
                           🎉 {holidayName}
                         </div>
                       )}
                     </div>
+                  );
+                })}
+              </div>
 
-                    {/* Column Content: Chronological Calendar Event Cards */}
-                    <div className="p-2.5 flex-1 space-y-2.5 overflow-y-auto">
-                      {schedule.length === 0 ? (
-                        <div className="h-44 flex flex-col items-center justify-center text-center p-4 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-300">
-                          <BookOpen className="w-5 h-5 mb-1.5 opacity-40" />
-                          <span className="text-xs font-medium">Free Academic Day</span>
-                          <span className="text-[10px] text-zinc-500 dark:text-zinc-300 mt-0.5">Prep & Consultation</span>
-                          {onAddClassClick && (
-                            <button
-                              type="button"
-                              onClick={onAddClassClick}
-                              className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
-                            >
-                              <Plus className="w-3 h-3" />
-                              <span>Add Session</span>
-                            </button>
-                          )}
+              {/* Time-Grid Body */}
+              <div 
+                className="relative grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] divide-x divide-zinc-200 dark:divide-zinc-800" 
+                style={{ height: `${totalGridHeightPx}px` }}
+              >
+                {/* Left Y-Axis Time Labels */}
+                <div className="relative bg-zinc-50/70 dark:bg-[#111318] select-none">
+                  {timeSlots.filter(s => !s.isHalf).map((slot, sIdx) => (
+                    <div 
+                      key={sIdx} 
+                      className="absolute w-full px-2 text-right text-[10px] font-mono leading-none font-bold text-zinc-600 dark:text-zinc-300 -translate-y-1.5"
+                      style={{ top: `${sIdx * (SLOT_HEIGHT_PX * 2)}px` }}
+                    >
+                      {slot.label}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Day Columns */}
+                {weekDays.map((dayDate) => {
+                  const schedule = getDaySchedule(dayDate);
+                  const isCurrentDay = isToday(dayDate);
+
+                  return (
+                    <div 
+                      key={dayDate.toISOString()} 
+                      className={`relative transition-colors ${
+                        isCurrentDay ? 'bg-zinc-50/40 dark:bg-[#141720]' : 'bg-white dark:bg-[#0f1116]'
+                      }`}
+                      style={{ height: `${totalGridHeightPx}px` }}
+                    >
+                      {/* Hour Lines */}
+                      {timeSlots.map((slot, sIdx) => (
+                        <div
+                          key={sIdx}
+                          className={`absolute left-0 right-0 border-t pointer-events-none ${
+                            slot.isHalf 
+                              ? 'border-zinc-100 dark:border-zinc-800/40 border-dashed' 
+                              : 'border-zinc-200 dark:border-zinc-800'
+                          }`}
+                          style={{ top: `${sIdx * SLOT_HEIGHT_PX}px` }}
+                        />
+                      ))}
+
+                      {/* Real-time Current Time Line for Today */}
+                      {isCurrentDay && nowIndicatorTopPx !== null && (
+                        <div 
+                          className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                          style={{ top: `${nowIndicatorTopPx}px` }}
+                        >
+                          <div className="w-2.5 h-2.5 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 animate-ping absolute" />
+                          <div className="w-2 h-2 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 relative z-10" />
+                          <div className="flex-1 h-[2px] bg-rose-500 shadow-xs" />
+                          <span className="text-[9px] font-mono font-bold bg-rose-500 text-white px-1.5 py-0.5 rounded shadow-xs ml-1">
+                            {format(currentTime, 'h:mm a')}
+                          </span>
                         </div>
-                      ) : (
-                        schedule.map((item, itemIdx) => {
-                          const isLab = item.sch.type === 'Laboratory';
+                      )}
 
-                          // Modern Apple/Google calendar card styling with color accent border
-                          const accentBorder = item.isLogged
-                            ? 'border-l-4 border-l-emerald-500 bg-emerald-50/40 dark:bg-[#12281c] border-emerald-200/80 dark:border-[#1e4632]'
-                            : isLab
-                            ? 'border-l-4 border-l-teal-500 bg-teal-50/40 dark:bg-[#11292b] border-teal-200/80 dark:border-[#1c4347]'
-                            : 'border-l-4 border-l-sky-500 bg-sky-50/40 dark:bg-[#142337] border-sky-200/80 dark:border-[#1f3756]';
+                      {/* Scheduled Class Blocks with Left Accent Border */}
+                      {schedule.map((item, itemIdx) => {
+                        const isLab = item.sch.type === 'Laboratory';
 
-                          return (
-                            <div
-                              key={`${item.cls.id}_planner_${itemIdx}`}
-                              onClick={() => onClassClick(item.cls, item.sch, dayDate)}
-                              className={`group rounded-xl border p-3 text-left transition-all duration-150 cursor-pointer shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] ${accentBorder}`}
-                              title={`${item.cls.subjectCode} (${item.cls.section})\n${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} – ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to log topics or view syllabus.`}
-                            >
-                              {/* Card Header: Time Range & Type Chip */}
-                              <div className="flex items-center justify-between gap-1 text-[11px]">
-                                <div className="flex items-center gap-1 font-mono font-bold text-zinc-800 dark:text-zinc-200">
-                                  <Clock className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300 shrink-0" />
-                                  <span>{formatTimeSlot(item.sch.startTime)}</span>
-                                </div>
-                                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                                  isLab
-                                    ? 'bg-teal-100 dark:bg-teal-900/60 text-teal-900 dark:text-teal-200'
-                                    : 'bg-sky-100 dark:bg-sky-900/60 text-sky-900 dark:text-sky-200'
-                                }`}>
-                                  {item.sch.type === 'Laboratory' ? 'Lab' : 'Lec'}
-                                </span>
-                              </div>
+                        const cardColors = item.isLogged
+                          ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#143224] border-emerald-200/90 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
+                          : isLab
+                          ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#133235] border-teal-200/90 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
+                          : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#17273d] border-sky-200/90 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
 
-                              {/* Card Subject Code & Section Badge */}
-                              <div className="mt-2 flex items-center justify-between gap-1.5">
-                                <span className="text-sm font-black text-zinc-950 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
+                        return (
+                          <div
+                            key={`${item.cls.id}_timeline_${itemIdx}`}
+                            onClick={() => onClassClick(item.cls, item.sch, dayDate)}
+                            style={{
+                              top: `${item.topPx}px`,
+                              height: `${item.heightPx}px`,
+                            }}
+                            className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] active:scale-[0.98] flex flex-col justify-between overflow-hidden z-10 ${cardColors}`}
+                            title={`${item.cls.subjectCode} (${item.cls.section}) - ${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} – ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to log topics or view syllabus.`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1 leading-tight">
+                                <span className="text-xs font-black truncate">
                                   {item.cls.subjectCode}
                                 </span>
-                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-zinc-200/70 dark:bg-black/40 text-zinc-800 dark:text-zinc-200 shrink-0">
+                                <span className="text-[9px] font-bold px-1 rounded bg-black/10 dark:bg-black/30 shrink-0">
                                   {item.cls.section}
                                 </span>
                               </div>
-
-                              {/* Subject Title */}
-                              <div className="text-xs text-zinc-700 dark:text-zinc-300 font-medium truncate mt-0.5">
+                              <div className="text-[10px] opacity-85 truncate mt-0.5">
                                 {item.cls.subjectTitle}
                               </div>
-
-                              {/* Location Room Badge */}
-                              <div className="flex items-center gap-1 mt-2 text-[11px] text-zinc-600 dark:text-zinc-300">
-                                <MapPin className="w-3 h-3 text-zinc-500 dark:text-zinc-300 shrink-0" />
-                                <span className="font-semibold">{item.sch.room || item.cls.room || 'CL Room'}</span>
-                              </div>
-
-                              {/* Next Topic Chip Preview */}
-                              {item.nextTopic && (
-                                <div className="mt-2 pt-2 border-t border-zinc-200/60 dark:border-white/10 text-[10px] text-zinc-600 dark:text-zinc-300 flex items-start gap-1">
-                                  <BookOpen className="w-3 h-3 text-zinc-500 dark:text-zinc-300 shrink-0 mt-0.5" />
-                                  <span className="truncate leading-tight font-medium">
-                                    {item.nextTopic}
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* Status Pills */}
-                              <div className="mt-2.5 flex items-center justify-between gap-1">
-                                {item.isLiveNow ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-100/90 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full animate-pulse">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                    Active Now
-                                  </span>
-                                ) : item.startsInMinutes !== null ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-blue-700 dark:text-blue-300 bg-blue-100/90 dark:bg-blue-950/60 px-2 py-0.5 rounded-full animate-pulse">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                                    Starts in {item.startsInMinutes}m
-                                  </span>
-                                ) : item.isLogged ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded-md">
-                                    <Check className="w-3 h-3" />
-                                    Logged
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-300 group-hover:text-zinc-950 dark:group-hover:text-white transition-colors">
-                                    Log topics →
-                                  </span>
-                                )}
-
-                                <span className="text-[10px] font-mono text-zinc-500 dark:text-zinc-300">
-                                  {item.durationMinutes}m
-                                </span>
-                              </div>
                             </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
 
-            {/* Mobile View: Tab Day Switcher + Rich Cards */}
-            <div className="md:hidden">
-              {(() => {
-                const currentDay = weekDays[selectedMobileDayIdx] || weekDays[0];
-                const holidayName = PHILIPPINE_HOLIDAYS[format(currentDay, 'MM-dd')];
-                const schedule = getDaySchedule(currentDay);
-                const isCurrentDay = isToday(currentDay);
-
-                return (
-                  <div className="p-3.5 space-y-3">
-                    {/* Mobile Day Header Banner */}
-                    <div className={`p-3.5 rounded-xl border flex items-center justify-between ${
-                      isCurrentDay 
-                        ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white' 
-                        : holidayName 
-                        ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-200' 
-                        : 'bg-zinc-50 dark:bg-zinc-800/60 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100'
-                    }`}>
-                      <div>
-                        <span className="text-xs font-bold uppercase tracking-wider opacity-80">
-                          {format(currentDay, 'EEEE')}
-                        </span>
-                        <h3 className="text-base font-black">
-                          {format(currentDay, 'MMMM d, yyyy')}
-                        </h3>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-bold">
-                          {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
-                        </span>
-                        {isCurrentDay && (
-                          <div className="text-[10px] font-bold text-emerald-400 dark:text-emerald-600 uppercase tracking-wider mt-0.5">
-                            • Today
+                            <div className="flex items-center justify-between text-[10px] font-mono leading-none pt-1">
+                              <span>{formatTimeSlot(item.sch.startTime)}</span>
+                              <span className="font-bold">{item.sch.room || item.cls.room || 'CL'}</span>
+                            </div>
                           </div>
-                        )}
-                      </div>
+                        );
+                      })}
                     </div>
-
-                    {holidayName && (
-                      <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-900 dark:text-rose-200">
-                        🎉 Holiday: {holidayName}
-                      </div>
-                    )}
-
-                    {/* Mobile Class Cards */}
-                    <div className="space-y-2.5">
-                      {schedule.length === 0 ? (
-                        <div className="py-12 text-center text-zinc-500 dark:text-zinc-300 text-xs font-semibold">
-                          No classes scheduled for {format(currentDay, 'EEEE')}.
-                        </div>
-                      ) : (
-                        schedule.map((item, itemIdx) => {
-                          const isLab = item.sch.type === 'Laboratory';
-                          return (
-                            <div
-                              key={`${item.cls.id}_mobile_planner_${itemIdx}`}
-                              onClick={() => onClassClick(item.cls, item.sch, currentDay)}
-                              className={`rounded-xl border p-3.5 cursor-pointer shadow-2xs space-y-2.5 transition-all active:scale-[0.98] ${
-                                item.isLogged
-                                  ? 'border-l-4 border-l-emerald-500 bg-emerald-50/40 dark:bg-[#12281c] border-emerald-200 dark:border-[#1e4632]'
-                                  : isLab
-                                  ? 'border-l-4 border-l-teal-500 bg-teal-50/40 dark:bg-[#11292b] border-teal-200 dark:border-[#1c4347]'
-                                  : 'border-l-4 border-l-sky-500 bg-sky-50/40 dark:bg-[#142337] border-sky-200 dark:border-[#1f3756]'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-base font-black text-zinc-950 dark:text-zinc-100">
-                                    {item.cls.subjectCode}
-                                  </span>
-                                  <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-zinc-200/80 dark:bg-black/40 text-zinc-800 dark:text-zinc-200">
-                                    {item.cls.section}
-                                  </span>
-                                </div>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
-                                  isLab 
-                                    ? 'bg-teal-100 dark:bg-teal-900/60 text-teal-900 dark:text-teal-200' 
-                                    : 'bg-sky-100 dark:bg-sky-900/60 text-sky-900 dark:text-sky-200'
-                                }`}>
-                                  {item.sch.type}
-                                </span>
-                              </div>
-
-                              <div className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">
-                                {item.cls.subjectTitle}
-                              </div>
-
-                              {item.nextTopic && (
-                                <div className="text-[11px] text-zinc-600 dark:text-zinc-300 font-medium flex items-center gap-1.5 pt-1">
-                                  <BookOpen className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300 shrink-0" />
-                                  <span className="truncate">{item.nextTopic}</span>
-                                </div>
-                              )}
-
-                              <div className="flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 pt-2 border-t border-zinc-200/60 dark:border-white/10 font-mono">
-                                <div className="flex items-center gap-1.5">
-                                  <Clock className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
-                                  <span>{formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}</span>
-                                </div>
-                                <span className="font-bold bg-zinc-100 dark:bg-black/30 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white">
-                                  {item.sch.room || item.cls.room || 'CL'}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-        ) : (
-          /* ========================================================= */
-          /* MODE B: CONTINUOUS HOURLY TIMELINE (Responsive Grid)      */
-          /* ========================================================= */
-          <div>
-            {/* Desktop Mode B: Multi-day Continuous Timeline Grid */}
-            <div className="hidden md:block overflow-x-auto">
-              <div className="min-w-[750px]">
-                {/* Day Column Headers */}
-                <div className="grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-[#161820] divide-x divide-zinc-200 dark:divide-zinc-800">
-                  <div className="p-3 text-center text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-300 flex items-center justify-center">
-                    Time
-                  </div>
-
-                  {weekDays.map((dayDate) => {
-                    const isCurrentDay = isToday(dayDate);
-                    const holidayName = PHILIPPINE_HOLIDAYS[format(dayDate, 'MM-dd')];
-                    const schedule = getDaySchedule(dayDate);
-
-                    return (
-                      <div 
-                        key={dayDate.toISOString()} 
-                        className={`p-3 text-center transition-all ${
-                          isCurrentDay
-                            ? 'bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs'
-                            : holidayName
-                            ? 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-950 dark:text-rose-200'
-                            : 'text-zinc-800 dark:text-zinc-200'
-                        }`}
-                      >
-                        <div className={`text-[10px] font-black uppercase tracking-wider ${
-                          isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-300'
-                        }`}>
-                          {format(dayDate, 'EEEE')}
-                        </div>
-                        <div className="text-base font-black tracking-tight mt-0.5 flex items-center justify-center gap-1.5">
-                          <span>{format(dayDate, 'MMM d')}</span>
-                          {isCurrentDay && (
-                            <span className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-600 animate-pulse" />
-                          )}
-                        </div>
-                        <div className={`text-[10px] font-medium mt-0.5 ${
-                          isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-300'
-                        }`}>
-                          {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Time-Grid Body */}
-                <div 
-                  className="relative grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] divide-x divide-zinc-200 dark:divide-zinc-800" 
-                  style={{ height: `${totalGridHeightPx}px` }}
-                >
-                  {/* Left Y-Axis Time Labels */}
-                  <div className="relative bg-zinc-50/70 dark:bg-[#111318] select-none">
-                    {timeSlots.filter(s => !s.isHalf).map((slot, sIdx) => (
-                      <div 
-                        key={sIdx} 
-                        className="absolute w-full px-2 text-right text-[10px] font-mono leading-none font-bold text-zinc-600 dark:text-zinc-300 -translate-y-1.5"
-                        style={{ top: `${sIdx * (SLOT_HEIGHT_PX * 2)}px` }}
-                      >
-                        {slot.label}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Day Columns */}
-                  {weekDays.map((dayDate) => {
-                    const schedule = getDaySchedule(dayDate);
-                    const isCurrentDay = isToday(dayDate);
-
-                    return (
-                      <div 
-                        key={dayDate.toISOString()} 
-                        className={`relative transition-colors ${
-                          isCurrentDay ? 'bg-zinc-50/40 dark:bg-[#141720]' : 'bg-white dark:bg-[#0f1116]'
-                        }`}
-                        style={{ height: `${totalGridHeightPx}px` }}
-                      >
-                        {/* Hour Lines */}
-                        {timeSlots.map((slot, sIdx) => (
-                          <div
-                            key={sIdx}
-                            className={`absolute left-0 right-0 border-t pointer-events-none ${
-                              slot.isHalf 
-                                ? 'border-zinc-100 dark:border-zinc-800/40 border-dashed' 
-                                : 'border-zinc-200 dark:border-zinc-800'
-                            }`}
-                            style={{ top: `${sIdx * SLOT_HEIGHT_PX}px` }}
-                          />
-                        ))}
-
-                        {/* Real-time Current Time Line for Today */}
-                        {isCurrentDay && nowIndicatorTopPx !== null && (
-                          <div 
-                            className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
-                            style={{ top: `${nowIndicatorTopPx}px` }}
-                          >
-                            <div className="w-2.5 h-2.5 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 animate-ping absolute" />
-                            <div className="w-2 h-2 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 relative z-10" />
-                            <div className="flex-1 h-[2px] bg-rose-500 shadow-xs" />
-                            <span className="text-[9px] font-mono font-bold bg-rose-500 text-white px-1.5 py-0.5 rounded shadow-xs ml-1">
-                              {format(currentTime, 'h:mm a')}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Scheduled Class Blocks with Left Accent Border */}
-                        {schedule.map((item, itemIdx) => {
-                          const isLab = item.sch.type === 'Laboratory';
-
-                          const cardColors = item.isLogged
-                            ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#143224] border-emerald-200/90 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
-                            : isLab
-                            ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#133235] border-teal-200/90 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
-                            : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#17273d] border-sky-200/90 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
-
-                          return (
-                            <div
-                              key={`${item.cls.id}_timeline_${itemIdx}`}
-                              onClick={() => onClassClick(item.cls, item.sch, dayDate)}
-                              style={{
-                                top: `${item.topPx}px`,
-                                height: `${item.heightPx}px`,
-                              }}
-                              className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] active:scale-[0.98] flex flex-col justify-between overflow-hidden z-10 ${cardColors}`}
-                              title={`${item.cls.subjectCode} (${item.cls.section}) - ${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} – ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to log topics or view syllabus.`}
-                            >
-                              <div>
-                                <div className="flex items-center justify-between gap-1 leading-tight">
-                                  <span className="text-xs font-black truncate">
-                                    {item.cls.subjectCode}
-                                  </span>
-                                  <span className="text-[9px] font-bold px-1 rounded bg-black/10 dark:bg-black/30 shrink-0">
-                                    {item.cls.section}
-                                  </span>
-                                </div>
-                                <div className="text-[10px] opacity-85 truncate mt-0.5">
-                                  {item.cls.subjectTitle}
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between text-[10px] font-mono leading-none pt-1">
-                                <span>{formatTimeSlot(item.sch.startTime)}</span>
-                                <span className="font-bold">{item.sch.room || item.cls.room || 'CL'}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
+                  );
+                })}
               </div>
             </div>
+          </div>
 
-            {/* Mobile Mode B: Dedicated Full-Width Single Day Hourly Timeline */}
-            <div className="md:hidden">
+          {/* Dedicated Full-Width Single Day Hourly Timeline for Mobile */}
+          <div className="md:hidden">
               {(() => {
                 const currentDay = weekDays[selectedMobileDayIdx] || weekDays[0];
                 const isCurrentDay = isToday(currentDay);
                 const holidayName = PHILIPPINE_HOLIDAYS[format(currentDay, 'MM-dd')];
                 const schedule = getDaySchedule(currentDay);
+                const totalDayHours = schedule.reduce((acc, s) => acc + s.durationMinutes / 60, 0);
 
                 return (
                   <div>
@@ -1112,7 +786,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                             )}
                           </div>
                           <div className="text-xs text-zinc-500 dark:text-zinc-300 font-medium truncate mt-0.5">
-                            {format(currentDay, 'MMMM d, yyyy')} • {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
+                            {format(currentDay, 'MMMM d, yyyy')} • {schedule.length > 0 ? `${schedule.length} ${schedule.length === 1 ? 'class' : 'classes'} • ${totalDayHours}h` : 'No classes'}
                           </div>
                         </div>
 
@@ -1297,7 +971,6 @@ export const CalendarView: FC<CalendarViewProps> = ({
               })()}
             </div>
           </div>
-        )}
       </div>
 
     </div>
