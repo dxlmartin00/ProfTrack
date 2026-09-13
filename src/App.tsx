@@ -47,8 +47,7 @@ import {
   getStoredUsers, 
   mergeUsersRegistry,
   saveStoredUsers,
-  getLocalDeletedUsers,
-  DAN_MARTIN_ACCOUNT
+  getLocalDeletedUsers
 } from './services/auth';
 import type { UserAccount } from './services/auth';
 import { 
@@ -82,270 +81,6 @@ import {
   Keyboard
 } from 'lucide-react';
 
-export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
-  // 1. CS 314 - CS Elective 1 (Section 3D)
-  {
-    id: 'course_cs314_3d',
-    instructorId: 'inst1',
-    subjectCode: 'CS 314',
-    subjectTitle: 'CS Elective 1',
-    section: '3D',
-    year: '3rd Year',
-    room: 'CL2',
-    schedule: [
-      { dayOfWeek: 1, startTime: '13:00', endTime: '14:00', type: 'Lecture', room: 'CL2' },
-      { dayOfWeek: 4, startTime: '13:00', endTime: '14:00', type: 'Lecture', room: 'CL2' },
-      { dayOfWeek: 2, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' },
-      { dayOfWeek: 5, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
-    ],
-    masterSyllabus: [
-      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
-      'Introduction to Systems Architecture & SDLC Models',
-      'Operating System Concepts & Concurrency Management',
-      'Memory Management: Paging & Virtual Storage Subsystems',
-      'File Systems & Secondary Storage Architecture',
-      'Computer Networking & Distributed Client-Server Systems',
-      'System Security, Cryptography & Access Control',
-      'Virtualization, Hypervisors & Cloud Virtual Machines',
-      'System Performance Benchmarking & Diagnostics Evaluation',
-      'Final Examination'
-    ]
-  },
-
-  // 2. CS 315 - Application Development & Emerging Tech (Section 3B)
-  {
-    id: 'course_cs315_3b',
-    instructorId: 'inst1',
-    subjectCode: 'CS 315',
-    subjectTitle: 'Application Development & Emerging Technologies',
-    section: '3B',
-    year: '3rd Year',
-    room: '128 / CL2',
-    schedule: [
-      { dayOfWeek: 1, startTime: '08:00', endTime: '09:00', type: 'Lecture', room: '128' },
-      { dayOfWeek: 4, startTime: '08:00', endTime: '09:00', type: 'Lecture', room: '128' },
-      { dayOfWeek: 1, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' },
-      { dayOfWeek: 4, startTime: '14:30', endTime: '16:00', type: 'Laboratory', room: 'CL2' }
-    ],
-    masterSyllabus: [
-      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
-      'Introduction to Application Development & Emerging Technologies',
-      'Ethical and Legal Considerations of App Development',
-      'Mobile App Architecture & Design Patterns',
-      'Modern Frontend Frameworks & State Management',
-      'Backend API Development & Microservices',
-      'Cloud Services & Serverless Computing',
-      'UI/UX Principles',
-      'Midterm Exam',
-      'Introduction to Java & Android Studio Setup',
-      'Android Activities & XML Layouts',
-      'Event Handling & User Interaction',
-      'Data Storage in Android and CRUD Operations (Java + SQLite)',
-      'Connecting Apps to APIs',
-      'Testing the Mobile App',
-      'Deployment & App Launch + App Enhancement',
-      'Final Project Defense',
-      'Final Exam'
-    ]
-  },
-
-  // 3. CS 315 - Application Development & Emerging Tech (Section 3D)
-  {
-    id: 'course_cs315_3d',
-    instructorId: 'inst1',
-    subjectCode: 'CS 315',
-    subjectTitle: 'Application Development & Emerging Technologies',
-    section: '3D',
-    year: '3rd Year',
-    room: '127 / IL2',
-    schedule: [
-      { dayOfWeek: 2, startTime: '10:00', endTime: '11:00', type: 'Lecture', room: '127' },
-      { dayOfWeek: 5, startTime: '10:00', endTime: '11:00', type: 'Lecture', room: '127' },
-      { dayOfWeek: 2, startTime: '11:00', endTime: '12:30', type: 'Laboratory', room: 'IL2' },
-      { dayOfWeek: 5, startTime: '11:00', endTime: '12:30', type: 'Laboratory', room: 'IL2' }
-    ],
-    masterSyllabus: [
-      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
-      'Introduction to Application Development & Emerging Technologies',
-      'Ethical and Legal Considerations of App Development',
-      'Mobile App Architecture & Design Patterns',
-      'Modern Frontend Frameworks & State Management',
-      'Backend API Development & Microservices',
-      'Cloud Services & Serverless Computing',
-      'UI/UX Principles',
-      'Midterm Exam',
-      'Introduction to Java & Android Studio Setup',
-      'Android Activities & XML Layouts',
-      'Event Handling & User Interaction',
-      'Data Storage in Android and CRUD Operations (Java + SQLite)',
-      'Connecting Apps to APIs',
-      'Testing the Mobile App',
-      'Deployment & App Launch + App Enhancement',
-      'Final Project Defense',
-      'Final Exam'
-    ]
-  },
-
-  // 4. CS 412 - Operating Systems (Section 4A)
-  {
-    id: 'course_cs412_4a',
-    instructorId: 'inst1',
-    subjectCode: 'CS 412',
-    subjectTitle: 'Operating Systems',
-    section: '4A',
-    year: '4th Year',
-    room: '127 / IL2',
-    schedule: [
-      { dayOfWeek: 1, startTime: '11:00', endTime: '12:00', type: 'Lecture', room: '127' },
-      { dayOfWeek: 4, startTime: '11:00', endTime: '12:00', type: 'Lecture', room: '127' },
-      { dayOfWeek: 3, startTime: '13:00', endTime: '16:00', type: 'Laboratory', room: 'IL2' }
-    ],
-    masterSyllabus: [
-      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
-      'Overview of Operating Systems & Kernel Architectures',
-      'Processes, Threads & CPU Scheduling Algorithms',
-      'Process Synchronization & Deadlock Prevention',
-      'Main Memory Management & Virtual Memory Paging',
-      'File System Storage & Secondary Subsystems',
-      'Protection, Security & Virtual Machine Concepts',
-      'Final Examination'
-    ]
-  },
-
-  // 5. CS 412 - Operating Systems (Section 4B)
-  {
-    id: 'course_cs412_4b',
-    instructorId: 'inst1',
-    subjectCode: 'CS 412',
-    subjectTitle: 'Operating Systems',
-    section: '4B',
-    year: '4th Year',
-    room: '129 / IL2',
-    schedule: [
-      { dayOfWeek: 1, startTime: '09:00', endTime: '10:00', type: 'Lecture', room: '129' },
-      { dayOfWeek: 4, startTime: '09:00', endTime: '10:00', type: 'Lecture', room: '129' },
-      { dayOfWeek: 2, startTime: '16:00', endTime: '17:30', type: 'Laboratory', room: 'IL2' },
-      { dayOfWeek: 5, startTime: '16:00', endTime: '17:30', type: 'Laboratory', room: 'IL2' }
-    ],
-    masterSyllabus: [
-      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
-      'Overview of Operating Systems & Kernel Architectures',
-      'Processes, Threads & CPU Scheduling Algorithms',
-      'Process Synchronization & Deadlock Prevention',
-      'Main Memory Management & Virtual Memory Paging',
-      'File System Storage & Secondary Subsystems',
-      'Protection, Security & Virtual Machine Concepts',
-      'Final Examination'
-    ]
-  },
-
-  // 6. eGE 1 - Living in the IT Era (Section 2D - BE)
-  {
-    id: 'course_ege1_2d_be',
-    instructorId: 'inst1',
-    subjectCode: 'eGE 1',
-    subjectTitle: 'Living in the IT Era',
-    section: '2D (BE)',
-    year: '2nd Year',
-    room: 'GF003',
-    schedule: [
-      { dayOfWeek: 2, startTime: '07:30', endTime: '09:00', type: 'Lecture', room: 'GF003' },
-      { dayOfWeek: 5, startTime: '07:30', endTime: '09:00', type: 'Lecture', room: 'GF003' }
-    ],
-    masterSyllabus: [
-      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
-      'Introduction to Living in the IT Era & ICT in Society',
-      'Evolution of ICT & Computing Systems',
-      'Internet, World Wide Web & Cloud Platforms',
-      'Data Privacy, Security & Cybersecurity Fundamentals',
-      'Digital Ethics, Netiquette & Intellectual Property',
-      'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
-      'Future Trends in Information Technology',
-      'Final Examination'
-    ]
-  },
-
-  // 7. eGE 1 - Living in the IT Era (Section 2D - FM)
-  {
-    id: 'course_ege1_2d_fm',
-    instructorId: 'inst1',
-    subjectCode: 'eGE 1',
-    subjectTitle: 'Living in the IT Era',
-    section: '2D (FM)',
-    year: '2nd Year',
-    room: '122',
-    schedule: [
-      { dayOfWeek: 1, startTime: '16:00', endTime: '17:30', type: 'Lecture', room: '122' },
-      { dayOfWeek: 4, startTime: '16:00', endTime: '17:30', type: 'Lecture', room: '122' }
-    ],
-    masterSyllabus: [
-      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
-      'Introduction to Living in the IT Era & ICT in Society',
-      'Evolution of ICT & Computing Systems',
-      'Internet, World Wide Web & Cloud Platforms',
-      'Data Privacy, Security & Cybersecurity Fundamentals',
-      'Digital Ethics, Netiquette & Intellectual Property',
-      'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
-      'Future Trends in Information Technology',
-      'Final Examination'
-    ]
-  },
-
-  // 8. eGE 1 - Living in the IT Era (Section 2H - FM)
-  {
-    id: 'course_ege1_2h_fm',
-    instructorId: 'inst1',
-    subjectCode: 'eGE 1',
-    subjectTitle: 'Living in the IT Era',
-    section: '2H (FM)',
-    year: '2nd Year',
-    room: '130',
-    schedule: [
-      { dayOfWeek: 3, startTime: '08:00', endTime: '11:00', type: 'Lecture', room: '130' }
-    ],
-    masterSyllabus: [
-      'Orientation: University Vision & Mission, Course Outcomes, Policies & Grading System',
-      'Introduction to Living in the IT Era & ICT in Society',
-      'Evolution of ICT & Computing Systems',
-      'Internet, World Wide Web & Cloud Platforms',
-      'Data Privacy, Security & Cybersecurity Fundamentals',
-      'Digital Ethics, Netiquette & Intellectual Property',
-      'Emerging Technologies (AI, IoT, Blockchain & Robotics)',
-      'Future Trends in Information Technology',
-      'Final Examination'
-    ]
-  }
-];
-
-export const INITIAL_OFFICIAL_LOGS: (SessionLog & { classInfo: ClassSession })[] = [
-  {
-    id: 'log_cs315_recent',
-    date: new Date(),
-    sessionType: 'Lecture',
-    topicsCovered: ['Introduction to Application Development & Emerging Technologies'],
-    nextActions: '[In Progress: Introduction to Application Development & Emerging Technologies - Stopped at Slide #20] Completed section 1.',
-    engagementLevel: 'High',
-    classInfo: OFFICIAL_SEMESTER_COURSES[2] // CS315 3D
-  },
-  {
-    id: 'log_ege1_recent',
-    date: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    sessionType: 'Lecture',
-    topicsCovered: ['Introduction to Living in the IT Era & ICT in Society'],
-    nextActions: 'Completed topic 1 orientation. Next meeting start ICT Evolution.',
-    engagementLevel: 'High',
-    classInfo: OFFICIAL_SEMESTER_COURSES[5] // eGE 1 2D (BE)
-  },
-  {
-    id: 'log_cs314_recent',
-    date: new Date(Date.now() - 48 * 60 * 60 * 1000),
-    sessionType: 'Laboratory',
-    topicsCovered: ['Introduction to Systems Architecture & SDLC Models'],
-    nextActions: 'Submitted lab activity 1 on SDLC workflows.',
-    engagementLevel: 'High',
-    classInfo: OFFICIAL_SEMESTER_COURSES[0] // CS 314 3D
-  }
-];
 
 // User-isolated data loading helpers
 const loadUserClasses = (user: UserAccount | null): ClassSession[] => {
@@ -363,10 +98,6 @@ const loadUserClasses = (user: UserAccount | null): ClassSession[] => {
     }
   } catch (err) {
     console.error('Failed to load user classes:', err);
-  }
-  // Prof. Dan Martin's 8 official semester courses
-  if (user.id === DAN_MARTIN_ACCOUNT.id || user.username === 'martin.dan') {
-    return OFFICIAL_SEMESTER_COURSES;
   }
   return [];
 };
@@ -391,10 +122,6 @@ const loadUserLogs = (user: UserAccount | null): (SessionLog & { classInfo: Clas
     }
   } catch (err) {
     console.error('Failed to load user logs:', err);
-  }
-  // Prof. Dan Martin's initial official logs
-  if (user.id === DAN_MARTIN_ACCOUNT.id || user.username === 'martin.dan') {
-    return INITIAL_OFFICIAL_LOGS;
   }
   return [];
 };
@@ -1004,11 +731,11 @@ function AppContent() {
 
   const pendingCount = allUsers.filter(u => u.status === 'pending').length;
 
-  // Reset or Restore official courses
-  const handleResetDemoData = () => {
-    if (window.confirm('Reset schedule back to all 8 official semester courses?')) {
-      setClasses(OFFICIAL_SEMESTER_COURSES);
-      setLogs(INITIAL_OFFICIAL_LOGS);
+  // Clear schedule to blank state
+  const handleClearSchedule = () => {
+    if (window.confirm('Are you sure you want to clear all your courses and teaching logs from this device? This will leave your schedule blank so you can add or import new courses.')) {
+      setClasses([]);
+      setLogs([]);
     }
   };
 
@@ -1781,7 +1508,7 @@ function AppContent() {
           profile={profile}
           onClose={() => setIsProfileOpen(false)}
           onSaveProfile={handleSaveProfile}
-          onResetData={handleResetDemoData}
+          onResetData={handleClearSchedule}
           hasCourses={classes.length > 0}
         />
       )}

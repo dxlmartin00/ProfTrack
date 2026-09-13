@@ -155,7 +155,7 @@ export const ProfileModal: FC<ProfileModalProps> = ({
               required
               value={formData.institution}
               onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
-              placeholder="e.g. University of Makati, Pamantasan ng Lungsod..."
+              placeholder="e.g. North Eastern Mindanao State University"
               className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
             />
           </div>
@@ -204,26 +204,28 @@ export const ProfileModal: FC<ProfileModalProps> = ({
             </p>
           </div>
 
-          {/* Dataset Management Area */}
-          <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Dataset Management</p>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-300">
-                  {hasCourses ? 'Clear all course records to start fresh' : 'Load sample demonstration courses'}
-                </p>
-              </div>
+          {/* Schedule Management Area */}
+          {hasCourses && (
+            <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Schedule Management</p>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    Clear all course records to start fresh
+                  </p>
+                </div>
 
-              <button
-                type="button"
-                onClick={onResetData}
-                className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 hover:text-zinc-950 dark:hover:text-zinc-100 transition-colors cursor-pointer shrink-0"
-              >
-                <RotateCcw className="w-3 h-3 mr-1" />
-                {hasCourses ? 'Reset Schedule' : 'Load Demo'}
-              </button>
+                <button
+                  type="button"
+                  onClick={onResetData}
+                  className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-800 transition-colors cursor-pointer shrink-0"
+                >
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  Clear Schedule
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Form Actions */}
           <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-zinc-200 dark:border-zinc-800">

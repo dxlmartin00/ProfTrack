@@ -4,8 +4,7 @@ import {
   authenticateUser, 
   registerInstructor, 
   formatUsername,
-  syncUsersFromCloud,
-  getStoredUsers
+  syncUsersFromCloud
 } from '../services/auth';
 import type { UserAccount } from '../services/auth';
 import { 
@@ -318,37 +317,6 @@ export const AuthModal: FC<AuthModalProps> = ({
                   </>
                 )}
               </button>
-
-              {/* Quick Demo Access */}
-              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 text-center space-y-2">
-                <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Quick Demo Access:</span>
-                <div className="flex items-center justify-center gap-2">
-                  {getStoredUsers().some(u => u.username === 'martin.dan') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUsername('martin.dan');
-                        setPin('1234');
-                        setSignInError(null);
-                      }}
-                      className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer border border-zinc-200 dark:border-zinc-700"
-                    >
-                      Prof. Dan Martin
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUsername('admin.admin');
-                      setPin('0000');
-                      setSignInError(null);
-                    }}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer border border-zinc-200 dark:border-zinc-700"
-                  >
-                    System Admin
-                  </button>
-                </div>
-              </div>
             </form>
           ) : (
             /* Registration Form */
@@ -458,7 +426,7 @@ export const AuthModal: FC<AuthModalProps> = ({
 
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider block dark:text-zinc-300">
-                      4-Digit Security PIN (Default: 1234)
+                      4-Digit Security PIN
                     </label>
                     <div className="relative">
                       <KeyRound className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -469,7 +437,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                         pattern="[0-9]{4}"
                         value={regPin}
                         onChange={(e) => setRegPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-                        placeholder="1234"
+                        placeholder="e.g. 1234"
                         className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 font-mono tracking-widest shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>

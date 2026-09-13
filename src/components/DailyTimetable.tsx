@@ -31,7 +31,6 @@ interface DailyTimetableProps {
   onOpenTransfer: () => void;
   onOpenScanModal?: () => void;
   onQuickAdvanceLesson?: (cls: ClassSession) => void;
-  onResetDemoData?: () => void;
   onOpenSyllabusViewer?: () => void;
   onOpenNotesViewer?: () => void;
   onSwitchToCalendar?: () => void;

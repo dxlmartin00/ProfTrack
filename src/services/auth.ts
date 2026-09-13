@@ -46,7 +46,6 @@ const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 5 * 60 * 1000; // 5-minute temporary security lockout
 
 const ADMIN_INIT_SALT = 'proftrack_admin_salt_2026';
-const DAN_INIT_SALT = 'proftrack_dan_salt_2026';
 
 // Default Dedicated Master Administrator Account (Only job is managing accounts, not classes)
 export const DEFAULT_ADMIN_ACCOUNT: UserAccount = {
@@ -58,27 +57,17 @@ export const DEFAULT_ADMIN_ACCOUNT: UserAccount = {
   lastName: 'Admin',
   fullName: 'System Administrator',
   department: 'Academic Affairs & IT Administration',
-  institution: 'University of Makati',
+  institution: 'North Eastern Mindanao State University',
   role: 'admin',
   status: 'approved',
   createdAt: new Date('2026-01-01').toISOString(),
 };
 
-// Prof. Dan Martin (Normal Instructor Account)
-export const DAN_MARTIN_ACCOUNT: UserAccount = {
+// Legacy removed account tombstone definition
+export const DAN_MARTIN_ACCOUNT = {
   id: 'usr_martin_dan',
   username: 'martin.dan',
-  salt: DAN_INIT_SALT,
-  pinHash: hashPinWithSalt('1234', DAN_INIT_SALT),
-  firstName: 'Dan',
-  lastName: 'Martin',
-  fullName: 'Prof. Dan Martin',
-  department: 'College of Computer Studies',
-  institution: 'University of Makati',
-  role: 'instructor', // Normal instructor account
-  status: 'approved',
-  createdAt: new Date('2026-01-01').toISOString(),
-};
+} as const;
 
 /**
  * Normalizes strings and formats to <lastname>.<firstname> (all lowercase, special chars replaced)
@@ -278,7 +267,7 @@ export function saveStoredUsers(users: UserAccount[]): void {
 
 /**
  * Initializes authentication registry and sets up Master Admin.
- * Note: Demo accounts like Dan Martin are never re-created or re-approved here.
+ * Note: Deleted or tombstoned accounts are never re-created or re-approved here.
  */
 export function initializeAuth(): {
   currentUser: UserAccount | null;
@@ -307,24 +296,6 @@ export function initializeAuth(): {
   }
 
   saveStoredUsers(users);
-
-  // Seamless zero-data-loss migration ONLY if Prof. Dan Martin is an active (non-deleted) user
-  if (users.some(u => u.id === DAN_MARTIN_ACCOUNT.id)) {
-    const danKeys = getUserStorageKeys(DAN_MARTIN_ACCOUNT.id);
-    const existingClasses = localStorage.getItem('proftrack_classes_cache');
-    const existingLogs = localStorage.getItem('proftrack_session_logs');
-    const existingProfile = localStorage.getItem('proftrack_instructor_profile');
-
-    if (existingClasses && !localStorage.getItem(danKeys.classesKey)) {
-      localStorage.setItem(danKeys.classesKey, existingClasses);
-    }
-    if (existingLogs && !localStorage.getItem(danKeys.logsKey)) {
-      localStorage.setItem(danKeys.logsKey, existingLogs);
-    }
-    if (existingProfile && !localStorage.getItem(danKeys.profileKey)) {
-      localStorage.setItem(danKeys.profileKey, existingProfile);
-    }
-  }
 
   // Retrieve active session user
   const activeUserId = localStorage.getItem(CURRENT_USER_SESSION_KEY);
