@@ -51,7 +51,7 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
               <h2 id="a11y-modal-title" className="text-base font-black text-zinc-950 dark:text-zinc-100 tracking-tight">
                 Display & Accessibility
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-zinc-600 dark:text-zinc-300">
                 Eye-care themes, font scaling, and visual accessibility options.
               </p>
             </div>
@@ -70,7 +70,7 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6">
           {/* Theme Selection */}
           <div className="space-y-2.5">
-            <label className="text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <label className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
               Color Theme (Eye Care)
             </label>
             <div className="grid grid-cols-3 gap-2.5">
@@ -92,7 +92,7 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
                 </div>
                 <div>
                   <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Light</div>
-                  <div className="text-[10px] text-zinc-500">Daytime clarity</div>
+                  <div className="text-[10px] text-zinc-600 dark:text-zinc-300">Daytime clarity</div>
                 </div>
               </button>
 
@@ -114,7 +114,7 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
                 </div>
                 <div>
                   <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Dark Mode</div>
-                  <div className="text-[10px] text-zinc-500 dark:text-zinc-400">Easy on eyes</div>
+                  <div className="text-[10px] text-zinc-600 dark:text-zinc-300">Easy on eyes</div>
                 </div>
               </button>
 
@@ -140,7 +140,7 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
                 </div>
               </button>
             </div>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            <p className="text-[11px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
               Dark Mode uses desaturated matte tones to avoid eye strain. Night Mode features deep midnight black with low blue light for comfortable nighttime scheduling.
             </p>
           </div>
@@ -148,7 +148,7 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
           {/* Text Size / Scaling */}
           <div className="space-y-2.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+              <label className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
                 <Type className="w-3.5 h-3.5" />
                 Text Scaling
               </label>
@@ -176,7 +176,7 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
 
           {/* Accessibility Toggles */}
           <div className="space-y-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-            <label className="text-xs font-black uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <label className="text-xs font-black uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
               Visual & Motion Controls
             </label>
 
@@ -184,10 +184,10 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
             <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40">
               <div className="space-y-0.5 pr-3">
                 <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+                  <Sparkles className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
                   High Contrast Mode
                 </div>
-                <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-300">
                   Increases border definitions and sharpens text ratios for maximum readability.
                 </div>
               </div>
@@ -212,10 +212,10 @@ export const AccessibilityModal: FC<AccessibilityModalProps> = ({
             <div className="flex items-center justify-between p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40">
               <div className="space-y-0.5 pr-3">
                 <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                  <ZapOff className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+                  <ZapOff className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
                   Reduce Motion
                 </div>
-                <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-300">
                   Disables transitions and pulsing indicators for users sensitive to movement.
                 </div>
               </div>

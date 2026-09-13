@@ -392,20 +392,20 @@ export const CalendarView: FC<CalendarViewProps> = ({
       <div className="bg-zinc-50 dark:bg-zinc-900/60 rounded-xl border border-zinc-200/80 dark:border-zinc-800 px-4 py-2.5 flex items-center justify-between gap-4 text-xs flex-wrap transition-colors">
         <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-zinc-500 dark:text-zinc-400">Weekly Total:</span>
+            <span className="font-semibold text-zinc-600 dark:text-zinc-300">Weekly Total:</span>
             <span className="font-extrabold text-zinc-900 dark:text-zinc-100">{weeklyMetrics.totalClasses} Sessions</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-zinc-500 dark:text-zinc-400">Teaching Hours:</span>
+            <span className="font-semibold text-zinc-600 dark:text-zinc-300">Teaching Hours:</span>
             <span className="font-extrabold text-zinc-900 dark:text-zinc-100">{weeklyMetrics.totalHours} hrs</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-zinc-500 dark:text-zinc-400">Accomplished:</span>
+            <span className="font-semibold text-zinc-600 dark:text-zinc-300">Accomplished:</span>
             <span className="font-extrabold text-emerald-700 dark:text-emerald-400">{weeklyMetrics.loggedSessions} logged</span>
           </div>
         </div>
 
-        <div className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 hidden md:block">
+        <div className="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 hidden md:block">
           {profile?.fullName || 'Faculty Schedule'} • {profile?.position || 'Instructor'}
         </div>
       </div>
@@ -453,7 +453,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
           {/* Day Headers Bar */}
           <div className="grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-[#161820] divide-x divide-zinc-200 dark:divide-zinc-800">
             {/* Time label corner */}
-            <div className="p-2.5 text-center text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-400 dark:text-zinc-500 flex items-center justify-center">
+            <div className="p-2.5 text-center text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-300 flex items-center justify-center">
               Time
             </div>
 
@@ -475,7 +475,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                   }`}
                 >
                   <div className={`text-[10px] font-black uppercase tracking-wider ${
-                    isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-400'
+                    isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-300'
                   }`}>
                     {format(dayDate, 'EEEE')}
                   </div>
@@ -486,7 +486,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                     )}
                   </div>
                   <div className={`text-[10px] font-medium mt-0.5 ${
-                    isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-400 dark:text-zinc-500'
+                    isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-300'
                   }`}>
                     {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
                   </div>
@@ -508,7 +508,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                 <div 
                   key={sIdx} 
                   className={`absolute w-full px-2 text-right text-[10px] font-mono leading-none ${
-                    slot.isHalf ? 'text-zinc-400/80 dark:text-zinc-600' : 'font-bold text-zinc-600 dark:text-zinc-400'
+                    slot.isHalf ? 'text-zinc-400 dark:text-zinc-400 font-medium' : 'font-bold text-zinc-700 dark:text-zinc-100'
                   }`}
                   style={{ top: `${sIdx * SLOT_HEIGHT_PX}px` }}
                 >
@@ -681,7 +681,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                 {/* Mobile Class Cards */}
                 <div className="space-y-2.5">
                   {schedule.length === 0 ? (
-                    <div className="py-12 text-center text-zinc-400 dark:text-zinc-500 text-xs font-semibold">
+                    <div className="py-12 text-center text-zinc-500 dark:text-zinc-300 text-xs font-semibold">
                       No classes scheduled for {format(currentDay, 'EEEE')}.
                     </div>
                   ) : (
@@ -723,7 +723,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
 
                           <div className="flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 pt-2 border-t border-zinc-200/60 dark:border-white/10 font-mono">
                             <div className="flex items-center gap-1.5">
-                              <Clock className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+                              <Clock className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
                               <span>{formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}</span>
                             </div>
                             <span className="font-bold bg-zinc-100 dark:bg-black/30 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-white/10 text-zinc-900 dark:text-white">
@@ -741,7 +741,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
         </div>
 
         {/* Legend Bar (Matching Sample Image bottom row) */}
-        <div className="bg-zinc-50 dark:bg-[#111318] p-3.5 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600 dark:text-zinc-400 transition-colors">
+        <div className="bg-zinc-50 dark:bg-[#111318] p-3.5 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-600 dark:text-zinc-300 transition-colors">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="font-bold text-zinc-900 dark:text-zinc-200 text-[11px] uppercase tracking-wider">Legend:</span>
             <div className="flex items-center gap-1.5">
@@ -762,7 +762,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
             </div>
           </div>
 
-          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">
+          <div className="text-[11px] text-zinc-600 dark:text-zinc-300 font-medium">
             Tip: Click any class block to view syllabus topics, log session accomplishments, or inspect course details.
           </div>
         </div>

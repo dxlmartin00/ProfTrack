@@ -23,6 +23,8 @@
   --color-border: #e4e4e7;
   --color-input: #e4e4e7;
   --color-ring: #18181b;
+  --color-zinc-750: #2d313a;
+  --color-zinc-850: #1a1d24;
 }
 
 @layer base {

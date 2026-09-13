@@ -140,8 +140,8 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
               Current Semester
             </span>
           </div>
-          <p className="text-xs sm:text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5">
-            <CalendarDays className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" aria-hidden="true" />
+          <p className="text-xs sm:text-sm font-medium text-zinc-600 dark:text-zinc-300 flex items-center gap-1.5">
+            <CalendarDays className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300 shrink-0" aria-hidden="true" />
             <span>{todayStr}</span>
           </p>
         </div>
@@ -161,10 +161,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             <button
               type="button"
               onClick={onSwitchToCalendar}
-              className="flex-1 sm:flex-initial inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3.5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
+              className="flex-1 sm:flex-initial inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3.5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
               title="Open Weekly Academic Schedule View"
             >
-              <Calendar className="w-4 h-4 mr-1.5 text-zinc-700 dark:text-zinc-300 shrink-0" aria-hidden="true" />
+              <Calendar className="w-4 h-4 mr-1.5 text-zinc-700 dark:text-zinc-200 shrink-0" aria-hidden="true" />
               <span>Weekly Schedule</span>
             </button>
           )}
@@ -173,10 +173,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             <button
               type="button"
               onClick={onOpenScanModal}
-              className="hidden lg:inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
+              className="hidden lg:inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
               title="Upload or scan faculty loading screenshot"
             >
-              <Camera className="w-4 h-4 mr-1.5 text-zinc-700 dark:text-zinc-300 shrink-0" aria-hidden="true" />
+              <Camera className="w-4 h-4 mr-1.5 text-zinc-700 dark:text-zinc-200 shrink-0" aria-hidden="true" />
               <span>Scan Image</span>
             </button>
           )}
@@ -184,10 +184,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
           <button
             type="button"
             onClick={onOpenReports}
-            className="hidden sm:inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
+            className="hidden sm:inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
             title="Generate Accomplishment Reports"
           >
-            <FileDown className="w-4 h-4 mr-1.5 text-zinc-600 dark:text-zinc-400 shrink-0" aria-hidden="true" />
+            <FileDown className="w-4 h-4 mr-1.5 text-zinc-600 dark:text-zinc-300 shrink-0" aria-hidden="true" />
             <span>Reports</span>
           </button>
         </div>
@@ -243,8 +243,8 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                   </p>
                 )}
                 {activeProgress.nextLessonTopic && (
-                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium pl-5 pt-0.5 truncate">
-                    Next lesson: <span className="font-bold text-zinc-950 dark:text-zinc-200">{activeProgress.nextLessonTopic}</span>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-300 font-medium pl-5 pt-0.5 truncate">
+                    Next lesson: <span className="font-bold text-zinc-950 dark:text-zinc-100">{activeProgress.nextLessonTopic}</span>
                   </p>
                 )}
               </div>
@@ -305,7 +305,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             className={`inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-3 sm:px-4 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'today'
                 ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 shadow-2xs'
-                : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100'
+                : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
             }`}
           >
             Today's Schedule ({todaySessions.length})
@@ -318,7 +318,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             className={`inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md px-3 sm:px-4 text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'all'
                 ? 'bg-white dark:bg-zinc-900 text-zinc-950 dark:text-zinc-100 shadow-2xs'
-                : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100'
+                : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
             }`}
           >
             All Courses ({classes.length})
@@ -327,13 +327,13 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
         {activeTab === 'all' && (
           <div className="relative w-full sm:w-80 min-w-0">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 dark:text-zinc-300" aria-hidden="true" />
             <input
               type="text"
               placeholder="Search by code, title, or section..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 pl-10 pr-4 py-2 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
+              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-10 pr-4 py-2 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300"
             />
           </div>
         )}
@@ -344,13 +344,13 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
         {activeTab === 'today' ? (
           todaySessions.length === 0 ? (
             <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-8 sm:p-12 text-center w-full box-border">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 mb-3.5">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 mb-3.5">
                 <BookOpen className="h-6 w-6" aria-hidden="true" />
               </div>
               <h2 className="text-base font-bold text-zinc-950 dark:text-zinc-100">
                 {classes.length === 0 ? 'No courses in your schedule yet' : 'No classes scheduled for today'}
               </h2>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1 max-w-sm mx-auto mb-5 leading-normal">
+              <p className="text-sm text-zinc-600 dark:text-zinc-300 mt-1 max-w-sm mx-auto mb-5 leading-normal">
                 {classes.length === 0 
                   ? 'Your timetable is completely clean. Get started by adding your semester courses or uploading your syllabus (.docx).'
                   : 'You do not have any lecture or laboratory sessions assigned for today.'}
@@ -368,7 +368,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveTab('all')}
-                    className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-4 text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                    className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-sm font-semibold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                   >
                     View All Courses ({classes.length})
                   </button>
@@ -405,14 +405,14 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                           {sch.type || 'Lecture'}
                         </span>
 
-                        <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shrink-0">
+                        <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200 shrink-0">
                           {cls.section}
                         </span>
                       </div>
 
                       {displayRoom && (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700/80 px-2 py-0.5 rounded shrink-0">
-                          <MapPin className="w-3 h-3 text-zinc-500 dark:text-zinc-400 shrink-0" aria-hidden="true" />
+                        <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700 px-2 py-0.5 rounded shrink-0">
+                          <MapPin className="w-3 h-3 text-zinc-500 dark:text-zinc-300 shrink-0" aria-hidden="true" />
                           {displayRoom}
                         </span>
                       )}
@@ -420,7 +420,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
 
                     {/* Subject Title */}
                     {cls.subjectTitle && (
-                      <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium leading-snug break-words">
+                      <p className="text-sm text-zinc-700 dark:text-zinc-200 font-medium leading-snug break-words">
                         {cls.subjectTitle}
                       </p>
                     )}
@@ -471,9 +471,9 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       </div>
                     ) : (
                       progress.currentActiveTopic && (
-                        <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 font-medium min-w-0">
-                          <span className="text-zinc-500 dark:text-zinc-400 font-normal shrink-0">Next Up:</span>
-                          <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate">{progress.currentActiveTopic}</span>
+                        <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300 font-medium min-w-0">
+                          <span className="text-zinc-500 dark:text-zinc-300 font-normal shrink-0">Next Up:</span>
+                          <span className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{progress.currentActiveTopic}</span>
                         </div>
                       )
                     )}
@@ -481,10 +481,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                     {/* Notes from Last Session Box (Never Erased) */}
                     {progress.latestNote && (
                       <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-800/60 p-2.5 flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 w-full min-w-0 box-border">
-                        <FileText className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400 shrink-0 mt-0.5" />
+                        <FileText className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-300 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-bold text-zinc-700 dark:text-zinc-300 uppercase text-[10px] tracking-wider">
+                            <span className="font-bold text-zinc-700 dark:text-zinc-200 uppercase text-[10px] tracking-wider">
                               Notes from Last Class {progress.latestNoteDate && `(${format(progress.latestNoteDate, 'MMM d')})`}:
                             </span>
                             {progress.isLatestNoteDone && (
@@ -501,11 +501,11 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                     )}
 
                     {/* Mini syllabus progress bar */}
-                    <div className="flex items-center gap-2.5 text-xs font-semibold text-zinc-600 dark:text-zinc-400 w-full min-w-0">
-                      <div className="w-24 sm:w-28 bg-zinc-200 dark:bg-zinc-750 h-1.5 rounded-full overflow-hidden shrink-0">
+                    <div className="flex items-center gap-2.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 w-full min-w-0">
+                      <div className="w-24 sm:w-28 bg-zinc-200 dark:bg-zinc-700 h-1.5 rounded-full overflow-hidden shrink-0">
                         <div className="bg-zinc-900 dark:bg-zinc-200 h-full rounded-full transition-all" style={{ width: `${progress.percent}%` }} />
                       </div>
-                      <span className="text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-400 font-medium truncate">
+                      <span className="text-[11px] sm:text-xs text-zinc-600 dark:text-zinc-300 font-medium truncate">
                         {progress.completedCount}/{progress.totalTopics} Topics Covered ({progress.percent}%)
                       </span>
                     </div>
@@ -513,10 +513,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                     {/* Card Footer: Time, Status Badge & Action */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-t border-zinc-100 dark:border-zinc-800/80 pt-3 mt-0.5 w-full min-w-0">
                       <div className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-200 flex-wrap min-w-0">
-                        <Clock className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" aria-hidden="true" />
+                        <Clock className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300 shrink-0" aria-hidden="true" />
                         <span>{formatTime(sch.startTime)} – {formatTime(sch.endTime)}</span>
-                        <span className="text-zinc-400 dark:text-zinc-600 font-normal">•</span>
-                        <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                        <span className="text-zinc-400 dark:text-zinc-500 font-normal">•</span>
+                        <span className="text-xs text-zinc-500 dark:text-zinc-300 font-medium">
                           {sch.type || 'Lecture'} Slot
                         </span>
                       </div>
@@ -577,18 +577,18 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                             <span className="text-base font-bold tracking-tight text-zinc-950 dark:text-zinc-100">
                               {cls.subjectCode}
                             </span>
-                            <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                            <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-200">
                               {cls.section}
                             </span>
                           </div>
-                          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400 mt-0.5">
+                          <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300 mt-0.5">
                             {cls.year}
                           </p>
                         </div>
 
                         {cls.room && (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-400 shrink-0">
-                            <MapPin className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-300 shrink-0">
+                            <MapPin className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" aria-hidden="true" />
                             {cls.room}
                           </span>
                         )}
@@ -613,7 +613,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                           </div>
                         </div>
                       ) : progress.latestNote ? (
-                        <p className="text-xs text-zinc-600 dark:text-zinc-400 font-medium line-clamp-1">
+                        <p className="text-xs text-zinc-600 dark:text-zinc-300 font-medium line-clamp-1">
                           <span className="text-zinc-500 dark:text-zinc-400">Note:</span> {progress.latestNote}
                         </p>
                       ) : null}
@@ -621,7 +621,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       {/* Real Syllabus Accomplishment Progress Bar */}
                       <div className="space-y-1 bg-zinc-50 dark:bg-zinc-800/60 p-2.5 rounded-lg border border-zinc-200/80 dark:border-zinc-700/80 w-full min-w-0">
                         <div className="flex items-center justify-between text-xs font-semibold">
-                          <span className="text-zinc-600 dark:text-zinc-400">Syllabus Progress</span>
+                          <span className="text-zinc-600 dark:text-zinc-300">Syllabus Progress</span>
                           <span className="font-mono text-zinc-950 dark:text-zinc-100 font-bold">{progress.completedCount}/{progress.totalTopics} ({progress.percent}%)</span>
                         </div>
                         <div className="w-full bg-zinc-200 dark:bg-zinc-700 h-2 rounded-full overflow-hidden">
@@ -633,9 +633,9 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400 w-full min-w-0">
+                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-300 w-full min-w-0">
                       <span className="flex items-center gap-1 shrink-0">
-                        <Layers className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+                        <Layers className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
                         {cls.masterSyllabus.length} Topics
                       </span>
                       <span className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-zinc-950 dark:group-hover:text-white shrink-0">

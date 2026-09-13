@@ -171,7 +171,7 @@ export const AuthModal: FC<AuthModalProps> = ({
             className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               mode === 'signin'
                 ? 'bg-white text-zinc-950 shadow-2xs dark:bg-zinc-800 dark:text-zinc-100'
-                : 'text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200'
+                : 'text-zinc-600 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-100'
             }`}
           >
             <LogIn className="h-3.5 w-3.5" />
@@ -188,7 +188,7 @@ export const AuthModal: FC<AuthModalProps> = ({
             className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               mode === 'register'
                 ? 'bg-white text-zinc-950 shadow-2xs dark:bg-zinc-800 dark:text-zinc-100'
-                : 'text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200'
+                : 'text-zinc-600 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-100'
             }`}
           >
             <UserPlus className="h-3.5 w-3.5" />
@@ -228,18 +228,18 @@ export const AuthModal: FC<AuthModalProps> = ({
                   Username
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <User className="w-4 h-4 text-zinc-400 dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
                     placeholder="e.g. martin.dan"
-                    className="w-full rounded-lg border border-zinc-300 bg-white pl-9 pr-3 py-2 text-sm text-zinc-950 shadow-2xs placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus-visible:ring-zinc-400"
+                    className="w-full rounded-lg border border-zinc-300 bg-white pl-9 pr-3 py-2 text-sm text-zinc-950 shadow-2xs placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                   />
                 </div>
-                <span className="text-[11px] text-zinc-500 block dark:text-zinc-400">
-                  Format: <span className="font-mono text-zinc-800 dark:text-zinc-300">lastname.firstname</span>
+                <span className="text-[11px] text-zinc-600 block dark:text-zinc-300">
+                  Format: <span className="font-mono text-zinc-800 dark:text-zinc-200 font-semibold">lastname.firstname</span>
                 </span>
               </div>
 
@@ -258,12 +258,12 @@ export const AuthModal: FC<AuthModalProps> = ({
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
                     placeholder="••••"
-                    className="w-full rounded-lg border border-zinc-300 bg-white pl-9 pr-10 py-2 text-sm text-zinc-950 font-mono tracking-widest shadow-2xs placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus-visible:ring-zinc-400"
+                    className="w-full rounded-lg border border-zinc-300 bg-white pl-9 pr-10 py-2 text-sm text-zinc-950 font-mono tracking-widest shadow-2xs placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPin(!showPin)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 cursor-pointer dark:hover:text-zinc-200"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700 cursor-pointer dark:text-zinc-400 dark:hover:text-zinc-200"
                   >
                     {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -325,7 +325,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                         value={regFirstName}
                         onChange={(e) => setRegFirstName(e.target.value)}
                         placeholder="e.g. Maria"
-                        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus-visible:ring-zinc-400"
+                        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>
 
@@ -339,14 +339,14 @@ export const AuthModal: FC<AuthModalProps> = ({
                         value={regLastName}
                         onChange={(e) => setRegLastName(e.target.value)}
                         placeholder="e.g. Cruz"
-                        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus-visible:ring-zinc-400"
+                        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>
                   </div>
 
                   {/* Realtime Username Preview */}
                   <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-xs flex items-center justify-between dark:border-zinc-800 dark:bg-zinc-900/80">
-                    <span className="text-zinc-600 font-medium dark:text-zinc-400">Assigned Username:</span>
+                    <span className="text-zinc-600 font-medium dark:text-zinc-300">Assigned Username:</span>
                     <span className="font-mono font-bold text-zinc-950 bg-white px-2 py-0.5 rounded border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700">
                       {calculatedUsername}
                     </span>
@@ -357,12 +357,12 @@ export const AuthModal: FC<AuthModalProps> = ({
                       Department / College
                     </label>
                     <div className="relative">
-                      <Building2 className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <Building2 className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         value={regDept}
                         onChange={(e) => setRegDept(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus-visible:ring-zinc-400"
+                        className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>
                   </div>
@@ -372,12 +372,12 @@ export const AuthModal: FC<AuthModalProps> = ({
                       Institution
                     </label>
                     <div className="relative">
-                      <School className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <School className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         value={regInst}
                         onChange={(e) => setRegInst(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus-visible:ring-zinc-400"
+                        className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>
                   </div>
@@ -387,7 +387,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                       4-Digit Security PIN (Default: 1234)
                     </label>
                     <div className="relative">
-                      <KeyRound className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <KeyRound className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         maxLength={4}
@@ -395,7 +395,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                         pattern="[0-9]{4}"
                         value={regPin}
                         onChange={(e) => setRegPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-                        className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 font-mono tracking-widest shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus-visible:ring-zinc-400"
+                        className="w-full rounded-lg border border-zinc-300 bg-white pl-8 pr-3 py-1.5 text-xs text-zinc-950 font-mono tracking-widest shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                       />
                     </div>
                   </div>

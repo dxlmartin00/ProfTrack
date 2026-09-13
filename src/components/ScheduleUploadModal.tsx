@@ -403,7 +403,7 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -421,8 +421,8 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className={`border-2 border-dashed rounded-xl p-6 sm:p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-3 ${
                 dragOver 
-                  ? 'border-zinc-950 dark:border-zinc-200 bg-zinc-50 dark:bg-zinc-850 scale-[0.99]' 
-                  : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50/50 dark:bg-zinc-850/50 hover:bg-zinc-50 dark:hover:bg-zinc-850'
+                  ? 'border-zinc-950 dark:border-zinc-200 bg-zinc-50 dark:bg-zinc-800 scale-[0.99]' 
+                  : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 bg-zinc-50/50 dark:bg-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800'
               }`}
             >
               <input
@@ -441,12 +441,12 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
                 <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
                   Click to upload screenshot, or drag and drop
                 </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-1">
                   Supports PNG, JPG, or paste directly with <kbd className="font-mono bg-zinc-200 dark:bg-zinc-700 px-1.5 py-0.5 rounded text-[10px] font-semibold text-zinc-800 dark:text-zinc-200">Ctrl + V</kbd>
                 </p>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 font-medium bg-white dark:bg-zinc-800 px-3 py-1 rounded-full border border-zinc-200 dark:border-zinc-700">
+              <div className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300 font-medium bg-white dark:bg-zinc-800 px-3 py-1 rounded-full border border-zinc-200 dark:border-zinc-700">
                 <Camera className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
                 Auto-detects MH (Mon/Thu), TF (Tue/Fri), W, rooms & section codes (e.g. CS314D → 3D)
               </div>
@@ -458,7 +458,7 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
             <div className="py-12 flex flex-col items-center justify-center gap-3 text-center">
               <div className="h-8 w-8 animate-spin rounded-full border-3 border-zinc-300 dark:border-zinc-700 border-t-zinc-950 dark:border-t-zinc-100" />
               <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Analyzing Schedule Image...</p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Extracting subject codes, shortened sections, and time slots</p>
+              <p className="text-xs text-zinc-600 dark:text-zinc-300">Extracting subject codes, shortened sections, and time slots</p>
             </div>
           )}
 
@@ -481,7 +481,7 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
                   <button
                     type="button"
                     onClick={() => { setParsedCourses(null); setImagePreview(null); }}
-                    className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 font-semibold underline cursor-pointer"
+                    className="text-xs text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 font-semibold underline cursor-pointer"
                   >
                     Scan Another Image
                   </button>
@@ -492,7 +492,7 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
                 {parsedCourses.map((cls) => (
                   <div 
                     key={cls.id} 
-                    className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-850 bg-zinc-50 dark:bg-zinc-850/80 hover:bg-white dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors space-y-1.5"
+                    className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 hover:bg-white dark:hover:bg-zinc-750 hover:border-zinc-300 dark:hover:border-zinc-600 transition-colors space-y-1.5"
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-zinc-950 dark:text-zinc-100 bg-white dark:bg-zinc-800 px-2 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 shadow-2xs font-mono">
@@ -507,11 +507,11 @@ export const ScheduleUploadModal: FC<ScheduleUploadModalProps> = ({
                       {cls.subjectTitle}
                     </p>
 
-                    <div className="space-y-0.5 text-[11px] text-zinc-600 dark:text-zinc-400">
+                    <div className="space-y-0.5 text-[11px] text-zinc-600 dark:text-zinc-300">
                       {cls.schedule.map((s, idx) => {
                         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                         return (
-                          <div key={idx} className="flex items-center justify-between text-zinc-500 dark:text-zinc-400">
+                          <div key={idx} className="flex items-center justify-between text-zinc-600 dark:text-zinc-300">
                             <span>📅 {dayNames[s.dayOfWeek]} • {s.startTime}–{s.endTime}</span>
                             <span className="font-mono text-zinc-700 dark:text-zinc-300">📍 {s.room}</span>
                           </div>

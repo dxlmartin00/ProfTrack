@@ -1023,7 +1023,7 @@ export function App() {
                 <span className="text-xs font-bold text-zinc-950 dark:text-zinc-100 group-hover:text-zinc-800 dark:group-hover:text-white truncate max-w-[130px]">
                   {currentUser?.username || profile.fullName}
                 </span>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium truncate max-w-[130px]">
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-300 font-medium truncate max-w-[130px]">
                   {currentUser?.role === 'admin' ? 'Administrator' : 'Instructor'}
                 </span>
               </div>
@@ -1033,7 +1033,7 @@ export function App() {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
               title="Switch Account / Sign Out"
               aria-label="Switch Account / Sign Out"
             >
@@ -1130,7 +1130,7 @@ export function App() {
                   <button
                     type="button"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                    className="p-1.5 rounded-lg text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     aria-label="Close menu"
                   >
                     <X className="w-5 h-5" />
@@ -1148,16 +1148,16 @@ export function App() {
                     <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-100 truncate">
                       {profile.fullName || currentUser?.fullName}
                     </h3>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono truncate">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-300 font-mono truncate">
                       @{currentUser?.username}
                     </p>
-                    <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300">
+                    <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
                       {currentUser?.role === 'admin' ? 'System Administrator' : profile.position || 'Faculty Member'}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-300 truncate">
                   {profile.department}
                 </div>
 
@@ -1168,7 +1168,7 @@ export function App() {
                       setIsMobileMenuOpen(false);
                       setIsProfileOpen(true);
                     }}
-                    className="flex-1 inline-flex h-8 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
+                    className="flex-1 inline-flex h-8 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-800 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
                   >
                     Edit Profile
                   </button>
@@ -1189,7 +1189,7 @@ export function App() {
 
               {/* Section: Academic Schedule Views */}
               <div className="space-y-1">
-                <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+                <div className="text-[11px] font-bold text-zinc-500 dark:text-zinc-300 uppercase tracking-wider px-1">
                   Schedule Views
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -1202,7 +1202,7 @@ export function App() {
                     className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                       viewMode === 'daily'
                         ? 'border-zinc-950 dark:border-white bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-2xs'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 text-zinc-700 dark:text-zinc-300'
+                        : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200'
                     }`}
                   >
                     <Clock className="w-4 h-4" />
@@ -1218,7 +1218,7 @@ export function App() {
                     className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                       viewMode === 'calendar'
                         ? 'border-zinc-950 dark:border-white bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-2xs'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 text-zinc-700 dark:text-zinc-300'
+                        : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200'
                     }`}
                   >
                     <Calendar className="w-4 h-4" />
@@ -1229,7 +1229,7 @@ export function App() {
 
               {/* Section: Faculty Tools */}
               <div className="space-y-1">
-                <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+                <div className="text-[11px] font-bold text-zinc-500 dark:text-zinc-300 uppercase tracking-wider px-1">
                   Faculty Tools
                 </div>
                 <div className="space-y-1">
@@ -1240,13 +1240,13 @@ export function App() {
                       setEditingCourse(null);
                       setIsAddClassOpen(true);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       <span>Add Course Session</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-400" />
+                    <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-300" />
                   </button>
 
                   <button
@@ -1255,13 +1255,13 @@ export function App() {
                       setIsMobileMenuOpen(false);
                       setIsScanModalOpen(true);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <Camera className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <Camera className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
                       <span>Scan Faculty Loading Image</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-400" />
+                    <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-300" />
                   </button>
 
                   <button
@@ -1270,13 +1270,13 @@ export function App() {
                       setIsMobileMenuOpen(false);
                       setIsReportOpen(true);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <FileDown className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <FileDown className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
                       <span>Accomplishment Reports</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-400" />
+                    <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-300" />
                   </button>
 
                   <button
@@ -1285,20 +1285,20 @@ export function App() {
                       setIsMobileMenuOpen(false);
                       setIsTransferModalOpen(true);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <Smartphone className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <Smartphone className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
                       <span>Transfer to Phone / QR Code</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-400" />
+                    <ChevronRight className="w-4 h-4 text-zinc-400 dark:text-zinc-300" />
                   </button>
                 </div>
               </div>
 
               {/* Section: System & Settings */}
               <div className="space-y-1">
-                <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+                <div className="text-[11px] font-bold text-zinc-500 dark:text-zinc-300 uppercase tracking-wider px-1">
                   System & Preferences
                 </div>
                 <div className="space-y-1">
@@ -1308,10 +1308,10 @@ export function App() {
                       setIsMobileMenuOpen(false);
                       setIsDeviceSyncModalOpen(true);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <ArrowRightLeft className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <ArrowRightLeft className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
                       <span>Device & Cloud Sync</span>
                     </div>
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
@@ -1325,13 +1325,13 @@ export function App() {
                       setIsMobileMenuOpen(false);
                       setIsA11yModalOpen(true);
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <Sliders className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <Sliders className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
                       <span>Display & Eye Care Themes</span>
                     </div>
-                    <span className="capitalize text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                    <span className="capitalize text-[11px] font-semibold text-zinc-600 dark:text-zinc-300">
                       {themeMode}
                     </span>
                   </button>
@@ -1339,13 +1339,13 @@ export function App() {
                   <button
                     type="button"
                     onClick={handleToggleNotifications}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <Bell className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <Bell className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
                       <span>Class Push Reminders</span>
                     </div>
-                    <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                    <span className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300">
                       {notificationGranted ? 'Enabled' : 'Disabled'}
                     </span>
                   </button>
@@ -1360,10 +1360,10 @@ export function App() {
                       }
                       window.location.reload();
                     }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <RotateCcw className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <RotateCcw className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
                       <span>Check for Updates / Reload</span>
                     </div>
                   </button>
@@ -1488,7 +1488,7 @@ export function App() {
           className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
             viewMode === 'daily'
               ? 'text-zinc-950 dark:text-white'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+              : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
           }`}
         >
           <div className={`p-1.5 rounded-lg ${viewMode === 'daily' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-2xs' : ''}`}>
@@ -1503,7 +1503,7 @@ export function App() {
           className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
             viewMode === 'calendar'
               ? 'text-zinc-950 dark:text-white'
-              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+              : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
           }`}
         >
           <div className={`p-1.5 rounded-lg ${viewMode === 'calendar' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-2xs' : ''}`}>
@@ -1529,7 +1529,7 @@ export function App() {
         <button
           type="button"
           onClick={() => setIsReportOpen(true)}
-          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
+          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all cursor-pointer"
         >
           <div className="p-1.5">
             <FileDown className="w-4 h-4" />
@@ -1540,7 +1540,7 @@ export function App() {
         <button
           type="button"
           onClick={() => setIsMobileMenuOpen(true)}
-          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
+          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all cursor-pointer"
         >
           <div className="p-1.5 relative">
             <Menu className="w-4 h-4" />

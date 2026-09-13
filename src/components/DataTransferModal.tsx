@@ -274,7 +274,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
               <Smartphone className="h-5 w-5 text-zinc-900 dark:text-zinc-100" />
               Transfer Data (Laptop ⇄ Phone)
             </h2>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">
               Move your private timetable, syllabus, and logs between devices.
             </p>
           </div>
@@ -282,7 +282,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -296,7 +296,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
             className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 text-center transition-colors cursor-pointer ${
               activeTab === 'qrcode'
                 ? 'border-zinc-950 text-zinc-950 dark:border-zinc-100 dark:text-zinc-100'
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                : 'border-transparent text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100'
             }`}
           >
             1. Scan QR Code
@@ -307,7 +307,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
             className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 text-center transition-colors cursor-pointer ${
               activeTab === 'export'
                 ? 'border-zinc-950 text-zinc-950 dark:border-zinc-100 dark:text-zinc-100'
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                : 'border-transparent text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100'
             }`}
           >
             2. Export File
@@ -318,7 +318,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
             className={`pb-3 text-xs sm:text-sm font-semibold border-b-2 text-center transition-colors cursor-pointer ${
               activeTab === 'import'
                 ? 'border-zinc-950 text-zinc-950 dark:border-zinc-100 dark:text-zinc-100'
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                : 'border-transparent text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100'
             }`}
           >
             3. Import File
@@ -346,12 +346,12 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
           {/* TAB 1: QR CODE */}
           {activeTab === 'qrcode' && (
             <div className="space-y-4 text-center">
-              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-5 flex flex-col items-center justify-center space-y-3.5">
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-5 flex flex-col items-center justify-center space-y-3.5">
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-100">
                     Scan with Your Phone Camera
                   </h3>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-xs">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 max-w-xs">
                     Point your mobile phone camera at this QR code. Tap the link popup to instantly load all {classes.length} course(s) and {logs.length} log(s) on your phone.
                   </p>
                 </div>
@@ -363,7 +363,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                       dangerouslySetInnerHTML={{ __html: qrSvgMarkup }}
                     />
                   ) : (
-                    <div className="h-48 w-48 flex items-center justify-center text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+                    <div className="h-48 w-48 flex items-center justify-center text-xs text-zinc-500 dark:text-zinc-300 font-medium">
                       Loading QR Code...
                     </div>
                   )}
@@ -374,7 +374,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                   <div className="w-full text-left bg-zinc-100 dark:bg-zinc-800 p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 space-y-1.5">
                     <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
                       <span className="flex items-center gap-1">
-                        <Globe className="h-3 w-3 text-zinc-500 dark:text-zinc-400" />
+                        <Globe className="h-3 w-3 text-zinc-500 dark:text-zinc-300" />
                         Target Web App:
                       </span>
                       <button
@@ -395,7 +395,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                         className="w-full h-7 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 text-xs font-mono text-zinc-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
                       />
                     ) : (
-                      <p className="text-xs font-mono text-zinc-600 dark:text-zinc-400 truncate">
+                      <p className="text-xs font-mono text-zinc-600 dark:text-zinc-300 truncate">
                         {targetDomain}
                       </p>
                     )}
@@ -416,7 +416,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                       </>
                     ) : (
                       <>
-                        <ExternalLink className="h-3.5 w-3.5 mr-1.5 text-zinc-600 dark:text-zinc-400" />
+                        <ExternalLink className="h-3.5 w-3.5 mr-1.5 text-zinc-600 dark:text-zinc-300" />
                         Copy 1-Click Link
                       </>
                     )}
@@ -434,7 +434,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                       </>
                     ) : (
                       <>
-                        <Copy className="h-3.5 w-3.5 mr-1.5 text-zinc-600 dark:text-zinc-400" />
+                        <Copy className="h-3.5 w-3.5 mr-1.5 text-zinc-600 dark:text-zinc-300" />
                         Copy Sync Code
                       </>
                     )}
@@ -447,29 +447,29 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
           {/* TAB 2: EXPORT JSON FILE */}
           {activeTab === 'export' && (
             <div className="space-y-4">
-              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-5 space-y-3">
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-5 space-y-3">
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-100 flex items-center gap-1.5">
                     <Download className="h-4 w-4 text-zinc-900 dark:text-zinc-100" />
                     Download Offline Backup (.json)
                   </h3>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
                     Save a full offline backup file containing all your classes, syllabi, topic logs, and instructor profile. You can keep this on your USB or send it to another device.
                   </p>
                 </div>
 
-                <div className="bg-white dark:bg-zinc-800/80 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
+                <div className="bg-white dark:bg-zinc-800/80 p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs space-y-1.5 text-zinc-600 dark:text-zinc-300">
                   <div className="flex justify-between">
                     <span>Courses Included:</span>
-                    <span className="font-bold text-zinc-900 dark:text-zinc-100">{classes.length}</span>
+                    <span className="font-bold text-zinc-950 dark:text-zinc-100">{classes.length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Class Logs:</span>
-                    <span className="font-bold text-zinc-900 dark:text-zinc-100">{logs.length}</span>
+                    <span className="font-bold text-zinc-950 dark:text-zinc-100">{logs.length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Instructor Profile:</span>
-                    <span className="font-bold text-zinc-900 dark:text-zinc-100">{profile?.fullName || 'Configured'}</span>
+                    <span className="font-bold text-zinc-950 dark:text-zinc-100">{profile?.fullName || 'Configured'}</span>
                   </div>
                 </div>
 
@@ -490,13 +490,13 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
             <div className="space-y-5">
               
               {/* Option A: Upload JSON File */}
-              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-5 space-y-3">
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-5 space-y-3">
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-100 flex items-center gap-1.5">
                     <FileJson className="h-4 w-4 text-zinc-900 dark:text-zinc-100" />
                     Option A: Upload Backup File (.json)
                   </h3>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300">
                     Select a previously downloaded <code className="font-mono bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-[11px] text-zinc-900 dark:text-zinc-100">.json</code> backup file.
                   </p>
                 </div>
@@ -514,19 +514,19 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                   onClick={() => fileInputRef.current?.click()}
                   className="w-full inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
                 >
-                  <Upload className="h-4 w-4 mr-1.5 text-zinc-600 dark:text-zinc-400" />
+                  <Upload className="h-4 w-4 mr-1.5 text-zinc-600 dark:text-zinc-300" />
                   Select .json File to Restore
                 </button>
               </div>
 
               {/* Option B: Paste Sync Code */}
-              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-5 space-y-3">
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-5 space-y-3">
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-100 flex items-center gap-1.5">
                     <Copy className="h-4 w-4 text-zinc-900 dark:text-zinc-100" />
                     Option B: Paste Direct Link or Sync Code
                   </h3>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300">
                     Paste the 1-click link or compressed JSON sync code from your other device.
                   </p>
                 </div>
@@ -536,7 +536,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                   onChange={(e) => setManualCodeInput(e.target.value)}
                   placeholder="Paste #import=... link or JSON sync code here"
                   rows={3}
-                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2.5 text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
+                  className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2.5 text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
                 />
 
                 <button
@@ -556,7 +556,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
 
         {/* Dialog Footer */}
         <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/80 p-4 shrink-0">
-          <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300">
             <Laptop className="h-3.5 w-3.5" />
             <span>Laptop</span>
             <span>⇄</span>

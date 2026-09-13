@@ -148,7 +148,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                 Administrator Console — Instructor Accounts
               </h2>
             </div>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">
               Review and approve pending instructor registrations, manage user access, and maintain data isolation.
             </p>
           </div>
@@ -157,7 +157,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -180,7 +180,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
         )}
 
         {/* Filter Toolbar */}
-        <div className="p-4 sm:px-6 bg-zinc-50 dark:bg-zinc-850/80 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+        <div className="p-4 sm:px-6 bg-zinc-50 dark:bg-zinc-800/80 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-1.5 p-1 bg-zinc-200/80 dark:bg-zinc-800 rounded-lg text-xs font-bold">
             <button
               type="button"
@@ -222,19 +222,19 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                   : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
-              <Users className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-400" />
+              <Users className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-300" />
               <span>All ({users.length})</span>
             </button>
           </div>
 
           <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search by name, username..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-8 pr-3 py-1.5 text-xs text-zinc-950 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
+              className="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-8 pr-3 py-1.5 text-xs text-zinc-950 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
             />
           </div>
         </div>
@@ -242,10 +242,10 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
         {/* Instructors List */}
         <div className="p-4 sm:p-6 space-y-3 overflow-y-auto flex-1 bg-white dark:bg-zinc-900">
           {filteredUsers.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-600 dark:text-zinc-400 space-y-1">
-              <Users className="h-8 w-8 mx-auto text-zinc-400 dark:text-zinc-500" />
+            <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-600 dark:text-zinc-300 space-y-1">
+              <Users className="h-8 w-8 mx-auto text-zinc-400 dark:text-zinc-400" />
               <p className="text-sm font-bold text-zinc-950 dark:text-zinc-100">No instructor accounts found</p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-zinc-500 dark:text-zinc-300">
                 {filterTab === 'pending' 
                   ? 'There are no instructor accounts currently pending approval.' 
                   : 'No accounts match the selected filter.'}
@@ -265,7 +265,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                   className={`rounded-xl border p-4 transition-all ${
                     isPending 
                       ? 'border-amber-300 dark:border-amber-700/80 bg-amber-50/40 dark:bg-amber-950/30' 
-                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850/60 hover:border-zinc-300 dark:hover:border-zinc-700'
+                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                   }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -276,7 +276,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                         isAdmin 
                           ? 'bg-zinc-950 dark:bg-zinc-800 text-white dark:text-zinc-100' 
                           : isPending 
-                          ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700' 
+                          ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-700' 
                           : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700'
                       }`}>
                         {u.firstName?.[0] || 'I'}{u.lastName?.[0] || 'U'}
@@ -310,7 +310,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400 flex-wrap">
+                        <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-300 flex-wrap">
                           <span className="flex items-center gap-1">
                             <Building2 className="w-3 h-3 text-zinc-400" />
                             {u.department}
@@ -412,7 +412,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
 
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/80 p-4 shrink-0">
-          <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+          <div className="text-xs text-zinc-600 dark:text-zinc-300 font-medium">
             Data Isolation Active • Each instructor's courses and logs are stored privately in their own sandbox.
           </div>
 

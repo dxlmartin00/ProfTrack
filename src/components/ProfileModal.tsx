@@ -73,7 +73,7 @@ export const ProfileModal: FC<ProfileModalProps> = ({
               <h2 id="profile-modal-title" className="text-lg font-bold tracking-tight text-zinc-950 dark:text-zinc-100">
                 Instructor Profile
               </h2>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              <p className="text-xs text-zinc-600 dark:text-zinc-300">
                 Manage your academic credentials for reports & schedules.
               </p>
             </div>
@@ -83,7 +83,7 @@ export const ProfileModal: FC<ProfileModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -95,7 +95,7 @@ export const ProfileModal: FC<ProfileModalProps> = ({
           {/* Full Name */}
           <div className="space-y-1.5">
             <label htmlFor="fullName" className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+              <User className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
               Full Name & Title
             </label>
             <input
@@ -105,14 +105,14 @@ export const ProfileModal: FC<ProfileModalProps> = ({
               value={formData.fullName}
               onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
               placeholder="e.g. Prof. Dan Martin or Dr. Juan Dela Cruz"
-              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
+              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
             />
           </div>
 
           {/* Academic Position / Rank */}
           <div className="space-y-1.5">
             <label htmlFor="position" className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-              <Briefcase className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+              <Briefcase className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
               Academic Position / Rank
             </label>
             <input
@@ -122,14 +122,14 @@ export const ProfileModal: FC<ProfileModalProps> = ({
               value={formData.position}
               onChange={(e) => setFormData({ ...formData, position: e.target.value })}
               placeholder="e.g. Assistant Professor IV, Instructor I, Lecturer"
-              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
+              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
             />
           </div>
 
           {/* Department / College */}
           <div className="space-y-1.5">
             <label htmlFor="department" className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+              <Building2 className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
               Department / College
             </label>
             <input
@@ -139,14 +139,14 @@ export const ProfileModal: FC<ProfileModalProps> = ({
               value={formData.department}
               onChange={(e) => setFormData({ ...formData, department: e.target.value })}
               placeholder="e.g. College of Computer Studies / Department of IT"
-              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
+              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
             />
           </div>
 
           {/* Institution / University */}
           <div className="space-y-1.5">
             <label htmlFor="institution" className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+              <GraduationCap className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
               Institution / University
             </label>
             <input
@@ -156,7 +156,7 @@ export const ProfileModal: FC<ProfileModalProps> = ({
               value={formData.institution}
               onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
               placeholder="e.g. University of Makati, Pamantasan ng Lungsod..."
-              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
+              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
             />
           </div>
 
@@ -164,7 +164,7 @@ export const ProfileModal: FC<ProfileModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div className="space-y-1.5">
               <label htmlFor="employeeId" className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                <CreditCard className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+                <CreditCard className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
                 Employee ID (Optional)
               </label>
               <input
@@ -173,13 +173,13 @@ export const ProfileModal: FC<ProfileModalProps> = ({
                 value={formData.employeeId || ''}
                 onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
                 placeholder="e.g. EMP-2026-089"
-                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium font-mono"
+                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium font-mono"
               />
             </div>
 
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+                <Mail className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" />
                 Academic Email (Optional)
               </label>
               <input
@@ -188,13 +188,13 @@ export const ProfileModal: FC<ProfileModalProps> = ({
                 value={formData.email || ''}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="e.g. faculty@university.edu"
-                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
+                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
               />
             </div>
           </div>
 
           {/* Report Preview Note */}
-          <div className="rounded-lg bg-zinc-50 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-800 p-3 text-xs text-zinc-600 dark:text-zinc-400 space-y-1">
+          <div className="rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-3 text-xs text-zinc-600 dark:text-zinc-300 space-y-1">
             <span className="font-bold text-zinc-900 dark:text-zinc-200 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
               Automated Report Integration
@@ -209,7 +209,7 @@ export const ProfileModal: FC<ProfileModalProps> = ({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Dataset Management</p>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-300">
                   {hasCourses ? 'Clear all course records to start fresh' : 'Load sample demonstration courses'}
                 </p>
               </div>

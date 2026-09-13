@@ -85,18 +85,18 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 {classSession.section}
               </span>
-              <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:text-zinc-300">
                 {classSession.year}
               </span>
               {classSession.room && (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                  <MapPin className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                  <MapPin className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" aria-hidden="true" />
                   {classSession.room}
                 </span>
               )}
             </div>
             {classSession.subjectTitle && (
-              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              <p className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
                 {classSession.subjectTitle}
               </p>
             )}
@@ -107,7 +107,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={() => onEdit(classSession)}
               aria-label="Edit course details"
-              className="rounded-lg p-2 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="rounded-lg p-2 text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               title="Edit Course Details"
             >
               <Edit3 className="h-4 w-4" aria-hidden="true" />
@@ -116,7 +116,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={handleDelete}
               aria-label="Delete course"
-              className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+              className="rounded-lg p-2 text-zinc-500 dark:text-zinc-300 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
               title="Delete Course"
             >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -125,7 +125,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close dialog"
-              className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ml-1 cursor-pointer"
+              className="rounded-lg p-2 text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ml-1 cursor-pointer"
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
@@ -138,7 +138,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+                <Layers className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-300" aria-hidden="true" />
                 Syllabus Accomplishment
               </span>
               <span className="text-zinc-950 dark:text-zinc-100 font-mono">{courseProgress.completedCount} of {courseProgress.totalTopics} Topics ({courseProgress.percent}%)</span>
@@ -167,7 +167,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
             </div>
           ) : courseProgress.latestNote ? (
             <div className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-2.5 flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200">
-              <FileText className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-400 shrink-0 mt-0.5" />
+              <FileText className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-300 shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold text-zinc-900 dark:text-zinc-100">Notes from Last Class: </span>
                 <span className="text-zinc-700 dark:text-zinc-300 font-medium">{courseProgress.latestNote}</span>
@@ -189,7 +189,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                   </span>
                   <span className="font-bold text-zinc-950 dark:text-zinc-100">{DAY_NAMES[sch.dayOfWeek]}</span>
                   <span className="font-mono text-zinc-700 dark:text-zinc-300">{sch.startTime} – {sch.endTime}</span>
-                  {sch.room && <span className="text-zinc-500 dark:text-zinc-400 font-medium">({sch.room})</span>}
+                  {sch.room && <span className="text-zinc-500 dark:text-zinc-300 font-medium">({sch.room})</span>}
                 </div>
               );
             })}
@@ -204,7 +204,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
             className={`pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
               activeTab === 'syllabus'
                 ? 'border-zinc-950 dark:border-zinc-100 text-zinc-950 dark:text-zinc-100'
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                : 'border-transparent text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
             Master Syllabus ({classSession.masterSyllabus.length})
@@ -215,7 +215,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
             className={`pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
               activeTab === 'history'
                 ? 'border-zinc-950 dark:border-zinc-100 text-zinc-950 dark:text-zinc-100'
-                : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                : 'border-transparent text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
             Logged Sessions ({courseLogs.length})
@@ -267,7 +267,7 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
                         ? 'bg-emerald-600 border-emerald-600 text-white'
                         : isPartial
                         ? 'bg-amber-600 border-amber-600 text-white'
-                        : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500'
+                        : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold'
                     }`}>
                       {isCovered ? (
                         <Check className="h-3.5 w-3.5 stroke-[3]" aria-hidden="true" />
@@ -317,10 +317,10 @@ export const CourseDetailModal: FC<CourseDetailModalProps> = ({
             </div>
           ) : (
             courseLogs.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-600 dark:text-zinc-400 space-y-1.5">
-                <Calendar className="h-6 w-6 mx-auto text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
+              <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-600 dark:text-zinc-300 space-y-1.5">
+                <Calendar className="h-6 w-6 mx-auto text-zinc-400 dark:text-zinc-400" aria-hidden="true" />
                 <p className="text-sm font-bold text-zinc-950 dark:text-zinc-100">No sessions logged for this course yet</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">Log class attendance and topic updates after your lectures.</p>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300">Log class attendance and topic updates after your lectures.</p>
               </div>
             ) : (
               <div className="space-y-3">

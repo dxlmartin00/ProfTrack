@@ -211,14 +211,14 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
           className={`rounded-2xl border p-5 transition-all cursor-pointer ${
             pendingCount > 0 
               ? 'border-amber-300 dark:border-amber-700/80 bg-amber-50/60 dark:bg-amber-950/30 shadow-xs hover:border-amber-400' 
-              : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:border-zinc-300 dark:hover:border-zinc-700'
+              : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
               Pending Approvals
             </span>
-            <span className={`p-2 rounded-xl ${pendingCount > 0 ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'}`}>
+            <span className={`p-2 rounded-xl ${pendingCount > 0 ? 'bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-300'}`}>
               <Clock className="w-4 h-4" />
             </span>
           </div>
@@ -226,7 +226,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
             <span className={`text-3xl font-black ${pendingCount > 0 ? 'text-amber-950 dark:text-amber-200' : 'text-zinc-950 dark:text-zinc-100'}`}>
               {pendingCount}
             </span>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="text-xs text-zinc-500 dark:text-zinc-300">
               {pendingCount === 1 ? 'instructor awaiting review' : 'instructors awaiting review'}
             </span>
           </div>
@@ -235,10 +235,10 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
         {/* Approved Instructors */}
         <div 
           onClick={() => setFilterTab('approved')}
-          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer"
+          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
               Active Faculty Instructors
             </span>
             <span className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
@@ -249,7 +249,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
             <span className="text-3xl font-black text-zinc-950 dark:text-zinc-100">
               {approvedCount}
             </span>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="text-xs text-zinc-500 dark:text-zinc-300">
               approved & active accounts
             </span>
           </div>
@@ -258,10 +258,10 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
         {/* Total Registered Accounts */}
         <div 
           onClick={() => setFilterTab('all')}
-          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer"
+          className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-zinc-600 dark:text-zinc-300 uppercase tracking-wider">
               Total Faculty Directory
             </span>
             <span className="p-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
@@ -272,7 +272,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
             <span className="text-3xl font-black text-zinc-950 dark:text-zinc-100">
               {totalInstructors}
             </span>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="text-xs text-zinc-500 dark:text-zinc-300">
               registered instructor profiles
             </span>
           </div>
@@ -282,7 +282,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
       {/* Main Account Management Card */}
       <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
         {/* Controls Bar */}
-        <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-850/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Filter Tabs */}
           <div className="flex items-center gap-1.5 bg-white dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-2xs">
             <button
@@ -291,7 +291,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 filterTab === 'pending'
                   ? 'bg-zinc-950 dark:bg-zinc-700 text-white dark:text-zinc-100 shadow-2xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
               <span>Pending</span>
@@ -308,7 +308,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 filterTab === 'approved'
                   ? 'bg-zinc-950 dark:bg-zinc-700 text-white dark:text-zinc-100 shadow-2xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
               Approved ({approvedCount})
@@ -320,7 +320,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 filterTab === 'all'
                   ? 'bg-zinc-950 dark:bg-zinc-700 text-white dark:text-zinc-100 shadow-2xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100'
+                  : 'text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-zinc-100'
               }`}
             >
               All Accounts ({users.length})
@@ -329,13 +329,13 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
 
           {/* Search Input */}
           <div className="relative w-full md:w-72">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-400" />
             <input
               type="text"
               placeholder="Search by name, username, or college..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-zinc-950 dark:focus:border-zinc-400 focus:outline-none"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus:border-zinc-950 dark:focus:border-zinc-400 focus:outline-none"
             />
           </div>
         </div>
@@ -343,10 +343,10 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
         {/* Instructors List */}
         <div className="p-4 sm:p-6 space-y-3">
           {filteredUsers.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-12 text-center text-zinc-600 dark:text-zinc-400 space-y-2">
-              <Users className="h-10 w-10 mx-auto text-zinc-400 dark:text-zinc-500" />
+            <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-12 text-center text-zinc-600 dark:text-zinc-300 space-y-2">
+              <Users className="h-10 w-10 mx-auto text-zinc-400 dark:text-zinc-400" />
               <p className="text-sm font-bold text-zinc-950 dark:text-zinc-100">No accounts found</p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+              <p className="text-xs text-zinc-500 dark:text-zinc-300 max-w-sm mx-auto">
                 {filterTab === 'pending' 
                   ? 'Great job! There are currently no instructor accounts pending approval.' 
                   : 'No accounts match the current filter or search criteria.'}
@@ -366,7 +366,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                   className={`rounded-xl border p-4 sm:p-5 transition-all ${
                     isPending 
                       ? 'border-amber-300 dark:border-amber-700/80 bg-amber-50/40 dark:bg-amber-950/30' 
-                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850/60 hover:border-zinc-300 dark:hover:border-zinc-700'
+                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                   }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -424,7 +424,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                         </div>
 
                         {/* Username & Security & College */}
-                        <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400 flex-wrap">
+                        <div className="flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-300 flex-wrap">
                           <span>
                             Username: <code className="font-mono font-bold text-zinc-900 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 px-1 py-0.2 rounded border border-zinc-200 dark:border-zinc-700">{u.username}</code>
                           </span>
@@ -432,7 +432,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
                             <ShieldCheck className="h-3 w-3" />
                             Salted SHA-256
                           </span>
-                          <span className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400">
+                          <span className="flex items-center gap-1 text-zinc-500 dark:text-zinc-300">
                             <Building2 className="h-3 w-3" />
                             {u.department}
                           </span>
@@ -440,14 +440,14 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
 
                         {/* Isolated Data Counts (For Instructors) */}
                         {!isAdmin && (
-                          <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400 pt-1 flex-wrap">
+                          <div className="flex items-center gap-3 text-[11px] text-zinc-600 dark:text-zinc-300 pt-1 flex-wrap">
                             <span className="flex items-center gap-1 font-medium">
-                              <BookOpen className="h-3 w-3 text-zinc-400" />
+                              <BookOpen className="h-3 w-3 text-zinc-400 dark:text-zinc-400" />
                               {dataCounts.coursesCount} active courses
                             </span>
                             <span className="text-zinc-300 dark:text-zinc-700">•</span>
                             <span className="flex items-center gap-1 font-medium">
-                              <FileText className="h-3 w-3 text-zinc-400" />
+                              <FileText className="h-3 w-3 text-zinc-400 dark:text-zinc-400" />
                               {dataCounts.logsCount} session logs
                             </span>
                           </div>

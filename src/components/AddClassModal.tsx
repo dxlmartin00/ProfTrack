@@ -287,7 +287,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
             <h2 id="add-course-title" className="text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100">
               {isEditing ? `Edit Course — ${initialClass?.subjectCode}` : 'Add New Course'}
             </h2>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">
               Configure course schedules, lecture/laboratory splits, and syllabus topics.
             </p>
           </div>
@@ -295,7 +295,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -305,13 +305,13 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto flex-1 bg-white dark:bg-zinc-900">
           
           {/* Quick Docx Import Banner */}
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-4 space-y-2">
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-4 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-zinc-700 dark:text-zinc-300" />
                 <div>
                   <p className="text-sm font-bold text-zinc-950 dark:text-zinc-100">Import Word (.docx) Syllabus</p>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">Extracts course code, title, and topic tables automatically.</p>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300">Extracts course code, title, and topic tables automatically.</p>
                 </div>
               </div>
 
@@ -365,7 +365,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                   className={`flex items-center justify-center gap-2 rounded-lg border p-3 text-xs font-bold transition-all cursor-pointer ${
                     courseFormat === 'lecture_only'
                       ? 'border-zinc-950 dark:border-white bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-2xs'
-                      : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200'
+                      : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200'
                   }`}
                 >
                   <GraduationCap className="h-4 w-4" aria-hidden="true" />
@@ -401,7 +401,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                 placeholder="e.g. CS 315 or GE104"
                 value={subjectCode}
                 onChange={(e) => setSubjectCode(e.target.value)}
-                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 uppercase font-semibold"
+                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300 uppercase font-semibold"
               />
             </div>
 
@@ -416,7 +416,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                 placeholder="e.g. BSCS 3-A"
                 value={section}
                 onChange={(e) => setSection(e.target.value)}
-                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-semibold"
+                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300 font-semibold"
               />
             </div>
           </div>
@@ -431,7 +431,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
               placeholder="e.g. Application Development and Emerging Technologies"
               value={subjectTitle}
               onChange={(e) => setSubjectTitle(e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
+              className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300"
             />
           </div>
 
@@ -444,7 +444,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                 id="year-level"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
-                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400 font-medium"
+                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300 font-medium"
               >
                 <option value="1st Year">1st Year</option>
                 <option value="2nd Year">2nd Year</option>
@@ -464,7 +464,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                 placeholder="e.g. ComLab 3"
                 value={defaultRoom}
                 onChange={(e) => setDefaultRoom(e.target.value)}
-                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
+                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-300"
               />
             </div>
           </div>
@@ -478,7 +478,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
               <button
                 type="button"
                 onClick={() => handleAddSlot('Lecture')}
-                className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                 Add Slot
@@ -491,7 +491,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                 return (
                   <div
                     key={slot.id}
-                    className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-4 space-y-3.5"
+                    className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-4 space-y-3.5"
                   >
                     <div className="flex items-center justify-between">
                       <div className="inline-flex h-8 items-center rounded-md bg-zinc-200 dark:bg-zinc-800 p-0.5 text-xs text-zinc-700 dark:text-zinc-300">
@@ -522,7 +522,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">Slot #{index + 1}</span>
+                        <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Slot #{index + 1}</span>
                         {scheduleSlots.length > 1 && (
                           <button
                             type="button"
@@ -566,7 +566,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                     <div className="grid grid-cols-3 gap-2.5">
                       <div className="space-y-1">
                         <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" /> Start
+                          <Clock className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-300" aria-hidden="true" /> Start
                         </label>
                         <input
                           type="time"
@@ -579,7 +579,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
 
                       <div className="space-y-1">
                         <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" /> End
+                          <Clock className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-300" aria-hidden="true" /> End
                         </label>
                         <input
                           type="time"
@@ -592,14 +592,14 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
 
                       <div className="space-y-1">
                         <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" /> Room
+                          <MapPin className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-300" aria-hidden="true" /> Room
                         </label>
                         <input
                           type="text"
                           placeholder="e.g. Rm 302"
                           value={slot.room}
                           onChange={(e) => handleUpdateSlot(slot.id, 'room', e.target.value)}
-                          className="flex h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
+                          className="flex h-9 w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
                         />
                       </div>
                     </div>
@@ -639,12 +639,12 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                     handleAddTopic();
                   }
                 }}
-                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
+                className="flex h-10 w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-900 dark:text-zinc-100 shadow-2xs placeholder:text-zinc-400 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
               />
               <button
                 type="button"
                 onClick={handleAddTopic}
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-xs font-bold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shrink-0 cursor-pointer"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-xs font-bold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shrink-0 cursor-pointer"
               >
                 <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
                 Add
@@ -656,7 +656,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
                 {topics.map((topic, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 px-3.5 py-2 text-xs font-medium text-zinc-800 dark:text-zinc-200 group"
+                    className="flex items-center justify-between rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 px-3.5 py-2 text-xs font-medium text-zinc-800 dark:text-zinc-200 group"
                   >
                     <span className="truncate flex-1 mr-2">
                       {index + 1}. {topic}

@@ -67,7 +67,7 @@ export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onCl
             <h2 id="report-modal-title" className="text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100">
               Monthly Accomplishment Report
             </h2>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">
               Generate formatted PDF accomplishment logs for departmental reporting.
             </p>
           </div>
@@ -75,7 +75,7 @@ export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onCl
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="rounded-lg p-2 text-zinc-500 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -121,16 +121,16 @@ export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onCl
 
           {/* Quick Metrics */}
           <div className="grid grid-cols-3 gap-3.5">
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-4 space-y-1 shadow-2xs">
-              <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">Logged Sessions</p>
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-4 space-y-1 shadow-2xs">
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Logged Sessions</p>
               <p className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">{filteredLogs.length}</p>
             </div>
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-4 space-y-1 shadow-2xs">
-              <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">Topics Covered</p>
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-4 space-y-1 shadow-2xs">
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Topics Covered</p>
               <p className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">{totalTopicsCovered}</p>
             </div>
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850 p-4 space-y-1 shadow-2xs">
-              <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400">High Engagement</p>
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-4 space-y-1 shadow-2xs">
+              <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">High Engagement</p>
               <p className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">{engagementPercent}%</p>
             </div>
           </div>
@@ -141,16 +141,16 @@ export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onCl
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
                 Sessions Logged ({filteredLogs.length})
               </label>
-              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
                 {classes.length} Active Courses
               </span>
             </div>
 
             {filteredLogs.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-600 dark:text-zinc-400 space-y-1.5">
-                <FileText className="h-6 w-6 mx-auto text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
+              <div className="rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center text-zinc-600 dark:text-zinc-300 space-y-1.5">
+                <FileText className="h-6 w-6 mx-auto text-zinc-400 dark:text-zinc-400" aria-hidden="true" />
                 <p className="text-sm font-bold text-zinc-950 dark:text-zinc-100">No session logs found for this period</p>
-                <p className="text-xs text-zinc-600 dark:text-zinc-400">Once you log classes, they will be formatted for PDF output.</p>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300">Once you log classes, they will be formatted for PDF output.</p>
               </div>
             ) : (
               <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
