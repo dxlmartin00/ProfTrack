@@ -98,6 +98,12 @@ export const CalendarView: FC<CalendarViewProps> = ({
     const day = now.getDay();
     setSelectedMobileDayIdx(day >= 1 && day <= 6 ? day - 1 : 0);
   };
+  const prevMobileDay = () => {
+    setSelectedMobileDayIdx((prev) => (prev > 0 ? prev - 1 : weekDays.length - 1));
+  };
+  const nextMobileDay = () => {
+    setSelectedMobileDayIdx((prev) => (prev < weekDays.length - 1 ? prev + 1 : 0));
+  };
 
   // Check if Saturday has any scheduled classes
   const hasSaturdayClasses = useMemo(() => {
@@ -913,156 +919,382 @@ export const CalendarView: FC<CalendarViewProps> = ({
           </div>
         ) : (
           /* ========================================================= */
-          /* MODE B: CONTINUOUS HOURLY TIMELINE (Redesigned Grid)       */
+          /* MODE B: CONTINUOUS HOURLY TIMELINE (Responsive Grid)      */
           /* ========================================================= */
-          <div className="overflow-x-auto">
-            {/* Day Column Headers */}
-            <div className="grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-[#161820] divide-x divide-zinc-200 dark:divide-zinc-800">
-              <div className="p-3 text-center text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-300 flex items-center justify-center">
-                Time
-              </div>
-
-              {weekDays.map((dayDate) => {
-                const isCurrentDay = isToday(dayDate);
-                const holidayName = PHILIPPINE_HOLIDAYS[format(dayDate, 'MM-dd')];
-                const schedule = getDaySchedule(dayDate);
-
-                return (
-                  <div 
-                    key={dayDate.toISOString()} 
-                    className={`p-3 text-center transition-all ${
-                      isCurrentDay
-                        ? 'bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs'
-                        : holidayName
-                        ? 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-950 dark:text-rose-200'
-                        : 'text-zinc-800 dark:text-zinc-200'
-                    }`}
-                  >
-                    <div className={`text-[10px] font-black uppercase tracking-wider ${
-                      isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-300'
-                    }`}>
-                      {format(dayDate, 'EEEE')}
-                    </div>
-                    <div className="text-base font-black tracking-tight mt-0.5 flex items-center justify-center gap-1.5">
-                      <span>{format(dayDate, 'MMM d')}</span>
-                      {isCurrentDay && (
-                        <span className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-600 animate-pulse" />
-                      )}
-                    </div>
-                    <div className={`text-[10px] font-medium mt-0.5 ${
-                      isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-300'
-                    }`}>
-                      {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
-                    </div>
+          <div>
+            {/* Desktop Mode B: Multi-day Continuous Timeline Grid */}
+            <div className="hidden md:block overflow-x-auto">
+              <div className="min-w-[750px]">
+                {/* Day Column Headers */}
+                <div className="grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-[#161820] divide-x divide-zinc-200 dark:divide-zinc-800">
+                  <div className="p-3 text-center text-[10px] font-mono uppercase tracking-wider font-bold text-zinc-500 dark:text-zinc-300 flex items-center justify-center">
+                    Time
                   </div>
-                );
-              })}
+
+                  {weekDays.map((dayDate) => {
+                    const isCurrentDay = isToday(dayDate);
+                    const holidayName = PHILIPPINE_HOLIDAYS[format(dayDate, 'MM-dd')];
+                    const schedule = getDaySchedule(dayDate);
+
+                    return (
+                      <div 
+                        key={dayDate.toISOString()} 
+                        className={`p-3 text-center transition-all ${
+                          isCurrentDay
+                            ? 'bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 shadow-xs'
+                            : holidayName
+                            ? 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-950 dark:text-rose-200'
+                            : 'text-zinc-800 dark:text-zinc-200'
+                        }`}
+                      >
+                        <div className={`text-[10px] font-black uppercase tracking-wider ${
+                          isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-300'
+                        }`}>
+                          {format(dayDate, 'EEEE')}
+                        </div>
+                        <div className="text-base font-black tracking-tight mt-0.5 flex items-center justify-center gap-1.5">
+                          <span>{format(dayDate, 'MMM d')}</span>
+                          {isCurrentDay && (
+                            <span className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-600 animate-pulse" />
+                          )}
+                        </div>
+                        <div className={`text-[10px] font-medium mt-0.5 ${
+                          isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-300'
+                        }`}>
+                          {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Time-Grid Body */}
+                <div 
+                  className="relative grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] divide-x divide-zinc-200 dark:divide-zinc-800" 
+                  style={{ height: `${totalGridHeightPx}px` }}
+                >
+                  {/* Left Y-Axis Time Labels */}
+                  <div className="relative bg-zinc-50/70 dark:bg-[#111318] select-none">
+                    {timeSlots.filter(s => !s.isHalf).map((slot, sIdx) => (
+                      <div 
+                        key={sIdx} 
+                        className="absolute w-full px-2 text-right text-[10px] font-mono leading-none font-bold text-zinc-600 dark:text-zinc-300 -translate-y-1.5"
+                        style={{ top: `${sIdx * (SLOT_HEIGHT_PX * 2)}px` }}
+                      >
+                        {slot.label}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Day Columns */}
+                  {weekDays.map((dayDate) => {
+                    const schedule = getDaySchedule(dayDate);
+                    const isCurrentDay = isToday(dayDate);
+
+                    return (
+                      <div 
+                        key={dayDate.toISOString()} 
+                        className={`relative transition-colors ${
+                          isCurrentDay ? 'bg-zinc-50/40 dark:bg-[#141720]' : 'bg-white dark:bg-[#0f1116]'
+                        }`}
+                        style={{ height: `${totalGridHeightPx}px` }}
+                      >
+                        {/* Hour Lines */}
+                        {timeSlots.map((slot, sIdx) => (
+                          <div
+                            key={sIdx}
+                            className={`absolute left-0 right-0 border-t pointer-events-none ${
+                              slot.isHalf 
+                                ? 'border-zinc-100 dark:border-zinc-800/40 border-dashed' 
+                                : 'border-zinc-200 dark:border-zinc-800'
+                            }`}
+                            style={{ top: `${sIdx * SLOT_HEIGHT_PX}px` }}
+                          />
+                        ))}
+
+                        {/* Real-time Current Time Line for Today */}
+                        {isCurrentDay && nowIndicatorTopPx !== null && (
+                          <div 
+                            className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                            style={{ top: `${nowIndicatorTopPx}px` }}
+                          >
+                            <div className="w-2.5 h-2.5 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 animate-ping absolute" />
+                            <div className="w-2 h-2 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 relative z-10" />
+                            <div className="flex-1 h-[2px] bg-rose-500 shadow-xs" />
+                            <span className="text-[9px] font-mono font-bold bg-rose-500 text-white px-1.5 py-0.5 rounded shadow-xs ml-1">
+                              {format(currentTime, 'h:mm a')}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Scheduled Class Blocks with Left Accent Border */}
+                        {schedule.map((item, itemIdx) => {
+                          const isLab = item.sch.type === 'Laboratory';
+
+                          const cardColors = item.isLogged
+                            ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#143224] border-emerald-200/90 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
+                            : isLab
+                            ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#133235] border-teal-200/90 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
+                            : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#17273d] border-sky-200/90 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
+
+                          return (
+                            <div
+                              key={`${item.cls.id}_timeline_${itemIdx}`}
+                              onClick={() => onClassClick(item.cls, item.sch, dayDate)}
+                              style={{
+                                top: `${item.topPx}px`,
+                                height: `${item.heightPx}px`,
+                              }}
+                              className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] active:scale-[0.98] flex flex-col justify-between overflow-hidden z-10 ${cardColors}`}
+                              title={`${item.cls.subjectCode} (${item.cls.section}) - ${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} – ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to log topics or view syllabus.`}
+                            >
+                              <div>
+                                <div className="flex items-center justify-between gap-1 leading-tight">
+                                  <span className="text-xs font-black truncate">
+                                    {item.cls.subjectCode}
+                                  </span>
+                                  <span className="text-[9px] font-bold px-1 rounded bg-black/10 dark:bg-black/30 shrink-0">
+                                    {item.cls.section}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] opacity-85 truncate mt-0.5">
+                                  {item.cls.subjectTitle}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between text-[10px] font-mono leading-none pt-1">
+                                <span>{formatTimeSlot(item.sch.startTime)}</span>
+                                <span className="font-bold">{item.sch.room || item.cls.room || 'CL'}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
-            {/* Time-Grid Body */}
-            <div 
-              className="relative grid grid-cols-[70px_repeat(5,1fr)] lg:grid-cols-[80px_repeat(5,1fr)] divide-x divide-zinc-200 dark:divide-zinc-800" 
-              style={{ height: `${totalGridHeightPx}px` }}
-            >
-              {/* Left Y-Axis Time Labels */}
-              <div className="relative bg-zinc-50/70 dark:bg-[#111318] select-none">
-                {timeSlots.filter(s => !s.isHalf).map((slot, sIdx) => (
-                  <div 
-                    key={sIdx} 
-                    className="absolute w-full px-2 text-right text-[10px] font-mono leading-none font-bold text-zinc-600 dark:text-zinc-300 -translate-y-1.5"
-                    style={{ top: `${sIdx * (SLOT_HEIGHT_PX * 2)}px` }}
-                  >
-                    {slot.label}
-                  </div>
-                ))}
-              </div>
-
-              {/* Day Columns */}
-              {weekDays.map((dayDate) => {
-                const schedule = getDaySchedule(dayDate);
-                const isCurrentDay = isToday(dayDate);
+            {/* Mobile Mode B: Dedicated Full-Width Single Day Hourly Timeline */}
+            <div className="md:hidden">
+              {(() => {
+                const currentDay = weekDays[selectedMobileDayIdx] || weekDays[0];
+                const isCurrentDay = isToday(currentDay);
+                const holidayName = PHILIPPINE_HOLIDAYS[format(currentDay, 'MM-dd')];
+                const schedule = getDaySchedule(currentDay);
 
                 return (
-                  <div 
-                    key={dayDate.toISOString()} 
-                    className={`relative transition-colors ${
-                      isCurrentDay ? 'bg-zinc-50/40 dark:bg-[#141720]' : 'bg-white dark:bg-[#0f1116]'
-                    }`}
-                    style={{ height: `${totalGridHeightPx}px` }}
-                  >
-                    {/* Hour Lines */}
-                    {timeSlots.map((slot, sIdx) => (
-                      <div
-                        key={sIdx}
-                        className={`absolute left-0 right-0 border-t pointer-events-none ${
-                          slot.isHalf 
-                            ? 'border-zinc-100 dark:border-zinc-800/40 border-dashed' 
-                            : 'border-zinc-200 dark:border-zinc-800'
-                        }`}
-                        style={{ top: `${sIdx * SLOT_HEIGHT_PX}px` }}
-                      />
-                    ))}
-
-                    {/* Real-time Current Time Line for Today */}
-                    {isCurrentDay && nowIndicatorTopPx !== null && (
-                      <div 
-                        className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
-                        style={{ top: `${nowIndicatorTopPx}px` }}
-                      >
-                        <div className="w-2.5 h-2.5 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 animate-ping absolute" />
-                        <div className="w-2 h-2 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 relative z-10" />
-                        <div className="flex-1 h-[2px] bg-rose-500 shadow-xs" />
-                        <span className="text-[9px] font-mono font-bold bg-rose-500 text-white px-1.5 py-0.5 rounded shadow-xs ml-1">
-                          {format(currentTime, 'h:mm a')}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Scheduled Class Blocks with Left Accent Border */}
-                    {schedule.map((item, itemIdx) => {
-                      const isLab = item.sch.type === 'Laboratory';
-
-                      const cardColors = item.isLogged
-                        ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#143224] border-emerald-200/90 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
-                        : isLab
-                        ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#133235] border-teal-200/90 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
-                        : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#17273d] border-sky-200/90 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
-
-                      return (
-                        <div
-                          key={`${item.cls.id}_timeline_${itemIdx}`}
-                          onClick={() => onClassClick(item.cls, item.sch, dayDate)}
-                          style={{
-                            top: `${item.topPx}px`,
-                            height: `${item.heightPx}px`,
-                          }}
-                          className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] active:scale-[0.98] flex flex-col justify-between overflow-hidden z-10 ${cardColors}`}
-                          title={`${item.cls.subjectCode} (${item.cls.section}) - ${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} – ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to log topics or view syllabus.`}
+                  <div>
+                    {/* Mobile Day Navigation Banner */}
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-850/60 border-b border-zinc-200 dark:border-zinc-800">
+                      <div className="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={prevMobileDay}
+                          className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                          title="Previous Day"
+                          aria-label="Previous Day"
                         >
-                          <div>
-                            <div className="flex items-center justify-between gap-1 leading-tight">
-                              <span className="text-xs font-black truncate">
-                                {item.cls.subjectCode}
-                              </span>
-                              <span className="text-[9px] font-bold px-1 rounded bg-black/10 dark:bg-black/30 shrink-0">
-                                {item.cls.section}
-                              </span>
-                            </div>
-                            <div className="text-[10px] opacity-85 truncate mt-0.5">
-                              {item.cls.subjectTitle}
-                            </div>
-                          </div>
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
 
-                          <div className="flex items-center justify-between text-[10px] font-mono leading-none pt-1">
-                            <span>{formatTimeSlot(item.sch.startTime)}</span>
-                            <span className="font-bold">{item.sch.room || item.cls.room || 'CL'}</span>
+                        <div className="text-center flex-1 min-w-0">
+                          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+                              {format(currentDay, 'EEEE')}
+                            </span>
+                            {isCurrentDay && (
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                Today
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-300 font-medium truncate mt-0.5">
+                            {format(currentDay, 'MMMM d, yyyy')} • {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
                           </div>
                         </div>
-                      );
-                    })}
+
+                        <button
+                          type="button"
+                          onClick={nextMobileDay}
+                          className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition-colors shadow-2xs shrink-0 cursor-pointer"
+                          title="Next Day"
+                          aria-label="Next Day"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Day Pill Buttons */}
+                      <div className="grid grid-cols-5 gap-1.5 mt-2.5">
+                        {weekDays.slice(0, 5).map((d, i) => {
+                          const isSel = selectedMobileDayIdx === i;
+                          const isTd = isToday(d);
+                          const count = getDaySchedule(d).length;
+                          return (
+                            <button
+                              key={d.toISOString()}
+                              type="button"
+                              onClick={() => setSelectedMobileDayIdx(i)}
+                              className={`py-1.5 px-1 rounded-xl text-center transition-all cursor-pointer border ${
+                                isSel
+                                  ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 border-zinc-950 dark:border-white shadow-xs'
+                                  : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-200/80 dark:border-zinc-700/80 hover:bg-zinc-100/60 dark:hover:bg-zinc-750'
+                              }`}
+                            >
+                              <div className={`text-[9px] uppercase font-bold ${
+                                isSel ? 'opacity-80' : isTd ? 'text-emerald-600 dark:text-emerald-400 font-black' : 'text-zinc-500 dark:text-zinc-300'
+                              }`}>
+                                {format(d, 'EEE')}
+                              </div>
+                              <div className="text-xs font-black">
+                                {format(d, 'd')}
+                              </div>
+                              <div className={`text-[9px] font-medium leading-none mt-0.5 ${
+                                isSel ? 'opacity-80' : 'text-zinc-400 dark:text-zinc-400'
+                              }`}>
+                                {count} {count === 1 ? 'cls' : 'cls'}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {holidayName && (
+                        <div className="mt-2 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs font-bold text-rose-900 dark:text-rose-200 flex items-center gap-2">
+                          <span className="text-sm">🎉</span>
+                          <span className="truncate">Holiday: {holidayName}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Single-Day Hourly Timeline Body */}
+                    <div 
+                      className="relative grid grid-cols-[55px_1fr] divide-x divide-zinc-200 dark:divide-zinc-800"
+                      style={{ height: `${totalGridHeightPx}px` }}
+                    >
+                      {/* Left Y-Axis Time Labels */}
+                      <div className="relative bg-zinc-50/70 dark:bg-[#111318] select-none">
+                        {timeSlots.filter(s => !s.isHalf).map((slot, sIdx) => (
+                          <div 
+                            key={sIdx} 
+                            className="absolute w-full px-2 text-right text-[10px] font-mono leading-none font-bold text-zinc-600 dark:text-zinc-300 -translate-y-1.5"
+                            style={{ top: `${sIdx * (SLOT_HEIGHT_PX * 2)}px` }}
+                          >
+                            {slot.label}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Full-Width Day Column */}
+                      <div 
+                        className={`relative transition-colors ${
+                          isCurrentDay ? 'bg-zinc-50/40 dark:bg-[#141720]' : 'bg-white dark:bg-[#0f1116]'
+                        }`}
+                        style={{ height: `${totalGridHeightPx}px` }}
+                      >
+                        {/* Hour Lines */}
+                        {timeSlots.map((slot, sIdx) => (
+                          <div
+                            key={sIdx}
+                            className={`absolute left-0 right-0 border-t pointer-events-none ${
+                              slot.isHalf 
+                                ? 'border-zinc-100 dark:border-zinc-800/40 border-dashed' 
+                                : 'border-zinc-200 dark:border-zinc-800'
+                            }`}
+                            style={{ top: `${sIdx * SLOT_HEIGHT_PX}px` }}
+                          />
+                        ))}
+
+                        {/* Real-time Current Time Line for Today */}
+                        {isCurrentDay && nowIndicatorTopPx !== null && (
+                          <div 
+                            className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                            style={{ top: `${nowIndicatorTopPx}px` }}
+                          >
+                            <div className="w-2.5 h-2.5 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 animate-ping absolute" />
+                            <div className="w-2 h-2 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 relative z-10" />
+                            <div className="flex-1 h-[2px] bg-rose-500 shadow-xs" />
+                            <span className="text-[9px] font-mono font-bold bg-rose-500 text-white px-1.5 py-0.5 rounded shadow-xs ml-1">
+                              {format(currentTime, 'h:mm a')}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Scheduled Class Cards (Spacious Full Width) */}
+                        {schedule.map((item, itemIdx) => {
+                          const isLab = item.sch.type === 'Laboratory';
+
+                          const cardColors = item.isLogged
+                            ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#143224] border-emerald-200/90 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
+                            : isLab
+                            ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#133235] border-teal-200/90 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
+                            : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#17273d] border-sky-200/90 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
+
+                          return (
+                            <div
+                              key={`${item.cls.id}_mobile_timeline_${itemIdx}`}
+                              onClick={() => onClassClick(item.cls, item.sch, currentDay)}
+                              style={{
+                                top: `${item.topPx}px`,
+                                height: `${item.heightPx}px`,
+                              }}
+                              className={`absolute left-2 right-2 rounded-xl border p-2.5 text-left cursor-pointer transition-all shadow-xs hover:shadow-md active:scale-[0.99] flex flex-col justify-between overflow-hidden z-10 ${cardColors}`}
+                            >
+                              <div className="min-w-0">
+                                <div className="flex items-center justify-between gap-1.5 leading-tight">
+                                  <div className="flex items-center gap-1.5 truncate">
+                                    <span className="text-xs font-black truncate">
+                                      {item.cls.subjectCode}
+                                    </span>
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-black/30 shrink-0">
+                                      {item.cls.section}
+                                    </span>
+                                  </div>
+
+                                  {item.isLogged ? (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 shrink-0">
+                                      <CheckCircle2 className="w-2.5 h-2.5" />
+                                      Done
+                                    </span>
+                                  ) : isLab ? (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-200/80 dark:bg-teal-900/60 text-teal-900 dark:text-teal-200 shrink-0">
+                                      Lab
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-200/80 dark:bg-sky-900/60 text-sky-900 dark:text-sky-200 shrink-0">
+                                      Lecture
+                                    </span>
+                                  )}
+                                </div>
+
+                                {item.heightPx >= 50 && (
+                                  <div className="text-[11px] font-medium opacity-90 truncate mt-1">
+                                    {item.cls.subjectTitle}
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between text-[10px] font-mono leading-none pt-1 border-t border-black/10 dark:border-white/10 mt-1">
+                                <div className="flex items-center gap-1 font-semibold truncate">
+                                  <Clock className="w-3 h-3 shrink-0 opacity-70" />
+                                  <span>{formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}</span>
+                                </div>
+                                <div className="flex items-center gap-1 font-bold shrink-0 ml-1">
+                                  <MapPin className="w-3 h-3 shrink-0 opacity-70" />
+                                  <span>{item.sch.room || item.cls.room || 'CL'}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 );
-              })}
+              })()}
             </div>
           </div>
         )}
