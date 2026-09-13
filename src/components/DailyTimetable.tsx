@@ -15,7 +15,6 @@ import {
   FileDown,
   CheckCircle2,
   BookOpen,
-  Smartphone,
   Hourglass,
   Camera,
   FileText,
@@ -45,7 +44,6 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
   onManageCourse,
   onAddClassClick,
   onOpenReports,
-  onOpenTransfer,
   onOpenScanModal,
   onQuickAdvanceLesson,
   onSwitchToCalendar,
@@ -132,10 +130,10 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
     <div className="flex flex-col gap-5 sm:gap-6 max-w-5xl mx-auto w-full min-w-0 px-3.5 py-4 sm:px-6 sm:py-8 box-border">
       
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5 w-full min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3.5 sm:gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5 w-full min-w-0">
         <div className="space-y-1 min-w-0">
-          <div className="flex items-center justify-between sm:justify-start gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 truncate">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100">
               Timetable & Syllabus
             </h1>
             <span className="inline-flex items-center rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 shrink-0">
@@ -144,30 +142,30 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
           </div>
           <p className="text-xs sm:text-sm font-medium text-zinc-600 dark:text-zinc-400 flex items-center gap-1.5">
             <CalendarDays className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" aria-hidden="true" />
-            <span className="truncate">{todayStr}</span>
+            <span>{todayStr}</span>
           </p>
         </div>
 
         {/* Responsive Action Buttons */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto min-w-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto shrink-0">
           <button
             type="button"
             onClick={onAddClassClick}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-3.5 text-xs sm:text-sm font-semibold text-white dark:text-zinc-950 shadow-sm hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-4 text-xs sm:text-sm font-bold text-white dark:text-zinc-950 shadow-sm hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4 mr-1.5 shrink-0" aria-hidden="true" />
-            Add Course
+            <span>Add Course</span>
           </button>
 
           {onSwitchToCalendar && (
             <button
               type="button"
               onClick={onSwitchToCalendar}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer min-w-0"
+              className="flex-1 sm:flex-initial inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3.5 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
               title="Open Weekly Academic Schedule View"
             >
               <Calendar className="w-4 h-4 mr-1.5 text-zinc-700 dark:text-zinc-300 shrink-0" aria-hidden="true" />
-              <span className="truncate">Weekly Schedule</span>
+              <span>Weekly Schedule</span>
             </button>
           )}
 
@@ -175,31 +173,22 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
             <button
               type="button"
               onClick={onOpenScanModal}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer min-w-0"
+              className="hidden lg:inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
               title="Upload or scan faculty loading screenshot"
             >
               <Camera className="w-4 h-4 mr-1.5 text-zinc-700 dark:text-zinc-300 shrink-0" aria-hidden="true" />
-              <span className="truncate">Scan Image</span>
+              <span>Scan Image</span>
             </button>
           )}
 
           <button
             type="button"
-            onClick={onOpenTransfer}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer min-w-0"
-            title="Transfer data between Laptop & Phone"
-          >
-            <Smartphone className="w-4 h-4 mr-1.5 text-zinc-700 dark:text-zinc-300 shrink-0" aria-hidden="true" />
-            <span className="truncate">Transfer</span>
-          </button>
-
-          <button
-            type="button"
             onClick={onOpenReports}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer min-w-0"
+            className="hidden sm:inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 px-3 text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
+            title="Generate Accomplishment Reports"
           >
             <FileDown className="w-4 h-4 mr-1.5 text-zinc-600 dark:text-zinc-400 shrink-0" aria-hidden="true" />
-            <span className="truncate">Report</span>
+            <span>Reports</span>
           </button>
         </div>
       </div>

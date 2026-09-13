@@ -68,7 +68,13 @@ import {
   Clock,
   Sun,
   Moon,
-  Eye
+  Eye,
+  Menu,
+  X,
+  Plus,
+  FileDown,
+  Sliders,
+  ChevronRight
 } from 'lucide-react';
 
 export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
@@ -421,6 +427,7 @@ export function App() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => getStoredTheme());
   const [a11ySettings, setA11ySettings] = useState<AccessibilitySettings>(() => getStoredA11y());
   const [isA11yModalOpen, setIsA11yModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Apply Theme & Accessibility configuration to document root
   useEffect(() => {
@@ -906,10 +913,11 @@ export function App() {
             </nav>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
+          {/* Desktop Actions Toolbar */}
+          <div className="hidden md:flex items-center gap-2 sm:gap-2.5">
             {/* Online / Offline Status Badge */}
             <span
-              className={`inline-flex items-center gap-1.5 rounded-full p-1.5 sm:px-3 sm:py-1 text-xs font-semibold border shrink-0 ${
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border shrink-0 ${
                 isOnline
                   ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-900 dark:text-emerald-200'
                   : 'border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-200'
@@ -917,18 +925,18 @@ export function App() {
               title={isOnline ? 'Network Connected • Local Mode Active' : 'Offline Mode • Local Cache Active'}
             >
               {isOnline ? <Wifi className="h-3.5 w-3.5 text-emerald-700 dark:text-emerald-400" /> : <WifiOff className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />}
-              <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
+              <span>{isOnline ? 'Online' : 'Offline'}</span>
             </span>
 
             {/* Live Device Sync Pill */}
             <button
               type="button"
               onClick={() => setIsDeviceSyncModalOpen(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 p-1.5 sm:px-2.5 sm:py-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 px-2.5 py-1 text-xs font-semibold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer shrink-0 shadow-2xs"
               title="Device & Account Sync: Tap to view connected devices and synchronization status"
             >
               <ArrowRightLeft className="h-3.5 w-3.5 text-zinc-600 dark:text-zinc-400" />
-              <span className="hidden md:inline">Sync</span>
+              <span>Sync</span>
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </button>
 
@@ -936,16 +944,16 @@ export function App() {
             <button
               type="button"
               onClick={() => setIsA11yModalOpen(true)}
-              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-2xs"
               title={`Theme: ${themeMode.toUpperCase()} • Display & Accessibility Preferences`}
               aria-label="Display and Accessibility Preferences"
             >
               {themeMode === 'light' ? (
-                <Sun className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500" />
+                <Sun className="h-4 w-4 text-amber-500" />
               ) : themeMode === 'dark' ? (
-                <Moon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-zinc-300" />
+                <Moon className="h-4 w-4 text-zinc-300" />
               ) : (
-                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-400" />
+                <Eye className="h-4 w-4 text-amber-400" />
               )}
             </button>
 
@@ -953,7 +961,7 @@ export function App() {
             <button
               type="button"
               onClick={handleToggleNotifications}
-              className={`inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 ${
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 ${
                 notificationGranted
                   ? 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
                   : 'border-zinc-950 bg-zinc-950 text-white shadow-2xs hover:bg-zinc-800'
@@ -961,7 +969,7 @@ export function App() {
               aria-label={notificationGranted ? 'Web Push Active' : 'Enable Web Push Reminders'}
               title={notificationGranted ? 'Web Push Active' : 'Enable Web Push Reminders'}
             >
-              <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <Bell className="h-4 w-4" />
             </button>
 
             {/* Refresh / Reload App Button */}
@@ -975,11 +983,11 @@ export function App() {
                 }
                 window.location.reload();
               }}
-              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
               title="Refresh / Check for Updates"
               aria-label="Refresh / Check for Updates"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
+              <RotateCcw className="h-4 w-4" />
             </button>
 
             {/* Admin Console Shortcut (Only visible for Admin martin.dan) */}
@@ -987,11 +995,11 @@ export function App() {
               <button
                 type="button"
                 onClick={() => setIsAdminModalOpen(true)}
-                className="inline-flex h-8 sm:h-9 items-center justify-center gap-1.5 rounded-lg border border-zinc-950 bg-zinc-950 text-white px-2.5 sm:px-3 text-xs font-bold shadow-2xs hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-zinc-950 bg-zinc-950 text-white px-3 text-xs font-bold shadow-2xs hover:bg-zinc-800 transition-colors cursor-pointer shrink-0"
                 title="Administrator Console: Manage and approve instructor accounts"
               >
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                <span className="hidden sm:inline">Admin Console</span>
+                <span>Admin Console</span>
                 {pendingCount > 0 && (
                   <span className="inline-flex items-center justify-center bg-amber-500 text-white rounded-full h-4 min-w-[16px] px-1 text-[10px] font-bold">
                     {pendingCount}
@@ -1004,14 +1012,14 @@ export function App() {
             <button
               type="button"
               onClick={() => setIsProfileOpen(true)}
-              className="flex items-center gap-2 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5 sm:pr-2.5 sm:pl-0.5 text-zinc-900 dark:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-2xs group"
+              className="flex items-center gap-2 rounded-full border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-0.5 pr-2.5 pl-0.5 text-zinc-900 dark:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-2xs group"
               aria-label={`Profile: ${profile.fullName} (${profile.position})`}
               title="View & Edit Instructor Profile"
             >
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-zinc-950 dark:bg-zinc-700 text-white text-xs font-bold shrink-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-950 dark:bg-zinc-700 text-white text-xs font-bold shrink-0">
                 {userInitials}
               </div>
-              <div className="hidden sm:flex flex-col text-left leading-tight pr-1">
+              <div className="flex flex-col text-left leading-tight pr-1">
                 <span className="text-xs font-bold text-zinc-950 dark:text-zinc-100 group-hover:text-zinc-800 dark:group-hover:text-white truncate max-w-[130px]">
                   {currentUser?.username || profile.fullName}
                 </span>
@@ -1025,15 +1033,382 @@ export function App() {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer shrink-0"
               title="Switch Account / Sign Out"
               aria-label="Switch Account / Sign Out"
             >
-              <LogOut className="h-3.5 w-3.5" />
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Mobile Actions Toolbar: Minimal 3 items, 100% immune to overflow */}
+          <div className="flex md:hidden items-center gap-2 shrink-0">
+            {/* Online / Offline Compact Status Dot */}
+            <button
+              type="button"
+              onClick={() => setIsDeviceSyncModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/80 px-2 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 shadow-2xs cursor-pointer shrink-0"
+              title={isOnline ? 'Online • Tap for Sync status' : 'Offline Mode Active'}
+            >
+              <span className={`h-2 w-2 rounded-full shrink-0 ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              <span className="text-[11px] font-bold">{isOnline ? 'Sync' : 'Off'}</span>
+            </button>
+
+            {/* Theme & Display Preferences Quick Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsA11yModalOpen(true)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              title={`Theme: ${themeMode.toUpperCase()}`}
+              aria-label="Display and Accessibility"
+            >
+              {themeMode === 'light' ? (
+                <Sun className="h-4 w-4 text-amber-500" />
+              ) : themeMode === 'dark' ? (
+                <Moon className="h-4 w-4 text-zinc-300" />
+              ) : (
+                <Eye className="h-4 w-4 text-amber-400" />
+              )}
+            </button>
+
+            {/* Mobile Menu & Profile Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="flex items-center gap-1.5 rounded-full border border-zinc-300 dark:border-zinc-700 bg-zinc-950 dark:bg-zinc-800 p-0.5 pr-2 text-white hover:bg-zinc-800 dark:hover:bg-zinc-700 transition-all cursor-pointer shrink-0 shadow-2xs"
+              aria-label="Open Mobile Menu and Profile"
+            >
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 dark:bg-zinc-700 text-white text-xs font-bold shrink-0">
+                {userInitials}
+              </div>
+              <Menu className="w-3.5 h-3.5 text-zinc-300" />
             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Slide-Over Drawer */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile Navigation and User Menu"
+        >
+          {/* Backdrop dismiss click area */}
+          <div 
+            className="flex-1" 
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+
+          <div className="w-full max-w-xs sm:max-w-sm bg-white dark:bg-[#12141a] night:bg-[#0b0d11] border-l border-zinc-200 dark:border-zinc-800 shadow-2xl flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200 p-4">
+            <div className="space-y-4">
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-950 dark:bg-zinc-800 text-white shadow-2xs shrink-0">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="font-bold text-sm tracking-tight text-zinc-950 dark:text-white">
+                    ProfTrack Menu
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors cursor-pointer"
+                    title="Sign Out / Switch Account"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                    aria-label="Close menu"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* User Profile Card */}
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 p-3.5 space-y-2.5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-950 dark:bg-zinc-700 text-white text-base font-bold shrink-0 shadow-sm">
+                    {userInitials}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-bold text-zinc-950 dark:text-zinc-100 truncate">
+                      {profile.fullName || currentUser?.fullName}
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono truncate">
+                      @{currentUser?.username}
+                    </p>
+                    <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300">
+                      {currentUser?.role === 'admin' ? 'System Administrator' : profile.position || 'Faculty Member'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                  {profile.department}
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsProfileOpen(true);
+                    }}
+                    className="flex-1 inline-flex h-8 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
+                  >
+                    Edit Profile
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="inline-flex h-8 items-center justify-center px-3 rounded-lg border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 text-xs font-bold text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors cursor-pointer shadow-2xs"
+                    title="Sign Out"
+                  >
+                    <LogOut className="w-3.5 h-3.5 mr-1" />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+
+              {/* Section: Academic Schedule Views */}
+              <div className="space-y-1">
+                <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+                  Schedule Views
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewMode('daily');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      viewMode === 'daily'
+                        ? 'border-zinc-950 dark:border-white bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-2xs'
+                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 text-zinc-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Daily Timetable</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewMode('calendar');
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                      viewMode === 'calendar'
+                        ? 'border-zinc-950 dark:border-white bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-2xs'
+                        : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 text-zinc-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span>Weekly Grid</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Section: Faculty Tools */}
+              <div className="space-y-1">
+                <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+                  Faculty Tools
+                </div>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setEditingCourse(null);
+                      setIsAddClassOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>Add Course Session</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-400" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsScanModalOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Camera className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <span>Scan Faculty Loading Image</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-400" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsReportOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <FileDown className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <span>Accomplishment Reports</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-400" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsTransferModalOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Smartphone className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <span>Transfer to Phone / QR Code</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-zinc-400" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Section: System & Settings */}
+              <div className="space-y-1">
+                <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider px-1">
+                  System & Preferences
+                </div>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsDeviceSyncModalOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ArrowRightLeft className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <span>Device & Cloud Sync</span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                      {isOnline ? 'Online' : 'Offline'}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsA11yModalOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Sliders className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <span>Display & Eye Care Themes</span>
+                    </div>
+                    <span className="capitalize text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                      {themeMode}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleToggleNotifications}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <span>Class Push Reminders</span>
+                    </div>
+                    <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+                      {notificationGranted ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.getRegistrations().then(regs => {
+                          regs.forEach(r => r.update());
+                        });
+                      }
+                      window.location.reload();
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-850 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <RotateCcw className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                      <span>Check for Updates / Reload</span>
+                    </div>
+                  </button>
+
+                  {currentUser?.role === 'admin' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setIsAdminModalOpen(true);
+                      }}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-950 dark:border-zinc-700 bg-zinc-950 dark:bg-zinc-800 text-white text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        <span>Administrator Console</span>
+                      </div>
+                      {pendingCount > 0 && (
+                        <span className="bg-amber-500 text-white rounded-full h-4 px-1.5 text-[10px]">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Prominent Mobile Sign Out Button - 100% immune to overflow */}
+            <div className="pt-3 mt-4 border-t border-zinc-200 dark:border-zinc-800 night:border-zinc-800/80 sticky bottom-0 bg-white dark:bg-[#12141a] night:bg-[#0b0d11]">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 font-bold text-sm border border-red-200 dark:border-red-900/60 transition-colors cursor-pointer shadow-2xs"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out / Switch Account</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* QR Code Deep-link Import Success Toast Banner */}
       {qrNotification && (
@@ -1055,7 +1430,7 @@ export function App() {
       )}
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full min-w-0 overflow-x-hidden">
+      <main className="flex-1 w-full min-w-0 overflow-x-hidden pb-20 md:pb-8">
         {currentUser?.role === 'admin' ? (
           <AdminAccountManagementView
             currentUser={currentUser}
@@ -1101,6 +1476,81 @@ export function App() {
           />
         )}
       </main>
+
+      {/* Mobile Bottom Navigation Bar: Floating 1-tap thumb navigation */}
+      <nav 
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-200 dark:border-zinc-800 night:border-zinc-800/80 bg-white/95 dark:bg-[#12141a]/95 night:bg-[#0b0d11]/95 backdrop-blur-md px-3 py-1.5 flex items-center justify-around shadow-lg transition-colors"
+        aria-label="Mobile Navigation"
+      >
+        <button
+          type="button"
+          onClick={() => setViewMode('daily')}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+            viewMode === 'daily'
+              ? 'text-zinc-950 dark:text-white'
+              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+          }`}
+        >
+          <div className={`p-1.5 rounded-lg ${viewMode === 'daily' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-2xs' : ''}`}>
+            <Clock className="w-4 h-4" />
+          </div>
+          <span>Daily</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setViewMode('calendar')}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+            viewMode === 'calendar'
+              ? 'text-zinc-950 dark:text-white'
+              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+          }`}
+        >
+          <div className={`p-1.5 rounded-lg ${viewMode === 'calendar' ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-2xs' : ''}`}>
+            <Calendar className="w-4 h-4" />
+          </div>
+          <span>Weekly</span>
+        </button>
+
+        {/* Center Quick Add Course Pill */}
+        <button
+          type="button"
+          onClick={() => {
+            setEditingCourse(null);
+            setIsAddClassOpen(true);
+          }}
+          className="flex flex-col items-center justify-center -mt-3 p-2.5 rounded-full bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-lg border-2 border-white dark:border-zinc-900 transition-transform active:scale-95 cursor-pointer"
+          title="Add New Course Session"
+          aria-label="Add Course"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsReportOpen(true)}
+          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
+        >
+          <div className="p-1.5">
+            <FileDown className="w-4 h-4" />
+          </div>
+          <span>Reports</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl text-[10px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 transition-all cursor-pointer"
+        >
+          <div className="p-1.5 relative">
+            <Menu className="w-4 h-4" />
+            {pendingCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-amber-500" />
+            )}
+          </div>
+          <span>Menu</span>
+        </button>
+      </nav>
 
       {/* Schedule Screenshot Scanner Modal */}
       {isScanModalOpen && (
