@@ -177,22 +177,28 @@ export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onCl
           ) : (
             <div className="space-y-6 animate-in fade-in duration-150">
               {/* Quick Metrics */}
-              <div className="grid grid-cols-3 gap-3.5">
-                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-4 space-y-1 shadow-2xs">
-                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Logged Sessions</p>
-                  <p className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">{filteredLogs.length}</p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3.5">
+                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-2.5 sm:p-4 space-y-0.5 sm:space-y-1 shadow-2xs min-w-0 overflow-hidden">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-tight sm:tracking-wider text-zinc-600 dark:text-zinc-300 truncate">
+                    <span className="hidden sm:inline">Logged </span>Sessions
+                  </p>
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono truncate">{filteredLogs.length}</p>
                 </div>
-                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-4 space-y-1 shadow-2xs">
-                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Topics Covered</p>
-                  <p className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">{totalTopicsCovered}</p>
+                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-2.5 sm:p-4 space-y-0.5 sm:space-y-1 shadow-2xs min-w-0 overflow-hidden">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-tight sm:tracking-wider text-zinc-600 dark:text-zinc-300 truncate">
+                    <span className="hidden sm:inline">Topics </span>Covered
+                  </p>
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono truncate">{totalTopicsCovered}</p>
                 </div>
-                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-4 space-y-1 shadow-2xs">
-                  <p className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">High Engagement</p>
-                  <p className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">{engagementPercent}%</p>
+                <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-2.5 sm:p-4 space-y-0.5 sm:space-y-1 shadow-2xs min-w-0 overflow-hidden">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase tracking-tight sm:tracking-wider text-zinc-600 dark:text-zinc-300 truncate">
+                    <span className="hidden sm:inline">High </span>Engagement
+                  </p>
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono truncate">{engagementPercent}%</p>
                 </div>
               </div>
 
-              {/* Table Preview */}
+              {/* Table / List Preview */}
               <div className="space-y-2.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
@@ -210,48 +216,84 @@ export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onCl
                     <p className="text-xs text-zinc-600 dark:text-zinc-300">Once you log classes, they will be formatted for PDF output.</p>
                   </div>
                 ) : (
-                  <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold">
-                        <tr>
-                          <th className="p-3 pl-3.5">Date</th>
-                          <th className="p-3">Course</th>
-                          <th className="p-3">Type</th>
-                          <th className="p-3">Topics Covered</th>
-                          <th className="p-3 pr-3.5">Engagement</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                        {filteredLogs.map((log, index) => (
-                          <tr key={log.id || index} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-                            <td className="p-3 pl-3.5 font-mono font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
-                              {format(new Date(log.date), 'MMM dd')}
-                            </td>
-                            <td className="p-3 font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                  <>
+                    {/* Mobile Card List (sm:hidden) */}
+                    <div className="sm:hidden space-y-2.5">
+                      {filteredLogs.map((log, index) => (
+                        <div key={log.id || index} className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/60 p-3 space-y-1.5 shadow-2xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono font-bold text-xs text-zinc-950 dark:text-zinc-100">
                               {log.classInfo.subjectCode} ({log.classInfo.section})
-                            </td>
-                            <td className="p-3 whitespace-nowrap">
-                              <span className="inline-flex items-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-                                {log.sessionType || 'Lecture'}
-                              </span>
-                            </td>
-                            <td className="p-3 text-zinc-700 dark:text-zinc-300">
-                              {log.topicsCovered.length > 0 ? log.topicsCovered.join(', ') : '—'}
-                            </td>
-                            <td className="p-3 pr-3.5 whitespace-nowrap">
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
-                                log.engagementLevel === 'High'
-                                  ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300'
-                                  : 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200'
-                              }`}>
-                                {log.engagementLevel || 'Medium'}
-                              </span>
-                            </td>
+                            </span>
+                            <span className="font-mono text-2xs font-semibold text-zinc-500 dark:text-zinc-400 shrink-0">
+                              {format(new Date(log.date), 'MMM dd')}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="inline-flex items-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold text-zinc-800 dark:text-zinc-200">
+                              {log.sessionType || 'Lecture'}
+                            </span>
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                              log.engagementLevel === 'High'
+                                ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300'
+                                : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200'
+                            }`}>
+                              {log.engagementLevel || 'Medium'} Engagement
+                            </span>
+                          </div>
+                          {log.topicsCovered.length > 0 && (
+                            <p className="text-2xs text-zinc-600 dark:text-zinc-300 pt-0.5 line-clamp-2">
+                              {log.topicsCovered.join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop Table (hidden sm:block) */}
+                    <div className="hidden sm:block rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-zinc-100 dark:bg-zinc-800 border-b border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold">
+                          <tr>
+                            <th className="p-3 pl-3.5">Date</th>
+                            <th className="p-3">Course</th>
+                            <th className="p-3">Type</th>
+                            <th className="p-3">Topics Covered</th>
+                            <th className="p-3 pr-3.5">Engagement</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                          {filteredLogs.map((log, index) => (
+                            <tr key={log.id || index} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                              <td className="p-3 pl-3.5 font-mono font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
+                                {format(new Date(log.date), 'MMM dd')}
+                              </td>
+                              <td className="p-3 font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                                {log.classInfo.subjectCode} ({log.classInfo.section})
+                              </td>
+                              <td className="p-3 whitespace-nowrap">
+                                <span className="inline-flex items-center rounded-md border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                                  {log.sessionType || 'Lecture'}
+                                </span>
+                              </td>
+                              <td className="p-3 text-zinc-700 dark:text-zinc-300">
+                                {log.topicsCovered.length > 0 ? log.topicsCovered.join(', ') : '—'}
+                              </td>
+                              <td className="p-3 pr-3.5 whitespace-nowrap">
+                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
+                                  log.engagementLevel === 'High'
+                                    ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300'
+                                    : 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200'
+                                }`}>
+                                  {log.engagementLevel || 'Medium'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </div>
             </div>

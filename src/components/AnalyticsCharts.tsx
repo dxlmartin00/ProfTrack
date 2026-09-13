@@ -139,69 +139,77 @@ export const AnalyticsCharts: FC<AnalyticsChartsProps> = ({ logs, classes, month
   const otherStroke = (sessionTypeData.otherPct / 100) * circumference;
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-200">
+    <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-200">
       {/* Top Level Key Indicators */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-3.5 space-y-1">
-          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
-            <Clock className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-300" />
-            <span className="text-2xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Teaching Hours</span>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-2.5 sm:p-3.5 space-y-0.5 sm:space-y-1 min-w-0 overflow-hidden shadow-2xs">
+          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 min-w-0">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-zinc-500 dark:text-zinc-300" />
+            <span className="text-[10px] sm:text-2xs font-bold uppercase tracking-tight sm:tracking-wider text-zinc-600 dark:text-zinc-300 truncate">
+              <span className="hidden sm:inline">Teaching </span>Hours
+            </span>
           </div>
-          <p className="text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">
+          <p className="text-lg sm:text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono truncate">
             ~{estimatedHours} <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 font-sans">hrs</span>
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-3.5 space-y-1">
-          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
-            <TrendingUp className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-300" />
-            <span className="text-2xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Avg Sessions/Wk</span>
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-2.5 sm:p-3.5 space-y-0.5 sm:space-y-1 min-w-0 overflow-hidden shadow-2xs">
+          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 min-w-0">
+            <TrendingUp className="h-3.5 w-3.5 shrink-0 text-zinc-500 dark:text-zinc-300" />
+            <span className="text-[10px] sm:text-2xs font-bold uppercase tracking-tight sm:tracking-wider text-zinc-600 dark:text-zinc-300 truncate">
+              <span className="hidden sm:inline">Avg </span>Sessions/Wk
+            </span>
           </div>
-          <p className="text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">
+          <p className="text-lg sm:text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono truncate">
             {(logs.length / 4.3).toFixed(1)}
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-3.5 space-y-1">
-          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
-            <BookOpen className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-300" />
-            <span className="text-2xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Active Courses</span>
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-2.5 sm:p-3.5 space-y-0.5 sm:space-y-1 min-w-0 overflow-hidden shadow-2xs">
+          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 min-w-0">
+            <BookOpen className="h-3.5 w-3.5 shrink-0 text-zinc-500 dark:text-zinc-300" />
+            <span className="text-[10px] sm:text-2xs font-bold uppercase tracking-tight sm:tracking-wider text-zinc-600 dark:text-zinc-300 truncate">
+              Active Courses
+            </span>
           </div>
-          <p className="text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono">
+          <p className="text-lg sm:text-xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 font-mono truncate">
             {courseWorkload.length} <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 font-sans">of {classes.length}</span>
           </p>
         </div>
 
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-3.5 space-y-1">
-          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
-            <Users className="h-3.5 w-3.5 text-zinc-500 dark:text-zinc-300" />
-            <span className="text-2xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300">High Engagement</span>
+        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 p-2.5 sm:p-3.5 space-y-0.5 sm:space-y-1 min-w-0 overflow-hidden shadow-2xs">
+          <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 min-w-0">
+            <Users className="h-3.5 w-3.5 shrink-0 text-zinc-500 dark:text-zinc-300" />
+            <span className="text-[10px] sm:text-2xs font-bold uppercase tracking-tight sm:tracking-wider text-zinc-600 dark:text-zinc-300 truncate">
+              <span className="hidden sm:inline">High </span>Engagement
+            </span>
           </div>
-          <p className="text-xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-mono">
+          <p className="text-lg sm:text-xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400 font-mono truncate">
             {engagementData.highPct}%
           </p>
         </div>
       </div>
 
       {/* Primary Charts: Weekly Trend & Modality Split */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-4">
         {/* Weekly Activity Bar Chart (3 cols on desktop) */}
-        <div className="md:col-span-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-4 space-y-3 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-              <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                Weekly Session Activity
+        <div className="md:col-span-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-3.5 sm:p-4 space-y-3 shadow-2xs overflow-hidden">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <BarChart3 className="h-4 w-4 shrink-0 text-zinc-700 dark:text-zinc-300" />
+              <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-tight sm:tracking-wider truncate">
+                Weekly Activity
               </h3>
             </div>
-            <span className="text-2xs font-semibold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300">
-              {logs.length} total sessions
+            <span className="text-2xs font-semibold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 shrink-0">
+              {logs.length} sessions
             </span>
           </div>
 
           {/* SVG Bar Chart */}
           <div className="relative pt-2 pb-1">
-            <div className="h-44 w-full flex items-end justify-between gap-2 sm:gap-4 px-2">
+            <div className="h-40 sm:h-44 w-full flex items-end justify-between gap-1.5 sm:gap-4 px-1 sm:px-2">
               {weeklyData.weeks.map((w, idx) => {
                 const heightPct = weeklyData.maxCount > 0 ? (w.count / weeklyData.maxCount) * 100 : 0;
                 const isHovered = hoveredWeek === idx;
@@ -209,7 +217,7 @@ export const AnalyticsCharts: FC<AnalyticsChartsProps> = ({ logs, classes, month
                 return (
                   <div
                     key={w.weekNumber}
-                    className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer relative"
+                    className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer relative min-w-0"
                     onMouseEnter={() => setHoveredWeek(idx)}
                     onMouseLeave={() => setHoveredWeek(null)}
                     onClick={() => setHoveredWeek(hoveredWeek === idx ? null : idx)}
@@ -233,7 +241,7 @@ export const AnalyticsCharts: FC<AnalyticsChartsProps> = ({ logs, classes, month
                     </span>
 
                     {/* Stacked Bar Container */}
-                    <div className="w-full max-w-[48px] bg-zinc-100 dark:bg-zinc-700/60 rounded-t-md overflow-hidden flex flex-col justify-end transition-all duration-300 hover:brightness-110" style={{ height: `${Math.max(heightPct, 6)}%` }}>
+                    <div className="w-full max-w-[40px] sm:max-w-[48px] bg-zinc-100 dark:bg-zinc-700/60 rounded-t-md overflow-hidden flex flex-col justify-end transition-all duration-300 hover:brightness-110" style={{ height: `${Math.max(heightPct, 6)}%` }}>
                       {/* Lab portion */}
                       {w.labCount > 0 && (
                         <div
@@ -253,9 +261,12 @@ export const AnalyticsCharts: FC<AnalyticsChartsProps> = ({ logs, classes, month
                     </div>
 
                     {/* X-axis label */}
-                    <div className="mt-2 text-center">
-                      <p className="text-2xs font-bold text-zinc-700 dark:text-zinc-300">{w.label}</p>
-                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 hidden sm:block">{w.dates}</p>
+                    <div className="mt-2 text-center w-full min-w-0">
+                      <p className="text-2xs font-bold text-zinc-700 dark:text-zinc-300 truncate">
+                        <span className="hidden sm:inline">Week </span>
+                        <span className="sm:hidden">W</span>{w.weekNumber}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 hidden sm:block truncate">{w.dates}</p>
                     </div>
                   </div>
                 );
@@ -277,16 +288,16 @@ export const AnalyticsCharts: FC<AnalyticsChartsProps> = ({ logs, classes, month
         </div>
 
         {/* Modality Donut / Delivery Split (2 cols on desktop) */}
-        <div className="md:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-4 space-y-3 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <PieChart className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-              <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                Session Modality
+        <div className="md:col-span-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-3.5 sm:p-4 space-y-3 shadow-2xs flex flex-col justify-between overflow-hidden">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <PieChart className="h-4 w-4 shrink-0 text-zinc-700 dark:text-zinc-300" />
+              <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-tight sm:tracking-wider truncate">
+                Modality Split
               </h3>
             </div>
-            <span className="text-2xs font-semibold text-zinc-500 dark:text-zinc-400">
-              Split Ratio
+            <span className="text-2xs font-semibold text-zinc-500 dark:text-zinc-400 shrink-0">
+              Ratio
             </span>
           </div>
 
@@ -389,41 +400,41 @@ export const AnalyticsCharts: FC<AnalyticsChartsProps> = ({ logs, classes, month
       </div>
 
       {/* Course Workload & Syllabus Topics Completed Breakdown */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-4 space-y-3 shadow-2xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-            <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-              Course Workload & Topics Completed
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-3.5 sm:p-4 space-y-3 shadow-2xs overflow-hidden">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <BookOpen className="h-4 w-4 shrink-0 text-zinc-700 dark:text-zinc-300" />
+            <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-tight sm:tracking-wider">
+              Course Workload
             </h3>
           </div>
-          <span className="text-2xs text-zinc-500 dark:text-zinc-400">
-            Ranked by session volume
+          <span className="text-2xs text-zinc-500 dark:text-zinc-400 shrink-0 hidden sm:inline">
+            Ranked by sessions
           </span>
         </div>
 
         <div className="space-y-3">
           {courseWorkload.map((item, idx) => (
             <div key={`${item.subjectCode}-${item.section}`} className="space-y-1.5">
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-zinc-950 dark:text-zinc-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-2 text-xs">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-mono font-bold text-zinc-950 dark:text-zinc-100 shrink-0">
                     {item.subjectCode}
                   </span>
-                  <span className="text-zinc-500 dark:text-zinc-400 text-2xs">
-                    Sec {item.section}
+                  <span className="text-zinc-500 dark:text-zinc-400 text-2xs shrink-0">
+                    ({item.section})
                   </span>
                   {item.subjectTitle && (
-                    <span className="text-zinc-600 dark:text-zinc-300 text-2xs truncate max-w-[180px] sm:max-w-xs hidden sm:inline">
+                    <span className="text-zinc-600 dark:text-zinc-300 text-2xs truncate hidden sm:inline">
                       • {item.subjectTitle}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-3 text-2xs">
+                <div className="flex items-center justify-between sm:justify-end gap-2 text-2xs">
                   <span className="text-zinc-600 dark:text-zinc-300">
-                    <strong className="text-zinc-950 dark:text-zinc-100 font-mono">{item.topicCount}</strong> topics done
+                    <strong className="text-zinc-950 dark:text-zinc-100 font-mono">{item.topicCount}</strong> topics
                   </span>
-                  <span className="font-mono font-bold text-zinc-900 dark:text-zinc-200">
+                  <span className="font-mono font-bold text-zinc-900 dark:text-zinc-200 shrink-0">
                     {item.sessionCount} sessions ({item.percentage}%)
                   </span>
                 </div>
@@ -450,22 +461,22 @@ export const AnalyticsCharts: FC<AnalyticsChartsProps> = ({ logs, classes, month
       </div>
 
       {/* Student Engagement Rating Meter */}
-      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-4 space-y-3 shadow-2xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-            <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-              Student Engagement Distribution
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 p-3.5 sm:p-4 space-y-3 shadow-2xs overflow-hidden">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Users className="h-4 w-4 shrink-0 text-zinc-700 dark:text-zinc-300" />
+            <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-tight sm:tracking-wider truncate">
+              Engagement Distribution
             </h3>
           </div>
-          <span className="text-2xs font-semibold text-emerald-600 dark:text-emerald-400">
-            {engagementData.highPct}% Optimal Engagement
+          <span className="text-2xs font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
+            {engagementData.highPct}% Optimal
           </span>
         </div>
 
         {/* Stacked Gauge Bar */}
         <div className="space-y-2">
-          <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-700/60 rounded-full overflow-hidden flex gap-0.5">
+          <div className="w-full h-2.5 sm:h-3 bg-zinc-100 dark:bg-zinc-700/60 rounded-full overflow-hidden flex gap-0.5">
             {engagementData.highPct > 0 && (
               <div
                 className="h-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-500"
@@ -489,18 +500,18 @@ export const AnalyticsCharts: FC<AnalyticsChartsProps> = ({ logs, classes, month
             )}
           </div>
 
-          <div className="flex items-center justify-between text-2xs text-zinc-600 dark:text-zinc-300 pt-1">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
-              <span>High Engagement ({engagementData.high})</span>
+          <div className="grid grid-cols-3 gap-1 text-2xs text-zinc-600 dark:text-zinc-300 pt-1">
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="w-2 h-2 shrink-0 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+              <span className="truncate">High ({engagementData.high})</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400" />
-              <span>Medium Engagement ({engagementData.medium})</span>
+            <div className="flex items-center justify-center gap-1 min-w-0">
+              <span className="w-2 h-2 shrink-0 rounded-full bg-blue-500 dark:bg-blue-400" />
+              <span className="truncate">Med ({engagementData.medium})</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" />
-              <span>Low Engagement ({engagementData.low})</span>
+            <div className="flex items-center justify-end gap-1 min-w-0">
+              <span className="w-2 h-2 shrink-0 rounded-full bg-amber-500 dark:bg-amber-400" />
+              <span className="truncate">Low ({engagementData.low})</span>
             </div>
           </div>
         </div>
