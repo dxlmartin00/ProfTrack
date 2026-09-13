@@ -5,6 +5,17 @@ import {
   safeJsonParse, 
   sanitizeString 
 } from '../utils/crypto';
+import { 
+  pushUserToCloud, 
+  updateUserStatusInCloud, 
+  resetUserPinInCloud, 
+  deleteUserFromCloud, 
+  fetchUsersFromCloud, 
+  fetchUserByUsernameFromCloud, 
+  subscribeToUsersCloud 
+} from './db';
+
+export { subscribeToUsersCloud };
 
 export type UserRole = 'admin' | 'instructor';
 export type AccountStatus = 'approved' | 'pending' | 'rejected';
@@ -131,6 +142,55 @@ export function getStoredUsers(): UserAccount[] {
 }
 
 /**
+ * Merges two user lists safely, preserving master admin, deduping by user.id,
+ * and adopting latest status / activity.
+ */
+export function mergeUsersRegistry(localUsers: UserAccount[], incomingUsers: UserAccount[]): UserAccount[] {
+  const mergedMap = new Map<string, UserAccount>();
+
+  // Ensure master admin is always intact
+  mergedMap.set(DEFAULT_ADMIN_ACCOUNT.id, DEFAULT_ADMIN_ACCOUNT);
+
+  for (const u of localUsers) {
+    mergedMap.set(u.id, u);
+  }
+
+  for (const inc of incomingUsers) {
+    if (inc.id === DEFAULT_ADMIN_ACCOUNT.id) continue;
+    const existing = mergedMap.get(inc.id);
+    if (!existing) {
+      mergedMap.set(inc.id, inc);
+    } else {
+      const existingDate = existing.lastLogin || existing.createdAt || '1970-01-01';
+      const incomingDate = inc.lastLogin || inc.createdAt || '1970-01-01';
+      if (incomingDate >= existingDate || (existing.status === 'pending' && inc.status !== 'pending')) {
+        mergedMap.set(inc.id, { ...existing, ...inc });
+      }
+    }
+  }
+
+  return Array.from(mergedMap.values());
+}
+
+/**
+ * Manually triggers a sync from Cloud Firestore to pull newly registered accounts.
+ */
+export async function syncUsersFromCloud(): Promise<UserAccount[]> {
+  try {
+    const cloudUsers = await fetchUsersFromCloud();
+    if (cloudUsers && cloudUsers.length > 0) {
+      const currentStored = getStoredUsers();
+      const merged = mergeUsersRegistry(currentStored, cloudUsers);
+      saveStoredUsers(merged);
+      return merged;
+    }
+  } catch (err) {
+    console.debug('Manual cloud users sync deferred:', err);
+  }
+  return getStoredUsers();
+}
+
+/**
  * Saves users registry to storage and broadcasts an update event.
  */
 export function saveStoredUsers(users: UserAccount[]): void {
@@ -215,17 +275,20 @@ export function initializeAuth(): {
     localStorage.setItem('proftrack_auth_initialized_flag_v2', 'true');
   }
 
+  // Background Cloud Sync to pull any newly registered users from other devices
+  syncUsersFromCloud().catch(err => console.debug('Initial cloud users fetch deferred:', err));
+
   return { currentUser, users };
 }
 
 /**
  * Authenticates an instructor or admin via Username and 4-digit PIN.
- * Features Salted SHA-256 validation and 5-attempt brute-force lockout protection.
+ * Features Salted SHA-256 validation, Cloud Firestore lookup fallback, and 5-attempt lockout.
  */
-export function authenticateUser(
+export async function authenticateUser(
   username: string,
   pin: string
-): { success: boolean; user?: UserAccount; error?: string; accountNotFound?: boolean } {
+): Promise<{ success: boolean; user?: UserAccount; error?: string; accountNotFound?: boolean }> {
   const normalizedUsername = sanitizeString(username, 50).toLowerCase().trim();
   const cleanPin = pin.trim();
 
@@ -246,9 +309,24 @@ export function authenticateUser(
     };
   }
 
-  const users = getStoredUsers();
-  const user = users.find(u => u.username === normalizedUsername);
+  let users = getStoredUsers();
+  let user = users.find(u => u.username === normalizedUsername);
   
+  // If not found in local storage, check Cloud Firestore before failing!
+  // This enables accounts registered on a phone to log in on a computer seamlessly.
+  if (!user) {
+    try {
+      const cloudUser = await fetchUserByUsernameFromCloud(normalizedUsername);
+      if (cloudUser) {
+        users = mergeUsersRegistry(users, [cloudUser]);
+        saveStoredUsers(users);
+        user = cloudUser;
+      }
+    } catch (cloudErr) {
+      console.debug('Cloud user lookup deferred:', cloudErr);
+    }
+  }
+
   // Generic response to prevent user enumeration, but flag accountNotFound so UI can offer registration
   if (!user) {
     return { 
@@ -376,6 +454,9 @@ export function registerInstructor(data: {
   const updatedUsers = [...users, newUser];
   saveStoredUsers(updatedUsers);
 
+  // Sync newly registered user to Cloud Firestore in background
+  pushUserToCloud(newUser).catch(err => console.debug('Cloud user registration sync deferred:', err));
+
   return { success: true, user: newUser };
 }
 
@@ -436,6 +517,10 @@ export function updateUserStatus(
 
   users[idx].status = status;
   saveStoredUsers(users);
+
+  // Sync status update to Cloud Firestore
+  updateUserStatusInCloud(userId, status).catch(err => console.debug('Cloud user status sync deferred:', err));
+
   return { success: true };
 }
 
@@ -459,11 +544,16 @@ export function resetUserPin(
   }
 
   const newSalt = generateSalt();
+  const pinHash = hashPinWithSalt(newPin, newSalt);
   users[idx].salt = newSalt;
-  users[idx].pinHash = hashPinWithSalt(newPin, newSalt);
+  users[idx].pinHash = pinHash;
   delete users[idx].pin; // Ensure no plaintext PIN remains
 
   saveStoredUsers(users);
+
+  // Sync PIN reset to Cloud Firestore
+  resetUserPinInCloud(userId, newSalt, pinHash).catch(err => console.debug('Cloud PIN reset sync deferred:', err));
+
   return { success: true };
 }
 
@@ -490,6 +580,9 @@ export function deleteUser(
 
   const updated = users.filter(u => u.id !== userId);
   saveStoredUsers(updated);
+
+  // Sync deletion to Cloud Firestore
+  deleteUserFromCloud(userId).catch(err => console.debug('Cloud user deletion sync deferred:', err));
 
   // If Dan Martin was explicitly deleted, remember tombstone so initializeAuth does not re-create him
   if (target.username === DAN_MARTIN_ACCOUNT.username) {

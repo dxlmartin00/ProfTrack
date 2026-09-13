@@ -5,7 +5,8 @@ import {
   updateUserStatus, 
   resetUserPin, 
   deleteUser, 
-  getUserDataCounts 
+  getUserDataCounts,
+  syncUsersFromCloud
 } from '../services/auth';
 import type { UserAccount, AccountStatus } from '../services/auth';
 import { 
@@ -43,10 +44,15 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Sync users whenever modal opens
+  // Sync users whenever modal opens (from local storage and Cloud Firestore)
   useEffect(() => {
     if (isOpen) {
       setUsers(getStoredUsers());
+      syncUsersFromCloud().then(cloudUsers => {
+        setUsers(cloudUsers);
+      }).catch(err => {
+        console.warn('Sync cloud users on modal open:', err);
+      });
     }
   }, [isOpen]);
 
@@ -65,10 +71,16 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
 
   if (!isOpen) return null;
 
-  const refreshUsers = () => {
-    const updated = getStoredUsers();
-    setUsers(updated);
-    if (onAccountsUpdated) onAccountsUpdated();
+  const refreshUsers = async () => {
+    try {
+      const updated = await syncUsersFromCloud();
+      setUsers(updated);
+    } catch {
+      const fallback = getStoredUsers();
+      setUsers(fallback);
+    } finally {
+      if (onAccountsUpdated) onAccountsUpdated();
+    }
   };
 
   const handleStatusChange = (userId: string, newStatus: AccountStatus, name: string) => {

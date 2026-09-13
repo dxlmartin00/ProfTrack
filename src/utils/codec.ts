@@ -1,5 +1,6 @@
 import * as LZString from 'lz-string';
 import type { ClassSession, SessionLog, InstructorProfile, ClassSchedule, ScheduleType } from '../services/db';
+import type { UserAccount } from '../services/auth';
 import { safeJsonParse, sanitizeString } from './crypto';
 
 /**
@@ -69,7 +70,8 @@ export function packTransferPayload(
   classes: ClassSession[], 
   logs: (SessionLog & { classInfo: ClassSession })[], 
   profile?: InstructorProfile,
-  metadata?: { updatedAt?: number; deviceId?: string; deviceLabel?: string }
+  metadata?: { updatedAt?: number; deviceId?: string; deviceLabel?: string },
+  users?: UserAccount[]
 ): string {
   const compact = {
     v: '3',
@@ -108,7 +110,21 @@ export function packTransferPayload(
       inst: profile.institution,
       eid: profile.employeeId,
       em: profile.email
-    } : undefined
+    } : undefined,
+    u: users && users.length > 0 ? users.map(u => ({
+      id: u.id,
+      un: u.username,
+      fn: u.firstName,
+      ln: u.lastName,
+      dp: u.department,
+      in: u.institution,
+      rl: u.role,
+      st: u.status,
+      sh: u.salt,
+      ph: u.pinHash,
+      ca: u.createdAt,
+      ll: u.lastLogin
+    })) : undefined
   };
 
   return JSON.stringify(compact);
@@ -124,6 +140,7 @@ export function unpackTransferPayload(parsed: any): {
   updatedAt?: number;
   deviceId?: string;
   deviceLabel?: string;
+  users?: UserAccount[];
 } {
   if (!parsed) return { classes: [], logs: [] };
 
@@ -228,7 +245,28 @@ export function unpackTransferPayload(parsed: any): {
   const deviceId = sanitizeString(parsed.did || parsed.deviceId || '', 80) || undefined;
   const deviceLabel = sanitizeString(parsed.dl || parsed.deviceLabel || '', 80) || undefined;
 
-  return { classes, logs, profile, updatedAt, deviceId, deviceLabel };
+  // 4. Users unpacking
+  let users: UserAccount[] | undefined = undefined;
+  const rawUsers = parsed.users || parsed.u;
+  if (Array.isArray(rawUsers) && rawUsers.length > 0) {
+    users = rawUsers.map((u: any) => ({
+      id: sanitizeString(u.id || `user_${Date.now()}`, 50),
+      username: sanitizeString(u.username || u.un || '', 50).toLowerCase(),
+      firstName: sanitizeString(u.firstName || u.fn || '', 80),
+      lastName: sanitizeString(u.lastName || u.ln || '', 80),
+      fullName: `${sanitizeString(u.firstName || u.fn || '', 80)} ${sanitizeString(u.lastName || u.ln || '', 80)}`.trim(),
+      department: sanitizeString(u.department || u.dp || '', 120),
+      institution: sanitizeString(u.institution || u.in || '', 120),
+      role: (u.role === 'admin' || u.rl === 'admin') ? 'admin' : 'instructor',
+      status: (u.status || u.st || 'active'),
+      salt: sanitizeString(u.salt || u.pinSalt || u.sh || '', 100),
+      pinHash: sanitizeString(u.pinHash || u.ph || '', 100),
+      createdAt: u.createdAt || u.ca || new Date().toISOString(),
+      lastLogin: u.lastLogin || u.ll
+    }));
+  }
+
+  return { classes, logs, profile, updatedAt, deviceId, deviceLabel, users };
 }
 
 /**

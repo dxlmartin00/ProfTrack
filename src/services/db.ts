@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import type { AccountSyncSnapshot } from './sync';
+import type { UserAccount, AccountStatus } from './auth';
 
 export type ScheduleType = 'Lecture' | 'Laboratory' | 'Tutorial' | 'Discussion';
 
@@ -288,4 +289,187 @@ export const subscribeToAccountSync = (
     return () => {};
   }
 };
+
+/**
+ * Pushes a user account to Cloud Firestore collection 'users'.
+ */
+export const pushUserToCloud = async (user: UserAccount): Promise<boolean> => {
+  if (!db) return false;
+  try {
+    const userDocRef = doc(db, 'users', user.id);
+    await withTimeout(setDoc(userDocRef, {
+      ...user,
+      cloudSyncedAt: serverTimestamp(),
+    }, { merge: true }));
+    return true;
+  } catch (err) {
+    console.warn('User cloud sync deferred (offline local mode):', err);
+    return false;
+  }
+};
+
+/**
+ * Updates a user account's status in Cloud Firestore.
+ */
+export const updateUserStatusInCloud = async (userId: string, status: AccountStatus): Promise<boolean> => {
+  if (!db) return false;
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    await withTimeout(updateDoc(userDocRef, {
+      status,
+      cloudSyncedAt: serverTimestamp(),
+    }));
+    return true;
+  } catch (err) {
+    console.warn('Update user status in cloud deferred:', err);
+    return false;
+  }
+};
+
+/**
+ * Updates a user account's PIN hash and salt in Cloud Firestore.
+ */
+export const resetUserPinInCloud = async (userId: string, salt: string, pinHash: string): Promise<boolean> => {
+  if (!db) return false;
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    await withTimeout(updateDoc(userDocRef, {
+      salt,
+      pinHash,
+      cloudSyncedAt: serverTimestamp(),
+    }));
+    return true;
+  } catch (err) {
+    console.warn('Reset user PIN in cloud deferred:', err);
+    return false;
+  }
+};
+
+/**
+ * Deletes a user account from Cloud Firestore.
+ */
+export const deleteUserFromCloud = async (userId: string): Promise<boolean> => {
+  if (!db) return false;
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    await withTimeout(deleteDoc(userDocRef));
+    return true;
+  } catch (err) {
+    console.warn('Delete user from cloud deferred:', err);
+    return false;
+  }
+};
+
+/**
+ * Fetches all registered users from Cloud Firestore.
+ */
+export const fetchUsersFromCloud = async (): Promise<UserAccount[]> => {
+  if (!db) return [];
+  try {
+    const usersRef = collection(db, 'users');
+    const snapshot = await withTimeout(getDocs(usersRef));
+    const users: UserAccount[] = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data && data.username && data.id) {
+        users.push({
+          id: data.id,
+          username: data.username,
+          salt: data.salt,
+          pinHash: data.pinHash,
+          firstName: data.firstName || '',
+          lastName: data.lastName || '',
+          fullName: data.fullName || '',
+          department: data.department || '',
+          institution: data.institution || '',
+          role: data.role || 'instructor',
+          status: data.status || 'pending',
+          createdAt: data.createdAt || new Date().toISOString(),
+          lastLogin: data.lastLogin
+        });
+      }
+    });
+    return users;
+  } catch (err) {
+    console.warn('Fetch users from cloud deferred:', err);
+    return [];
+  }
+};
+
+/**
+ * Fetches a single user by username from Cloud Firestore.
+ */
+export const fetchUserByUsernameFromCloud = async (username: string): Promise<UserAccount | null> => {
+  if (!db) return null;
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('username', '==', username));
+    const snap = await withTimeout(getDocs(q));
+    if (!snap.empty) {
+      const data = snap.docs[0].data();
+      return {
+        id: data.id,
+        username: data.username,
+        salt: data.salt,
+        pinHash: data.pinHash,
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        fullName: data.fullName || '',
+        department: data.department || '',
+        institution: data.institution || '',
+        role: data.role || 'instructor',
+        status: data.status || 'pending',
+        createdAt: data.createdAt || new Date().toISOString(),
+        lastLogin: data.lastLogin
+      };
+    }
+  } catch (err) {
+    console.warn('Fetch user by username from cloud deferred:', err);
+  }
+  return null;
+};
+
+/**
+ * Subscribes to real-time changes in Cloud Firestore 'users' collection.
+ */
+export const subscribeToUsersCloud = (
+  onRemoteUpdate: (users: UserAccount[]) => void
+): (() => void) => {
+  if (!db) return () => {};
+  try {
+    const usersRef = collection(db, 'users');
+    const unsubscribe = onSnapshot(usersRef, (snapshot) => {
+      const users: UserAccount[] = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data && data.username && data.id) {
+          users.push({
+            id: data.id,
+            username: data.username,
+            salt: data.salt,
+            pinHash: data.pinHash,
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            fullName: data.fullName || '',
+            department: data.department || '',
+            institution: data.institution || '',
+            role: data.role || 'instructor',
+            status: data.status || 'pending',
+            createdAt: data.createdAt || new Date().toISOString(),
+            lastLogin: data.lastLogin
+          });
+        }
+      });
+      if (users.length > 0) {
+        onRemoteUpdate(users);
+      }
+    }, (err) => {
+      console.warn('Users cloud sync listener inactive (offline mode):', err);
+    });
+    return unsubscribe;
+  } catch {
+    return () => {};
+  }
+};
+
 

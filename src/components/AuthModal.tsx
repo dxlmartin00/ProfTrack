@@ -17,7 +17,8 @@ import {
   AlertCircle, 
   CheckCircle2, 
   Eye, 
-  EyeOff
+  EyeOff,
+  Loader2
 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -53,6 +54,8 @@ export const AuthModal: FC<AuthModalProps> = ({
   const [regSuccessUser, setRegSuccessUser] = useState<UserAccount | null>(null);
   const [regError, setRegError] = useState<string | null>(null);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Real-time computed username preview
   const calculatedUsername = useMemo(() => {
     if (!regLastName && !regFirstName) return '<lastname>.<firstname>';
@@ -61,8 +64,9 @@ export const AuthModal: FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSignIn = (e: FormEvent) => {
+  const handleSignIn = async (e: FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setSignInError(null);
     setSuggestRegisterFor(null);
 
@@ -76,15 +80,22 @@ export const AuthModal: FC<AuthModalProps> = ({
       return;
     }
 
-    const res = authenticateUser(username, pin);
-    if (res.success && res.user) {
-      onLoginSuccess(res.user);
-      if (onClose) onClose();
-    } else {
-      setSignInError(res.error || 'Authentication failed. Please check your credentials.');
-      if (res.accountNotFound) {
-        setSuggestRegisterFor(username.trim());
+    setIsSubmitting(true);
+    try {
+      const res = await authenticateUser(username, pin);
+      if (res.success && res.user) {
+        onLoginSuccess(res.user);
+        if (onClose) onClose();
+      } else {
+        setSignInError(res.error || 'Authentication failed. Please check your credentials.');
+        if (res.accountNotFound) {
+          setSuggestRegisterFor(username.trim());
+        }
       }
+    } catch (err: any) {
+      setSignInError(err?.message || 'Authentication error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -99,8 +110,9 @@ export const AuthModal: FC<AuthModalProps> = ({
     setMode('register');
   };
 
-  const handleRegister = (e: FormEvent) => {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setRegError(null);
     setRegSuccessUser(null);
 
@@ -114,22 +126,29 @@ export const AuthModal: FC<AuthModalProps> = ({
       return;
     }
 
-    const res = registerInstructor({
-      firstName: regFirstName,
-      lastName: regLastName,
-      department: regDept,
-      institution: regInst,
-      pin: regPin,
-    });
+    setIsSubmitting(true);
+    try {
+      const res = await registerInstructor({
+        firstName: regFirstName,
+        lastName: regLastName,
+        department: regDept,
+        institution: regInst,
+        pin: regPin,
+      });
 
-    if (res.success && res.user) {
-      setRegSuccessUser(res.user);
-      if (onAccountsUpdated) onAccountsUpdated();
-      // Reset form
-      setRegFirstName('');
-      setRegLastName('');
-    } else {
-      setRegError(res.error || 'Failed to register account.');
+      if (res.success && res.user) {
+        setRegSuccessUser(res.user);
+        if (onAccountsUpdated) onAccountsUpdated();
+        // Reset form
+        setRegFirstName('');
+        setRegLastName('');
+      } else {
+        setRegError(res.error || 'Failed to register account.');
+      }
+    } catch (err: any) {
+      setRegError(err?.message || 'Failed to register account.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -272,10 +291,20 @@ export const AuthModal: FC<AuthModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 text-white text-sm font-bold shadow hover:bg-zinc-800 transition-colors cursor-pointer dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200"
+                disabled={isSubmitting}
+                className="w-full inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 text-white text-sm font-bold shadow hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200"
               >
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In to Dashboard
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Authenticating...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In to Dashboard
+                  </>
+                )}
               </button>
             </form>
           ) : (
@@ -402,10 +431,20 @@ export const AuthModal: FC<AuthModalProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 text-white text-xs font-bold shadow hover:bg-zinc-800 transition-colors cursor-pointer mt-1 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200"
+                    disabled={isSubmitting}
+                    className="w-full inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 text-white text-xs font-bold shadow hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer mt-1 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200"
                   >
-                    <UserPlus className="w-4 h-4 mr-1.5" />
-                    Submit Account for Approval
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                        Submitting Account...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-4 h-4 mr-1.5" />
+                        Submit Account for Approval
+                      </>
+                    )}
                   </button>
                 </>
               )}

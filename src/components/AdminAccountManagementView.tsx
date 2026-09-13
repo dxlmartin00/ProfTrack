@@ -5,7 +5,8 @@ import {
   updateUserStatus, 
   resetUserPin, 
   deleteUser, 
-  getUserDataCounts 
+  getUserDataCounts,
+  syncUsersFromCloud
 } from '../services/auth';
 import type { UserAccount, AccountStatus } from '../services/auth';
 import { 
@@ -44,6 +45,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
   const [filterTab, setFilterTab] = useState<'pending' | 'approved' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Synchronize when usersList prop changes
   useEffect(() => {
@@ -66,10 +68,29 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
     };
   }, []);
 
-  const refreshUsers = () => {
-    const updated = getStoredUsers();
-    setUsers(updated);
-    if (onAccountsUpdated) onAccountsUpdated();
+  // Fetch newest users from cloud on mount
+  useEffect(() => {
+    syncUsersFromCloud().then(cloudUsers => {
+      setUsers(cloudUsers);
+    }).catch(err => {
+      console.warn('Initial cloud users sync in admin view:', err);
+    });
+  }, []);
+
+  const refreshUsers = async () => {
+    setIsRefreshing(true);
+    try {
+      const updated = await syncUsersFromCloud();
+      setUsers(updated);
+      setActionNotice({ type: 'success', message: 'Synced accounts with Cloud Firestore.' });
+      setTimeout(() => setActionNotice(null), 3000);
+    } catch {
+      const updated = getStoredUsers();
+      setUsers(updated);
+    } finally {
+      setIsRefreshing(false);
+      if (onAccountsUpdated) onAccountsUpdated();
+    }
   };
 
   const handleStatusChange = (userId: string, newStatus: AccountStatus, name: string) => {
@@ -165,11 +186,12 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
             <button
               type="button"
               onClick={refreshUsers}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
-              title="Refresh Accounts"
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-800 disabled:opacity-50 transition-colors cursor-pointer"
+              title="Refresh Accounts from Cloud"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Refresh</span>
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>{isRefreshing ? 'Syncing...' : 'Refresh'}</span>
             </button>
             <button
               type="button"

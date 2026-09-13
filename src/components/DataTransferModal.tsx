@@ -4,6 +4,8 @@ import qrcode from 'qrcode-generator';
 import DOMPurify from 'dompurify';
 import { compressPayload, decompressPayload, packTransferPayload, unpackTransferPayload } from '../utils/codec';
 import type { ClassSession, SessionLog, InstructorProfile } from '../services/db';
+import { getStoredUsers, mergeUsersRegistry } from '../services/auth';
+import type { UserAccount } from '../services/auth';
 import { getDeviceId, getDeviceLabel } from '../services/sync';
 import { useToast } from '../context/ToastContext';
 import { 
@@ -78,6 +80,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
     classes,
     logs,
     profile,
+    users: getStoredUsers()
   }), [classes, logs, profile, lastUpdatedTimestamp]);
 
   const backupJsonString = useMemo(() => {
@@ -95,7 +98,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
         updatedAt: lastUpdatedTimestamp || Date.now(),
         deviceId: getDeviceId(),
         deviceLabel: getDeviceLabel()
-      });
+      }, getStoredUsers());
     } catch {
       return JSON.stringify(backupPayload);
     }
@@ -154,7 +157,8 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
     importedLogs: (SessionLog & { classInfo: ClassSession })[], 
     importedProfile?: InstructorProfile,
     incomingUpdatedAt?: number,
-    incomingDeviceLabel?: string
+    incomingDeviceLabel?: string,
+    importedUsers?: UserAccount[]
   ) => {
     const localTime = lastUpdatedTimestamp || 0;
     const incomingTime = incomingUpdatedAt || 0;
@@ -174,13 +178,20 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
       }
     }
 
+    if (importedUsers && importedUsers.length > 0) {
+      const merged = mergeUsersRegistry(getStoredUsers(), importedUsers);
+      localStorage.setItem('proftrack_users_registry', JSON.stringify(merged));
+      window.dispatchEvent(new Event('proftrack_accounts_updated'));
+    }
+
     onImportData(importedClasses, importedLogs, importedProfile, incomingTime || Date.now());
     const isNewer = incomingTime > localTime;
+    const usersCount = importedUsers?.length ? ` (${importedUsers.length} user accounts merged)` : '';
     setImportStatus({
       success: true,
       message: isNewer
-        ? `✅ Synced with latest updates from ${incomingDeviceLabel || 'your other device'}!`
-        : `Successfully imported ${importedClasses.length} courses, ${importedLogs.length} session logs, and profile!`
+        ? `✅ Synced with latest updates from ${incomingDeviceLabel || 'your other device'}!${usersCount}`
+        : `Successfully imported ${importedClasses.length} courses, ${importedLogs.length} session logs, and profile!${usersCount}`
     });
   };
 
@@ -195,13 +206,13 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
         const text = event.target?.result as string;
         const parsed = JSON.parse(text);
         
-        const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel } = unpackTransferPayload(parsed);
+        const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel, users: importedUsers } = unpackTransferPayload(parsed);
 
         if (!importedClasses || importedClasses.length === 0) {
           throw new Error('Invalid backup file format: missing classes.');
         }
 
-        applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt || parsed.updatedAt, incDeviceLabel || parsed.deviceLabel);
+        applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt || parsed.updatedAt, incDeviceLabel || parsed.deviceLabel, importedUsers);
       } catch (err: any) {
         setImportStatus({
           success: false,
@@ -245,18 +256,18 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
         const encoded = inputStr.split('#import=')[1];
         const decompressed = decompressPayload(encoded);
         if (decompressed) {
-          const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel } = unpackTransferPayload(decompressed);
+          const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel, users: importedUsers } = unpackTransferPayload(decompressed);
 
-          applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt, incDeviceLabel);
+          applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt, incDeviceLabel, importedUsers);
           setManualCodeInput('');
           return;
         }
       }
 
       const parsed = JSON.parse(inputStr);
-      const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel } = unpackTransferPayload(parsed);
+      const { classes: importedClasses, logs: validLogs, profile: importedProfile, updatedAt: incUpdatedAt, deviceLabel: incDeviceLabel, users: importedUsers } = unpackTransferPayload(parsed);
 
-      applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt, incDeviceLabel);
+      applyImportWithConflictCheck(importedClasses, validLogs, importedProfile, incUpdatedAt, incDeviceLabel, importedUsers);
       setManualCodeInput('');
     } catch (err: any) {
       setImportStatus({

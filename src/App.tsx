@@ -18,6 +18,7 @@ import {
   pushAccountSyncToCloud,
   fetchAccountSyncFromCloud,
   subscribeToAccountSync,
+  subscribeToUsersCloud,
   DEFAULT_INSTRUCTOR_PROFILE
 } from './services/db';
 import { decompressPayload, unpackTransferPayload } from './utils/codec';
@@ -44,6 +45,7 @@ import {
   getUserStorageKeys, 
   logoutUser, 
   getStoredUsers, 
+  mergeUsersRegistry,
   DAN_MARTIN_ACCOUNT
 } from './services/auth';
 import type { UserAccount } from './services/auth';
@@ -448,16 +450,28 @@ function AppContent() {
     setStoredA11y(newSettings);
   };
 
-  // Listen to accounts updates across tabs and modals
+  // Listen to accounts updates across tabs, modals, and Cloud Firestore
   useEffect(() => {
     const handleSync = () => {
       setAllUsers(getStoredUsers());
     };
     window.addEventListener('proftrack_accounts_updated', handleSync);
     window.addEventListener('storage', handleSync);
+
+    // Live Cloud Firestore sync for all accounts (e.g. accounts registered from phone or other computers)
+    const unsubCloudUsers = subscribeToUsersCloud((cloudUsers) => {
+      if (cloudUsers && cloudUsers.length > 0) {
+        const local = getStoredUsers();
+        const merged = mergeUsersRegistry(local, cloudUsers);
+        localStorage.setItem('proftrack_users_registry', JSON.stringify(merged));
+        setAllUsers(merged);
+      }
+    });
+
     return () => {
       window.removeEventListener('proftrack_accounts_updated', handleSync);
       window.removeEventListener('storage', handleSync);
+      unsubCloudUsers();
     };
   }, []);
 
@@ -723,7 +737,14 @@ function AppContent() {
         const rawEncoded = hash.replace('#import=', '');
         const parsed = decompressPayload(rawEncoded);
         if (parsed) {
-          const { classes: importedClasses, logs: importedLogs, profile: importedProfile, updatedAt: incomingTime, deviceLabel: incomingDevice } = unpackTransferPayload(parsed);
+          const { classes: importedClasses, logs: importedLogs, profile: importedProfile, updatedAt: incomingTime, deviceLabel: incomingDevice, users: importedUsers } = unpackTransferPayload(parsed);
+
+          if (importedUsers && importedUsers.length > 0) {
+            const merged = mergeUsersRegistry(getStoredUsers(), importedUsers);
+            localStorage.setItem('proftrack_users_registry', JSON.stringify(merged));
+            setAllUsers(merged);
+            window.dispatchEvent(new Event('proftrack_accounts_updated'));
+          }
 
           if (importedClasses.length > 0 || importedLogs.length > 0) {
             setClasses(importedClasses);
