@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import type { FC, FormEvent, ChangeEvent } from 'react';
 import type { ClassSession, ClassSchedule, ScheduleType } from '../services/db';
 import { parseDocxSyllabus } from '../utils/docxParser';
+import { useToast } from '../context/ToastContext';
 import { 
   X, 
   Plus, 
@@ -42,6 +43,7 @@ const DAYS_OF_WEEK = [
 ];
 
 export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, onSave }) => {
+  const { showToast } = useToast();
   const isEditing = Boolean(initialClass);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -164,7 +166,7 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
 
   const handleRemoveSlot = (id: string) => {
     if (scheduleSlots.length === 1) {
-      alert('Your course must have at least one scheduled slot.');
+      showToast('Your course must have at least one scheduled slot.', 'error');
       return;
     }
     setScheduleSlots(scheduleSlots.filter((s) => s.id !== id));
@@ -217,12 +219,13 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
       if (extractedTopics.length > 0) {
         setTopics(extractedTopics);
         setImportNotification(`Successfully imported ${extractedTopics.length} syllabus topics from "${file.name}"`);
+        showToast(`Imported ${extractedTopics.length} syllabus topics!`, 'success');
       } else {
-        alert('Could not detect syllabus tables or topics in this document. Please check the format.');
+        showToast('Could not detect syllabus tables or topics in this document. Please check the format.', 'error');
       }
     } catch (err) {
       console.error('Failed to parse docx file:', err);
-      alert('Error reading DOCX file. Please make sure it is a valid Word document.');
+      showToast('Error reading DOCX file. Please make sure it is a valid Word document.', 'error');
     } finally {
       setIsParsingDocx(false);
       // Reset input value so same file can be chosen again if needed
@@ -235,14 +238,14 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!subjectCode.trim()) {
-      alert('Please enter a Course Code (e.g. CS 315 or GE104).');
+      showToast('Please enter a Course Code (e.g. CS 315 or GE104).', 'error');
       return;
     }
 
     const flattenedSchedule: ClassSchedule[] = [];
     for (const slot of scheduleSlots) {
       if (slot.selectedDays.length === 0) {
-        alert(`Please select at least one day for your ${slot.type} schedule.`);
+        showToast(`Please select at least one day for your ${slot.type} schedule.`, 'error');
         return;
       }
       for (const dayOfWeek of slot.selectedDays) {
@@ -270,10 +273,11 @@ export const AddClassModal: FC<AddClassModalProps> = ({ initialClass, onClose, o
         },
         initialClass?.id
       );
+      showToast(isEditing ? 'Course updated successfully!' : 'Course added successfully!', 'success');
       onClose();
     } catch (err) {
       console.error('Failed to save course:', err);
-      alert('Failed to save course. Please try again.');
+      showToast('Failed to save course. Please try again.', 'error');
     }
   };
 

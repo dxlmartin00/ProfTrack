@@ -5,6 +5,7 @@ import { generateMonthlyReport } from '../utils/generatePdf';
 import { X, Download, FileText, BarChart3, Table as TableIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { AnalyticsCharts } from './AnalyticsCharts';
+import { useToast } from '../context/ToastContext';
 
 interface ReportModalProps {
   logs: (SessionLog & { classInfo: ClassSession })[];
@@ -14,6 +15,7 @@ interface ReportModalProps {
 }
 
 export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onClose }) => {
+  const { showToast } = useToast();
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
@@ -46,9 +48,10 @@ export const ReportModal: FC<ReportModalProps> = ({ logs, classes, profile, onCl
     setIsGenerating(true);
     try {
       generateMonthlyReport(logs, selectedYear, selectedMonth, profile);
+      showToast('PDF report exported successfully!', 'success');
     } catch (err) {
       console.error('Failed to export PDF:', err);
-      alert('Error generating PDF report.');
+      showToast('Error generating PDF report.', 'error');
     } finally {
       setIsGenerating(false);
     }

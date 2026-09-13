@@ -78,16 +78,21 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
     if (now >= start && now <= end) {
       return { 
         label: 'Active Now', 
-        badgeClass: 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200',
+        badgeClass: 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 font-bold',
         dot: 'bg-emerald-600 dark:bg-emerald-400 animate-pulse',
         isLive: true 
       };
     }
     if (now < start) {
+      const minutesUntil = Math.round((start.getTime() - now.getTime()) / (1000 * 60));
+      const isSoon = minutesUntil <= 60 && minutesUntil > 0;
+      const upNextLabel = isSoon ? `Starts in ${minutesUntil}m` : 'Upcoming';
       return { 
-        label: 'Upcoming', 
-        badgeClass: 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200',
-        dot: 'bg-zinc-500 dark:bg-zinc-400',
+        label: upNextLabel, 
+        badgeClass: isSoon
+          ? 'border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 font-bold'
+          : 'border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200',
+        dot: isSoon ? 'bg-blue-500 dark:bg-blue-400 animate-pulse' : 'bg-zinc-500 dark:bg-zinc-400',
         isLive: false 
       };
     }
@@ -359,18 +364,28 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                 <button
                   type="button"
                   onClick={onAddClassClick}
-                  className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-4 text-sm font-semibold text-white dark:text-zinc-950 shadow-sm hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors cursor-pointer"
+                  className="inline-flex h-10 items-center justify-center rounded-lg bg-zinc-950 dark:bg-white px-4 text-sm font-semibold text-white dark:text-zinc-950 shadow-sm hover:bg-zinc-800 dark:hover:bg-zinc-200 active:scale-95 transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4 mr-1.5" aria-hidden="true" />
                   Add Course
                 </button>
+                {onSwitchToCalendar && (
+                  <button
+                    type="button"
+                    onClick={onSwitchToCalendar}
+                    className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-sm font-semibold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Calendar className="w-4 h-4 mr-1.5 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
+                    View Weekly Grid
+                  </button>
+                )}
                 {classes.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setActiveTab('all')}
-                    className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-sm font-semibold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer"
+                    className="inline-flex h-10 items-center justify-center rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 text-sm font-semibold text-zinc-800 dark:text-zinc-100 shadow-2xs hover:bg-zinc-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer"
                   >
-                    View All Courses ({classes.length})
+                    All Courses ({classes.length})
                   </button>
                 )}
               </div>
@@ -387,7 +402,7 @@ export const DailyTimetable: FC<DailyTimetableProps> = ({
                   <div
                     key={`${cls.id}_${idx}`}
                     onClick={() => onClassClick(cls, sch)}
-                    className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 transition-all cursor-pointer flex flex-col gap-3 group w-full min-w-0 box-border overflow-hidden"
+                    className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-2xs hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 active:scale-[0.99] transition-all cursor-pointer flex flex-col gap-3 group w-full min-w-0 box-border overflow-hidden"
                   >
                     {/* Header Row: Subject Code, Type Badge, Section, Room */}
                     <div className="flex items-start justify-between gap-2 w-full min-w-0">

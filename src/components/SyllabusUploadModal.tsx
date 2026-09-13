@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import type { FC, ChangeEvent, DragEvent } from 'react';
 import type { ClassSession } from '../services/db';
 import { parseWordDocxSyllabus, extractTopicsFromText } from '../utils/docxParser';
+import { useToast } from '../context/ToastContext';
 import { 
   X, 
   UploadCloud, 
@@ -25,6 +26,7 @@ export const SyllabusUploadModal: FC<SyllabusUploadModalProps> = ({
   onClose,
   onUpdateSyllabus,
 }) => {
+  const { showToast } = useToast();
   const [selectedCourseId, setSelectedCourseId] = useState<string>(
     initialCourseId || (courses[0]?.id || '')
   );
@@ -51,12 +53,13 @@ export const SyllabusUploadModal: FC<SyllabusUploadModalProps> = ({
 
       if (extracted.length > 0) {
         setParsedTopics(extracted);
+        showToast(`Parsed ${extracted.length} syllabus topics from file!`, 'success');
       } else {
-        alert('Could not detect distinct syllabus topics from the file. You can paste the syllabus text below.');
+        showToast('Could not detect distinct syllabus topics. You can paste syllabus text below.', 'error');
       }
     } catch (err: any) {
       console.error('Failed to parse syllabus:', err);
-      alert('Error parsing document: ' + (err.message || 'Please upload a valid .docx or text file.'));
+      showToast('Error parsing document: ' + (err.message || 'Please upload a valid .docx or text file.'), 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -99,6 +102,7 @@ export const SyllabusUploadModal: FC<SyllabusUploadModalProps> = ({
   const handleSave = () => {
     if (!selectedCourseId || parsedTopics.length === 0) return;
     onUpdateSyllabus(selectedCourseId, parsedTopics);
+    showToast('Master syllabus updated successfully!', 'success');
     onClose();
   };
 

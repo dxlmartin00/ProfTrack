@@ -5,6 +5,7 @@ import DOMPurify from 'dompurify';
 import { compressPayload, decompressPayload, packTransferPayload, unpackTransferPayload } from '../utils/codec';
 import type { ClassSession, SessionLog, InstructorProfile } from '../services/db';
 import { getDeviceId, getDeviceLabel } from '../services/sync';
+import { useToast } from '../context/ToastContext';
 import { 
   X, 
   Download, 
@@ -42,6 +43,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
   onClose,
   onImportData,
 }) => {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'qrcode' | 'export' | 'import'>('qrcode');
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -140,8 +142,9 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      showToast('Backup JSON downloaded successfully!', 'success');
     } catch (err: any) {
-      alert('Failed to download backup: ' + err.message);
+      showToast('Failed to download backup: ' + err.message, 'error');
     }
   };
 

@@ -31,6 +31,8 @@ import { AdminDashboardModal } from './components/AdminDashboardModal';
 import { AdminAccountManagementView } from './components/AdminAccountManagementView';
 import { CalendarView } from './components/CalendarView';
 import { AccessibilityModal } from './components/AccessibilityModal';
+import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { ToastProvider, useToast } from './context/ToastContext';
 import { 
   getStoredTheme, 
   setStoredTheme, 
@@ -74,7 +76,8 @@ import {
   Plus,
   FileDown,
   Sliders,
-  ChevronRight
+  ChevronRight,
+  Keyboard
 } from 'lucide-react';
 
 export const OFFICIAL_SEMESTER_COURSES: ClassSession[] = [
@@ -413,7 +416,8 @@ const loadUserProfile = (user: UserAccount | null): InstructorProfile => {
   };
 };
 
-export function App() {
+function AppContent() {
+  const { showToast } = useToast();
   // 1. Multi-Tenant User & Session State
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
     const { currentUser: initialUser } = initializeAuth();
@@ -422,6 +426,7 @@ export function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(!currentUser);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isDeviceSyncModalOpen, setIsDeviceSyncModalOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<UserAccount[]>(() => getStoredUsers());
   const [viewMode, setViewMode] = useState<'daily' | 'calendar'>('daily');
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => getStoredTheme());
@@ -573,6 +578,130 @@ export function App() {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Power-User Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      // Escape dismisses any open dialog or menu
+      if (e.key === 'Escape') {
+        if (isShortcutsModalOpen) {
+          setIsShortcutsModalOpen(false);
+          return;
+        }
+        if (isMobileMenuOpen) {
+          setIsMobileMenuOpen(false);
+          return;
+        }
+        if (isAddClassOpen) {
+          setIsAddClassOpen(false);
+          return;
+        }
+        if (isReportOpen) {
+          setIsReportOpen(false);
+          return;
+        }
+        if (isTransferModalOpen) {
+          setIsTransferModalOpen(false);
+          return;
+        }
+        if (isProfileOpen) {
+          setIsProfileOpen(false);
+          return;
+        }
+        if (isScanModalOpen) {
+          setIsScanModalOpen(false);
+          return;
+        }
+        if (isSyllabusModalOpen) {
+          setIsSyllabusModalOpen(false);
+          return;
+        }
+        if (isA11yModalOpen) {
+          setIsA11yModalOpen(false);
+          return;
+        }
+        if (isAdminModalOpen) {
+          setIsAdminModalOpen(false);
+          return;
+        }
+        if (isDeviceSyncModalOpen) {
+          setIsDeviceSyncModalOpen(false);
+          return;
+        }
+        if (inspectedCourse) {
+          setInspectedCourse(null);
+          return;
+        }
+        if (selectedClassForLog) {
+          setSelectedClassForLog(null);
+          return;
+        }
+      }
+
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        setIsShortcutsModalOpen(prev => !prev);
+      } else if (e.key === '1') {
+        e.preventDefault();
+        setViewMode('daily');
+        showToast('Daily Timetable View (1)', 'info', 1500);
+      } else if (e.key === '2') {
+        e.preventDefault();
+        setViewMode('calendar');
+        showToast('Weekly Time-Grid View (2)', 'info', 1500);
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        setViewMode('daily');
+        showToast('Today Timetable (T)', 'info', 1500);
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        if (currentUser?.role !== 'admin') {
+          setEditingCourse(null);
+          setIsAddClassOpen(true);
+        }
+      } else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        if (currentUser?.role !== 'admin') {
+          setIsReportOpen(true);
+        }
+      } else if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        setIsA11yModalOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    isShortcutsModalOpen,
+    isMobileMenuOpen,
+    isAddClassOpen,
+    isReportOpen,
+    isTransferModalOpen,
+    isProfileOpen,
+    isScanModalOpen,
+    isSyllabusModalOpen,
+    isA11yModalOpen,
+    isAdminModalOpen,
+    isDeviceSyncModalOpen,
+    inspectedCourse,
+    selectedClassForLog,
+    currentUser?.role,
+    showToast
+  ]);
 
   // Save profile helper
   const handleSaveProfile = (newProfile: InstructorProfile) => {
@@ -957,6 +1086,17 @@ export function App() {
               )}
             </button>
 
+            {/* Keyboard Shortcuts Dialog Trigger */}
+            <button
+              type="button"
+              onClick={() => setIsShortcutsModalOpen(true)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0 shadow-2xs"
+              title="Keyboard Shortcuts (Press ?)"
+              aria-label="Keyboard Shortcuts"
+            >
+              <Keyboard className="h-4 w-4" />
+            </button>
+
             {/* Notification Bell / Test Trigger button */}
             <button
               type="button"
@@ -1333,6 +1473,23 @@ export function App() {
                     </div>
                     <span className="capitalize text-[11px] font-semibold text-zinc-600 dark:text-zinc-300">
                       {themeMode}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsShortcutsModalOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Keyboard className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+                      <span>Keyboard Shortcuts</span>
+                    </div>
+                    <span className="font-mono text-[10px] bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded text-zinc-600 dark:text-zinc-300 font-bold">
+                      ?
                     </span>
                   </button>
 
@@ -1722,7 +1879,21 @@ export function App() {
         onA11yChange={handleA11yChange}
       />
 
+      {/* Power-User Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
+      />
+
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }
 

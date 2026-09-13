@@ -248,6 +248,18 @@ export const CalendarView: FC<CalendarViewProps> = ({
     return { totalClasses, totalHours, loggedSessions };
   }, [weekDays, filteredClasses, logs]);
 
+  // Current time position indicator on the grid
+  const nowIndicatorTopPx = useMemo(() => {
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const totalMinutesFromStart = (hours - START_HOUR) * 60 + minutes;
+    const maxMinutes = (END_HOUR - START_HOUR) * 60;
+    if (totalMinutesFromStart < 0 || totalMinutesFromStart > maxMinutes) {
+      return null;
+    }
+    return (totalMinutesFromStart / 30) * SLOT_HEIGHT_PX;
+  }, [currentTime]);
+
   // Export PDF
   const handleExportPDF = async () => {
     if (!calendarPrintRef.current) return;
@@ -543,6 +555,21 @@ export const CalendarView: FC<CalendarViewProps> = ({
                     />
                   ))}
 
+                  {/* Real-time Current Time Indicator Line for Today */}
+                  {isCurrentDay && nowIndicatorTopPx !== null && (
+                    <div 
+                      className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+                      style={{ top: `${nowIndicatorTopPx}px` }}
+                    >
+                      <div className="w-2.5 h-2.5 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 animate-ping absolute" />
+                      <div className="w-2 h-2 -ml-1 rounded-full bg-rose-500 shadow-sm ring-2 ring-white dark:ring-zinc-900 relative z-10" />
+                      <div className="flex-1 h-[2px] bg-rose-500 shadow-xs" />
+                      <span className="text-[9px] font-mono font-bold bg-rose-500 text-white px-1.5 py-0.5 rounded shadow-xs ml-1">
+                        {format(currentTime, 'h:mm a')}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Scheduled Class Blocks (Eye-Care Desaturated Colors, Matte Contrast) */}
                   {schedule.map((item, itemIdx) => {
                     const isLab = item.sch.type === 'Laboratory';
@@ -571,7 +598,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                           top: `${item.topPx}px`,
                           height: `${item.heightPx}px`,
                         }}
-                        className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] flex flex-col justify-between overflow-hidden z-10 ${cardColorClasses}`}
+                        className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] active:scale-[0.98] flex flex-col justify-between overflow-hidden z-10 ${cardColorClasses}`}
                         title={`${item.cls.subjectCode} (${item.cls.section}) - ${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} – ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to log topics or view syllabus.`}
                       >
                         {/* Block Header: Subject Code, Section & Status */}
@@ -691,7 +718,7 @@ export const CalendarView: FC<CalendarViewProps> = ({
                         <div
                           key={`${item.cls.id}_mobile_${itemIdx}`}
                           onClick={() => onClassClick(item.cls, item.sch, currentDay)}
-                          className={`rounded-xl border p-3.5 cursor-pointer shadow-2xs space-y-2 ${
+                          className={`rounded-xl border p-3.5 cursor-pointer shadow-2xs space-y-2 transition-all active:scale-[0.98] ${
                             item.isLiveNow
                               ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40'
                               : isLab
