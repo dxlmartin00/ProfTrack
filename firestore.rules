@@ -12,6 +12,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Deletion tombstones (prevents resurrection of deleted users across devices)
+    match /tombstones/{tombstoneId} {
+      allow read, write: if true;
+    }
+
     // Classes Collection & Session Logs
     match /classes/{classId} {
       allow read, write: if true;

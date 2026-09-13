@@ -11,7 +11,9 @@ import {
   resetUserPinInCloud, 
   deleteUserFromCloud, 
   fetchUsersFromCloud, 
-  fetchUserByUsernameFromCloud, 
+  fetchUserByUsernameFromCloud,
+  fetchTombstonesFromCloud,
+  recordTombstoneInCloud,
   subscribeToUsersCloud 
 } from './db';
 
@@ -108,37 +110,73 @@ export function getUserStorageKeys(userId: string) {
   };
 }
 
+export const DELETED_USERS_STORAGE_KEY = 'proftrack_deleted_users';
+
+/**
+ * Retrieves the list of user IDs or usernames that have been deleted.
+ */
+export function getLocalDeletedUsers(): string[] {
+  try {
+    if (typeof localStorage === 'undefined') return [];
+    const raw = localStorage.getItem(DELETED_USERS_STORAGE_KEY);
+    const parsed = raw ? safeJsonParse<string[]>(raw, []) : [];
+    // Ensure Dan Martin is tracked if marked deleted or previously suppressed
+    if (localStorage.getItem('proftrack_dan_martin_deleted') === 'true') {
+      if (!parsed.includes('usr_martin_dan')) parsed.push('usr_martin_dan');
+      if (!parsed.includes('martin.dan')) parsed.push('martin.dan');
+    }
+    return parsed;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Adds an identifier to local deleted users tombstone list.
+ */
+export function addLocalDeletedUser(identifier: string): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const current = new Set(getLocalDeletedUsers());
+    current.add(identifier);
+    localStorage.setItem(DELETED_USERS_STORAGE_KEY, JSON.stringify(Array.from(current)));
+  } catch {}
+}
+
 /**
  * Retrieves all registered users from storage with prototype-pollution protection and auto-upgrade to salted SHA-256.
  */
 export function getStoredUsers(): UserAccount[] {
   try {
-    const raw = localStorage.getItem(USERS_STORAGE_KEY);
-    if (raw) {
-      const parsed = safeJsonParse<UserAccount[]>(raw, []);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        let upgraded = false;
-        for (const u of parsed) {
-          // Automatic cryptographic upgrade for legacy plaintext PINs
-          if (!u.pinHash || !u.salt) {
-            const rawPin = u.pin || (u.role === 'admin' ? '0000' : '1234');
-            u.salt = generateSalt();
-            u.pinHash = hashPinWithSalt(rawPin, u.salt);
-            delete u.pin;
-            upgraded = true;
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem(USERS_STORAGE_KEY);
+      if (raw) {
+        const parsed = safeJsonParse<UserAccount[]>(raw, []);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const deleted = new Set(getLocalDeletedUsers());
+          const filtered = parsed.filter(u => !deleted.has(u.id) && !deleted.has(u.username));
+          let upgraded = false;
+          for (const u of filtered) {
+            // Automatic cryptographic upgrade for legacy plaintext PINs
+            if (!u.pinHash || !u.salt) {
+              const rawPin = u.pin || (u.role === 'admin' ? '0000' : '1234');
+              u.salt = generateSalt();
+              u.pinHash = hashPinWithSalt(rawPin, u.salt);
+              delete u.pin;
+              upgraded = true;
+            }
           }
+          if (upgraded || filtered.length !== parsed.length) {
+            saveStoredUsers(filtered);
+          }
+          return filtered;
         }
-        if (upgraded) {
-          saveStoredUsers(parsed);
-        }
-        return parsed;
       }
     }
   } catch (err) {
     console.error('Failed to read users registry:', err);
   }
-  const isDanDeleted = typeof localStorage !== 'undefined' && localStorage.getItem('proftrack_dan_martin_deleted') === 'true';
-  return isDanDeleted ? [DEFAULT_ADMIN_ACCOUNT] : [DEFAULT_ADMIN_ACCOUNT, DAN_MARTIN_ACCOUNT];
+  return [DEFAULT_ADMIN_ACCOUNT];
 }
 
 /**
@@ -179,28 +217,43 @@ export function mergeUsersRegistry(localUsers: UserAccount[], incomingUsers: Use
  */
 export async function syncUsersFromCloud(): Promise<UserAccount[]> {
   try {
-    const cloudUsers = await fetchUsersFromCloud();
-    const currentStored = getStoredUsers();
+    const [cloudUsers, cloudTombstones] = await Promise.all([
+      fetchUsersFromCloud(),
+      fetchTombstonesFromCloud()
+    ]);
+
+    // Consolidate tombstones from local storage and Cloud Firestore
+    const localDeleted = getLocalDeletedUsers();
+    const allTombstones = new Set([...localDeleted, ...cloudTombstones]);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(DELETED_USERS_STORAGE_KEY, JSON.stringify(Array.from(allTombstones)));
+    }
+
+    // Filter both local and remote users against the tombstones
+    const currentStored = getStoredUsers().filter(u => !allTombstones.has(u.id) && !allTombstones.has(u.username));
+    const validCloudUsers = cloudUsers.filter(u => !allTombstones.has(u.id) && !allTombstones.has(u.username));
 
     // 1. Two-way push: Any instructor account stored locally on this device that is NOT in Cloud Firestore
-    // (e.g. accounts created while offline or before cloud database setup) gets pushed to Firestore now!
+    // and is NOT deleted gets pushed to Cloud Firestore
     for (const localUser of currentStored) {
       if (localUser.id === DEFAULT_ADMIN_ACCOUNT.id) continue;
+      if (allTombstones.has(localUser.id) || allTombstones.has(localUser.username)) continue;
       
-      const inCloud = cloudUsers.find(cu => cu.id === localUser.id || cu.username === localUser.username);
+      const inCloud = validCloudUsers.find(cu => cu.id === localUser.id || cu.username === localUser.username);
       if (!inCloud) {
         console.info(`[ProfTrack Sync] Pushing offline local account "${localUser.username}" to Cloud Firestore...`);
         try {
           await pushUserToCloud(localUser);
-          cloudUsers.push(localUser);
+          validCloudUsers.push(localUser);
         } catch (pushErr) {
           console.warn(`Failed to push local user ${localUser.username} to cloud:`, pushErr);
         }
       }
     }
 
-    // 2. Two-way pull: Merge all cloud accounts with local accounts
-    const merged = mergeUsersRegistry(currentStored, cloudUsers);
+    // 2. Two-way pull: Merge all valid cloud accounts with local accounts
+    const merged = mergeUsersRegistry(currentStored, validCloudUsers)
+      .filter(u => !allTombstones.has(u.id) && !allTombstones.has(u.username));
     saveStoredUsers(merged);
     return merged;
   } catch (err) {
@@ -224,7 +277,8 @@ export function saveStoredUsers(users: UserAccount[]): void {
 }
 
 /**
- * Initializes authentication registry and performs zero-data-loss migration for Dan Martin and System Admin.
+ * Initializes authentication registry and sets up Master Admin.
+ * Note: Demo accounts like Dan Martin are never re-created or re-approved here.
  */
 export function initializeAuth(): {
   currentUser: UserAccount | null;
@@ -246,38 +300,30 @@ export function initializeAuth(): {
     delete users[adminIdx].pin;
   }
 
-  // Ensure Dan Martin (martin.dan) exists and is a normal instructor account, unless explicitly deleted
-  const isDanDeleted = localStorage.getItem('proftrack_dan_martin_deleted') === 'true';
-  const danIdx = users.findIndex(u => u.username === DAN_MARTIN_ACCOUNT.username);
-  if (danIdx === -1 && !isDanDeleted) {
-    users = [...users, DAN_MARTIN_ACCOUNT];
-  } else if (danIdx !== -1) {
-    // Explicitly convert Dan Martin to normal instructor account
-    users[danIdx].role = 'instructor';
-    users[danIdx].status = 'approved';
-    if (!users[danIdx].pinHash) {
-      users[danIdx].salt = DAN_INIT_SALT;
-      users[danIdx].pinHash = hashPinWithSalt('1234', DAN_INIT_SALT);
-    }
-    delete users[danIdx].pin;
+  // Filter out any tombstoned accounts that might still exist in local storage
+  const tombstones = new Set(getLocalDeletedUsers());
+  if (tombstones.size > 0) {
+    users = users.filter(u => !tombstones.has(u.id) && !tombstones.has(u.username));
   }
 
   saveStoredUsers(users);
 
-  // Seamless zero-data-loss migration for Prof. Dan Martin's existing data
-  const danKeys = getUserStorageKeys(DAN_MARTIN_ACCOUNT.id);
-  const existingClasses = localStorage.getItem('proftrack_classes_cache');
-  const existingLogs = localStorage.getItem('proftrack_session_logs');
-  const existingProfile = localStorage.getItem('proftrack_instructor_profile');
+  // Seamless zero-data-loss migration ONLY if Prof. Dan Martin is an active (non-deleted) user
+  if (users.some(u => u.id === DAN_MARTIN_ACCOUNT.id)) {
+    const danKeys = getUserStorageKeys(DAN_MARTIN_ACCOUNT.id);
+    const existingClasses = localStorage.getItem('proftrack_classes_cache');
+    const existingLogs = localStorage.getItem('proftrack_session_logs');
+    const existingProfile = localStorage.getItem('proftrack_instructor_profile');
 
-  if (existingClasses && !localStorage.getItem(danKeys.classesKey)) {
-    localStorage.setItem(danKeys.classesKey, existingClasses);
-  }
-  if (existingLogs && !localStorage.getItem(danKeys.logsKey)) {
-    localStorage.setItem(danKeys.logsKey, existingLogs);
-  }
-  if (existingProfile && !localStorage.getItem(danKeys.profileKey)) {
-    localStorage.setItem(danKeys.profileKey, existingProfile);
+    if (existingClasses && !localStorage.getItem(danKeys.classesKey)) {
+      localStorage.setItem(danKeys.classesKey, existingClasses);
+    }
+    if (existingLogs && !localStorage.getItem(danKeys.logsKey)) {
+      localStorage.setItem(danKeys.logsKey, existingLogs);
+    }
+    if (existingProfile && !localStorage.getItem(danKeys.profileKey)) {
+      localStorage.setItem(danKeys.profileKey, existingProfile);
+    }
   }
 
   // Retrieve active session user
@@ -605,16 +651,27 @@ export async function deleteUser(
   const updated = users.filter(u => u.id !== userId);
   saveStoredUsers(updated);
 
-  // Sync deletion to Cloud Firestore
-  try {
-    await deleteUserFromCloud(userId);
-  } catch (err) {
-    console.debug('Cloud user deletion sync deferred:', err);
+  // Record tombstones locally to immediately prevent resurrection
+  addLocalDeletedUser(userId);
+  if (target.username) {
+    addLocalDeletedUser(target.username);
   }
 
-  // If Dan Martin was explicitly deleted, remember tombstone so initializeAuth does not re-create him
-  if (target.username === DAN_MARTIN_ACCOUNT.username) {
+  // If Dan Martin was explicitly deleted, permanently tombstone all identifiers
+  if (target.username === DAN_MARTIN_ACCOUNT.username || userId === DAN_MARTIN_ACCOUNT.id) {
+    addLocalDeletedUser('usr_martin_dan');
+    addLocalDeletedUser('martin.dan');
     localStorage.setItem('proftrack_dan_martin_deleted', 'true');
+  }
+
+  // Sync deletion to Cloud Firestore (removes users doc, user_sync snapshot, and writes cloud tombstone)
+  try {
+    await deleteUserFromCloud(userId);
+    if (target.username && target.username !== userId) {
+      await recordTombstoneInCloud(target.username);
+    }
+  } catch (err) {
+    console.debug('Cloud user deletion sync deferred:', err);
   }
 
   // Clean isolated storage

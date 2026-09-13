@@ -4,7 +4,8 @@ import {
   authenticateUser, 
   registerInstructor, 
   formatUsername,
-  syncUsersFromCloud
+  syncUsersFromCloud,
+  getStoredUsers
 } from '../services/auth';
 import type { UserAccount } from '../services/auth';
 import { 
@@ -76,8 +77,6 @@ export const AuthModal: FC<AuthModalProps> = ({
     e.preventDefault();
     if (isSubmitting) return;
     setSignInError(null);
-    setSuggestRegisterFor(null);
-
     if (!username.trim()) {
       setSignInError('Please enter your username (format: lastname.firstname)');
       return;
@@ -101,6 +100,7 @@ export const AuthModal: FC<AuthModalProps> = ({
         }
       }
     } catch (err: any) {
+      console.error('[AuthModal] authenticateUser catch:', err);
       setSignInError(err?.message || 'Authentication error. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -265,7 +265,7 @@ export const AuthModal: FC<AuthModalProps> = ({
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
-                    placeholder="e.g. martin.dan"
+                    placeholder="e.g. cruz.maria"
                     className="w-full rounded-lg border border-zinc-300 bg-white pl-9 pr-3 py-2 text-sm text-zinc-950 shadow-2xs placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-400"
                   />
                 </div>
@@ -323,17 +323,19 @@ export const AuthModal: FC<AuthModalProps> = ({
               <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 text-center space-y-2">
                 <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Quick Demo Access:</span>
                 <div className="flex items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUsername('martin.dan');
-                      setPin('1234');
-                      setSignInError(null);
-                    }}
-                    className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer border border-zinc-200 dark:border-zinc-700"
-                  >
-                    Prof. Dan Martin
-                  </button>
+                  {getStoredUsers().some(u => u.username === 'martin.dan') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUsername('martin.dan');
+                        setPin('1234');
+                        setSignInError(null);
+                      }}
+                      className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer border border-zinc-200 dark:border-zinc-700"
+                    >
+                      Prof. Dan Martin
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {

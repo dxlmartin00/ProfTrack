@@ -57,12 +57,12 @@ export interface InstructorProfile {
 }
 
 export const DEFAULT_INSTRUCTOR_PROFILE: InstructorProfile = {
-  fullName: 'Prof. Dan Martin',
-  position: 'Assistant Professor I',
+  fullName: 'Faculty Member',
+  position: 'Faculty Instructor',
   department: 'College of Computer Studies',
-  institution: 'University of Makati',
-  email: 'dan.martin@university.edu.ph',
-  employeeId: 'EMP-2026-089'
+  institution: 'North Eastern Mindanao State University',
+  email: 'faculty@nemsu.edu.ph',
+  employeeId: 'NEMSU-FACULTY'
 };
 
 // Timeout helper to prevent hanging when offline or unconfigured
@@ -292,10 +292,19 @@ export const subscribeToAccountSync = (
 
 /**
  * Pushes a user account to Cloud Firestore collection 'users'.
+ * Guarded: Refuses to write any account that has been deleted or tombstoned.
  */
 export const pushUserToCloud = async (user: UserAccount): Promise<boolean> => {
   if (!db) return false;
+  if (user.id === 'usr_martin_dan' || user.username === 'martin.dan') {
+    return false;
+  }
   try {
+    const tombstones = await fetchTombstonesFromCloud();
+    if (tombstones.includes(user.id) || tombstones.includes(user.username)) {
+      console.warn(`[ProfTrack] Refusing to push tombstoned user ${user.username} to cloud.`);
+      return false;
+    }
     const userDocRef = doc(db, 'users', user.id);
     await withTimeout(setDoc(userDocRef, {
       ...user,
@@ -346,13 +355,59 @@ export const resetUserPinInCloud = async (userId: string, salt: string, pinHash:
 };
 
 /**
- * Deletes a user account from Cloud Firestore.
+ * Records a deletion tombstone in Cloud Firestore so deleted users
+ * are permanently prevented from resurrecting on any device.
+ */
+export const recordTombstoneInCloud = async (userId: string): Promise<boolean> => {
+  if (!db) return false;
+  try {
+    const tombstoneDoc = doc(db, 'tombstones', userId);
+    await withTimeout(setDoc(tombstoneDoc, {
+      userId,
+      deletedAt: new Date().toISOString()
+    }));
+    return true;
+  } catch (err) {
+    console.warn('Record tombstone in cloud deferred:', err);
+    return false;
+  }
+};
+
+/**
+ * Fetches all deletion tombstones from Cloud Firestore.
+ */
+export const fetchTombstonesFromCloud = async (): Promise<string[]> => {
+  if (!db) return [];
+  try {
+    const snap = await withTimeout(getDocs(collection(db, 'tombstones')));
+    const ids: string[] = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (data && (data.userId || d.id)) {
+        ids.push(data.userId || d.id);
+      }
+    });
+    return ids;
+  } catch (err) {
+    console.warn('Fetch tombstones from cloud deferred:', err);
+    return [];
+  }
+};
+
+/**
+ * Deletes a user account from Cloud Firestore, their user_sync snapshot,
+ * and sets a tombstone to prevent resurrection from other syncing devices.
  */
 export const deleteUserFromCloud = async (userId: string): Promise<boolean> => {
   if (!db) return false;
   try {
     const userDocRef = doc(db, 'users', userId);
-    await withTimeout(deleteDoc(userDocRef));
+    const syncDocRef = doc(db, 'user_sync', userId);
+    await Promise.allSettled([
+      withTimeout(deleteDoc(userDocRef)),
+      withTimeout(deleteDoc(syncDocRef)),
+      recordTombstoneInCloud(userId)
+    ]);
     return true;
   } catch (err) {
     console.warn('Delete user from cloud deferred:', err);
@@ -361,17 +416,29 @@ export const deleteUserFromCloud = async (userId: string): Promise<boolean> => {
 };
 
 /**
- * Fetches all registered users from Cloud Firestore.
+ * Fetches all registered users from Cloud Firestore, strictly filtering against tombstones.
  */
 export const fetchUsersFromCloud = async (): Promise<UserAccount[]> => {
-  if (!db) return [];
+  const firestoreDb = db;
+  if (!firestoreDb) return [];
   try {
-    const usersRef = collection(db, 'users');
-    const snapshot = await withTimeout(getDocs(usersRef));
+    const [snapshot, tombstones] = await Promise.all([
+      withTimeout(getDocs(collection(firestoreDb, 'users'))),
+      fetchTombstonesFromCloud()
+    ]);
+    const tombstoneSet = new Set(tombstones);
+    tombstoneSet.add('usr_martin_dan');
+    tombstoneSet.add('martin.dan');
+
     const users: UserAccount[] = [];
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
       if (data && data.username && data.id) {
+        if (tombstoneSet.has(data.id) || tombstoneSet.has(data.username)) {
+          // Actively purge any zombie doc in Firestore
+          deleteDoc(doc(firestoreDb, 'users', docSnap.id)).catch(() => {});
+          return;
+        }
         users.push({
           id: data.id,
           username: data.username,
@@ -400,13 +467,22 @@ export const fetchUsersFromCloud = async (): Promise<UserAccount[]> => {
  * Fetches a single user by username from Cloud Firestore.
  */
 export const fetchUserByUsernameFromCloud = async (username: string): Promise<UserAccount | null> => {
-  if (!db) return null;
+  const firestoreDb = db;
+  if (!firestoreDb) return null;
+  if (username === 'martin.dan') return null;
   try {
-    const usersRef = collection(db, 'users');
+    const tombstones = await fetchTombstonesFromCloud();
+    if (tombstones.includes(username) || tombstones.includes('usr_martin_dan')) return null;
+
+    const usersRef = collection(firestoreDb, 'users');
     const q = query(usersRef, where('username', '==', username));
     const snap = await withTimeout(getDocs(q));
     if (!snap.empty) {
       const data = snap.docs[0].data();
+      if (tombstones.includes(data.id) || tombstones.includes(data.username)) {
+        deleteDoc(doc(firestoreDb, 'users', snap.docs[0].id)).catch(() => {});
+        return null;
+      }
       return {
         id: data.id,
         username: data.username,
@@ -443,6 +519,9 @@ export const subscribeToUsersCloud = (
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         if (data && data.username && data.id) {
+          if (data.id === 'usr_martin_dan' || data.username === 'martin.dan') {
+            return;
+          }
           users.push({
             id: data.id,
             username: data.username,

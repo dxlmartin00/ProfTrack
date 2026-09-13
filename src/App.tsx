@@ -47,6 +47,7 @@ import {
   getStoredUsers, 
   mergeUsersRegistry,
   saveStoredUsers,
+  getLocalDeletedUsers,
   DAN_MARTIN_ACCOUNT
 } from './services/auth';
 import type { UserAccount } from './services/auth';
@@ -463,7 +464,9 @@ function AppContent() {
     const unsubCloudUsers = subscribeToUsersCloud((cloudUsers) => {
       if (cloudUsers && cloudUsers.length > 0) {
         const local = getStoredUsers();
-        const merged = mergeUsersRegistry(local, cloudUsers);
+        const tombstones = new Set(getLocalDeletedUsers());
+        const filteredCloud = cloudUsers.filter(u => !tombstones.has(u.id) && !tombstones.has(u.username));
+        const merged = mergeUsersRegistry(local, filteredCloud).filter(u => !tombstones.has(u.id) && !tombstones.has(u.username));
         saveStoredUsers(merged);
         setAllUsers(merged);
       }
