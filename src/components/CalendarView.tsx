@@ -472,72 +472,6 @@ export const CalendarView: FC<CalendarViewProps> = ({
             )}
           </div>
         </div>
-
-        {/* 2. Interactive Week-at-a-Glance Strip */}
-        <div className="grid grid-cols-5 md:grid-cols-5 lg:grid-cols-6 gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
-          {weekDays.map((dayDate, idx) => {
-            const isCurrentDay = isToday(dayDate);
-            const isSelected = selectedMobileDayIdx === idx;
-            const schedule = getDaySchedule(dayDate);
-            const hasOngoing = schedule.some(s => s.isLiveNow);
-
-            return (
-              <button
-                key={dayDate.toISOString()}
-                type="button"
-                onClick={() => setSelectedMobileDayIdx(idx)}
-                className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                  isCurrentDay
-                    ? 'border-zinc-950 dark:border-white bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-sm'
-                    : isSelected
-                    ? 'border-zinc-400 dark:border-zinc-600 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100'
-                    : 'border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-850/40 hover:bg-zinc-100/70 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                    isCurrentDay ? 'text-zinc-300 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-400'
-                  }`}>
-                    {format(dayDate, 'EEE')}
-                  </span>
-                  {hasOngoing && (
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" title="Class in session now" />
-                  )}
-                </div>
-
-                <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-base sm:text-lg font-black tracking-tight">
-                    {format(dayDate, 'd')}
-                  </span>
-                  <span className={`text-[10px] font-medium truncate ${
-                    isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-300'
-                  }`}>
-                    {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
-                  </span>
-                </div>
-
-                {/* Event color dots indicator */}
-                <div className="flex items-center gap-1 mt-1.5 h-1.5">
-                  {schedule.slice(0, 4).map((item, dotIdx) => (
-                    <span 
-                      key={dotIdx}
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        item.isLogged 
-                          ? 'bg-emerald-500' 
-                          : item.sch.type === 'Laboratory' 
-                          ? 'bg-teal-500' 
-                          : 'bg-blue-500'
-                      }`}
-                    />
-                  ))}
-                  {schedule.length > 4 && (
-                    <span className="text-[8px] leading-none opacity-70">+{schedule.length - 4}</span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* 3. Faculty Schedule Insights Banner */}
@@ -612,20 +546,23 @@ export const CalendarView: FC<CalendarViewProps> = ({
                       }`}
                     >
                       <div className={`text-[10px] font-black uppercase tracking-wider ${
-                        isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-300'
+                        isCurrentDay ? 'text-zinc-200 dark:text-zinc-700' : 'text-zinc-500 dark:text-zinc-400'
                       }`}>
                         {format(dayDate, 'EEEE')}
                       </div>
-                      <div className="text-base font-black tracking-tight mt-0.5 flex items-center justify-center gap-1.5">
+                      <div className="text-base lg:text-lg font-black tracking-tight mt-0.5 flex items-center justify-center gap-1.5">
                         <span>{format(dayDate, 'MMM d')}</span>
                         {isCurrentDay && (
-                          <span className="h-2 w-2 rounded-full bg-emerald-400 dark:bg-emerald-600 animate-pulse" />
+                          <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-500 text-white shadow-2xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-white animate-ping" />
+                            Today
+                          </span>
                         )}
                       </div>
-                      <div className={`text-[10px] font-medium mt-0.5 ${
-                        isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-300'
+                      <div className={`text-[10px] font-semibold mt-0.5 ${
+                        isCurrentDay ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'
                       }`}>
-                        {schedule.length > 0 ? `${schedule.length} ${schedule.length === 1 ? 'class' : 'classes'} • ${totalDayHours}h` : 'No classes'}
+                        {schedule.length > 0 ? `${schedule.length} ${schedule.length === 1 ? 'class' : 'classes'} • ${totalDayHours}h load` : 'Free Day'}
                       </div>
                       {holidayName && (
                         <div className={`text-[9px] font-bold mt-1 px-1.5 py-0.5 rounded truncate ${
@@ -700,15 +637,18 @@ export const CalendarView: FC<CalendarViewProps> = ({
                         </div>
                       )}
 
-                      {/* Scheduled Class Blocks with Left Accent Border */}
+                      {/* Scheduled Class Blocks with Refined Visual Hierarchy */}
                       {schedule.map((item, itemIdx) => {
                         const isLab = item.sch.type === 'Laboratory';
 
                         const cardColors = item.isLogged
-                          ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#143224] border-emerald-200/90 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
+                          ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#133022] border-emerald-300/80 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
                           : isLab
-                          ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#133235] border-teal-200/90 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
-                          : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#17273d] border-sky-200/90 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
+                          ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#122e31] border-teal-300/80 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
+                          : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#14263b] border-sky-300/80 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
+
+                        const isShortCard = item.heightPx < 60;
+                        const isTallCard = item.heightPx >= 95;
 
                         return (
                           <div
@@ -718,26 +658,72 @@ export const CalendarView: FC<CalendarViewProps> = ({
                               top: `${item.topPx}px`,
                               height: `${item.heightPx}px`,
                             }}
-                            className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] active:scale-[0.98] flex flex-col justify-between overflow-hidden z-10 ${cardColors}`}
+                            className={`absolute left-1 right-1 rounded-xl border p-2 text-left cursor-pointer transition-all shadow-2xs hover:shadow-md hover:scale-[1.01] active:scale-[0.98] flex flex-col justify-between overflow-hidden ${
+                              item.isLiveNow 
+                                ? 'ring-2 ring-rose-500/90 dark:ring-rose-400 shadow-md z-30' 
+                                : 'z-10'
+                            } ${cardColors}`}
                             title={`${item.cls.subjectCode} (${item.cls.section}) - ${item.cls.subjectTitle}\nTime: ${formatTimeSlot(item.sch.startTime)} – ${formatTimeSlot(item.sch.endTime)}\nRoom: ${item.sch.room || item.cls.room}\nClick to log topics or view syllabus.`}
                           >
-                            <div>
+                            {/* Level 1 Priority: Subject Code, Section & Status */}
+                            <div className="min-w-0">
                               <div className="flex items-center justify-between gap-1 leading-tight">
-                                <span className="text-xs font-black truncate">
-                                  {item.cls.subjectCode}
-                                </span>
-                                <span className="text-[9px] font-bold px-1 rounded bg-black/10 dark:bg-black/30 shrink-0">
-                                  {item.cls.section}
-                                </span>
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-xs sm:text-[13px] font-black tracking-tight truncate text-zinc-950 dark:text-white">
+                                    {item.cls.subjectCode}
+                                  </span>
+                                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15 text-zinc-900 dark:text-zinc-100 shrink-0">
+                                    {item.cls.section}
+                                  </span>
+                                </div>
+
+                                {/* Status Pills */}
+                                {item.isLiveNow ? (
+                                  <span className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-rose-500 text-white shadow-2xs animate-pulse shrink-0">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                                    Live
+                                  </span>
+                                ) : item.isLogged ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-200/90 dark:bg-emerald-900/80 text-emerald-950 dark:text-emerald-200 shrink-0">
+                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                    Done
+                                  </span>
+                                ) : item.startsInMinutes !== null ? (
+                                  <span className="inline-flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-amber-200/90 dark:bg-amber-900/70 text-amber-950 dark:text-amber-200 shrink-0">
+                                    In {item.startsInMinutes}m
+                                  </span>
+                                ) : (
+                                  <span className="text-[8px] font-extrabold uppercase tracking-wider px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 shrink-0 opacity-80">
+                                    {isLab ? 'Lab' : 'Lec'}
+                                  </span>
+                                )}
                               </div>
-                              <div className="text-[10px] opacity-85 truncate mt-0.5">
-                                {item.cls.subjectTitle}
-                              </div>
+
+                              {/* Level 3 Priority: Subject Title */}
+                              {!isShortCard && (
+                                <div className="text-[10px] sm:text-[11px] font-medium text-zinc-700 dark:text-zinc-300 truncate mt-0.5">
+                                  {item.cls.subjectTitle}
+                                </div>
+                              )}
+
+                              {/* Level 4 Context: Topic Preview if 2hr+ tall card */}
+                              {isTallCard && (item.matchingLog?.topicsCovered?.[0] || item.nextTopic) && (
+                                <div className="text-[9px] text-zinc-600 dark:text-zinc-300 truncate mt-1 pt-1 border-t border-black/10 dark:border-white/10">
+                                  <span className="font-bold">{item.matchingLog?.topicsCovered?.[0] ? 'Topic:' : 'Next:'}</span> {item.matchingLog?.topicsCovered?.[0] || item.nextTopic}
+                                </div>
+                              )}
                             </div>
 
-                            <div className="flex items-center justify-between text-[10px] font-mono leading-none pt-1">
-                              <span>{formatTimeSlot(item.sch.startTime)}</span>
-                              <span className="font-bold">{item.sch.room || item.cls.room || 'CL'}</span>
+                            {/* Level 2 Priority: When & Where (Time Range & Room) */}
+                            <div className="flex items-center justify-between text-[10px] font-mono leading-none pt-1 border-t border-black/10 dark:border-white/10 mt-1">
+                              <div className="flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300 truncate">
+                                <Clock className="w-3 h-3 opacity-70 shrink-0" />
+                                <span>{formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}</span>
+                              </div>
+                              <div className="flex items-center gap-1 font-bold text-zinc-900 dark:text-zinc-100 shrink-0 ml-1">
+                                <MapPin className="w-3 h-3 opacity-70 shrink-0" />
+                                <span>{item.sch.room || item.cls.room || 'CL'}</span>
+                              </div>
                             </div>
                           </div>
                         );
@@ -897,15 +883,17 @@ export const CalendarView: FC<CalendarViewProps> = ({
                           </div>
                         )}
 
-                        {/* Scheduled Class Cards (Spacious Full Width) */}
+                        {/* Scheduled Class Cards (Spacious Full Width with Clear Visual Hierarchy) */}
                         {schedule.map((item, itemIdx) => {
                           const isLab = item.sch.type === 'Laboratory';
 
                           const cardColors = item.isLogged
-                            ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#143224] border-emerald-200/90 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
+                            ? 'border-l-4 border-l-emerald-500 bg-emerald-50/95 dark:bg-[#133022] border-emerald-300/80 dark:border-[#1f4c37] text-emerald-950 dark:text-[#bbf7d0]'
                             : isLab
-                            ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#133235] border-teal-200/90 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
-                            : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#17273d] border-sky-200/90 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
+                            ? 'border-l-4 border-l-teal-500 bg-teal-50/95 dark:bg-[#122e31] border-teal-300/80 dark:border-[#1e4d52] text-teal-950 dark:text-[#a7f3d0]'
+                            : 'border-l-4 border-l-sky-500 bg-sky-50/95 dark:bg-[#14263b] border-sky-300/80 dark:border-[#223d60] text-sky-950 dark:text-[#bae6fd]';
+
+                          const isTallCard = item.heightPx >= 90;
 
                           return (
                             <div
@@ -915,49 +903,69 @@ export const CalendarView: FC<CalendarViewProps> = ({
                                 top: `${item.topPx}px`,
                                 height: `${item.heightPx}px`,
                               }}
-                              className={`absolute left-2 right-2 rounded-xl border p-2.5 text-left cursor-pointer transition-all shadow-xs hover:shadow-md active:scale-[0.99] flex flex-col justify-between overflow-hidden z-10 ${cardColors}`}
+                              className={`absolute left-2 right-2 rounded-xl border p-2.5 text-left cursor-pointer transition-all shadow-xs hover:shadow-md active:scale-[0.99] flex flex-col justify-between overflow-hidden ${
+                                item.isLiveNow 
+                                  ? 'ring-2 ring-rose-500/90 dark:ring-rose-400 shadow-md z-30' 
+                                  : 'z-10'
+                              } ${cardColors}`}
                             >
+                              {/* Level 1 Priority: Subject Code, Section & Status */}
                               <div className="min-w-0">
                                 <div className="flex items-center justify-between gap-1.5 leading-tight">
-                                  <div className="flex items-center gap-1.5 truncate">
-                                    <span className="text-xs font-black truncate">
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className="text-sm font-black tracking-tight truncate text-zinc-950 dark:text-white">
                                       {item.cls.subjectCode}
                                     </span>
-                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-black/30 shrink-0">
+                                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/15 text-zinc-900 dark:text-zinc-100 shrink-0">
                                       {item.cls.section}
                                     </span>
                                   </div>
 
-                                  {item.isLogged ? (
-                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 shrink-0">
+                                  {/* Status Badges */}
+                                  {item.isLiveNow ? (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-500 text-white shadow-2xs animate-pulse shrink-0">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                                      Live Now
+                                    </span>
+                                  ) : item.isLogged ? (
+                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-200/90 dark:bg-emerald-900/80 text-emerald-950 dark:text-emerald-200 shrink-0">
                                       <CheckCircle2 className="w-2.5 h-2.5" />
                                       Done
                                     </span>
-                                  ) : isLab ? (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-teal-200/80 dark:bg-teal-900/60 text-teal-900 dark:text-teal-200 shrink-0">
-                                      Lab
+                                  ) : item.startsInMinutes !== null ? (
+                                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-200/90 dark:bg-amber-900/70 text-amber-950 dark:text-amber-200 shrink-0">
+                                      In {item.startsInMinutes}m
                                     </span>
                                   ) : (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-200/80 dark:bg-sky-900/60 text-sky-900 dark:text-sky-200 shrink-0">
-                                      Lecture
+                                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 shrink-0 opacity-80">
+                                      {isLab ? 'Lab' : 'Lecture'}
                                     </span>
                                   )}
                                 </div>
 
+                                {/* Level 3 Priority: Subject Title */}
                                 {item.heightPx >= 50 && (
-                                  <div className="text-[11px] font-medium opacity-90 truncate mt-1">
+                                  <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 truncate mt-1">
                                     {item.cls.subjectTitle}
+                                  </div>
+                                )}
+
+                                {/* Level 4 Context: Topic Preview if 2hr+ card */}
+                                {isTallCard && (item.matchingLog?.topicsCovered?.[0] || item.nextTopic) && (
+                                  <div className="text-[10px] text-zinc-600 dark:text-zinc-300 truncate mt-1 pt-1 border-t border-black/10 dark:border-white/10">
+                                    <span className="font-bold">{item.matchingLog?.topicsCovered?.[0] ? 'Topic:' : 'Next:'}</span> {item.matchingLog?.topicsCovered?.[0] || item.nextTopic}
                                   </div>
                                 )}
                               </div>
 
-                              <div className="flex items-center justify-between text-[10px] font-mono leading-none pt-1 border-t border-black/10 dark:border-white/10 mt-1">
-                                <div className="flex items-center gap-1 font-semibold truncate">
-                                  <Clock className="w-3 h-3 shrink-0 opacity-70" />
+                              {/* Level 2 Priority: When & Where (Time Range & Room) */}
+                              <div className="flex items-center justify-between text-[11px] font-mono leading-none pt-1.5 border-t border-black/10 dark:border-white/10 mt-1">
+                                <div className="flex items-center gap-1 font-semibold text-zinc-700 dark:text-zinc-300 truncate">
+                                  <Clock className="w-3.5 h-3.5 shrink-0 opacity-70" />
                                   <span>{formatTimeSlot(item.sch.startTime)} – {formatTimeSlot(item.sch.endTime)}</span>
                                 </div>
-                                <div className="flex items-center gap-1 font-bold shrink-0 ml-1">
-                                  <MapPin className="w-3 h-3 shrink-0 opacity-70" />
+                                <div className="flex items-center gap-1 font-bold text-zinc-900 dark:text-zinc-100 shrink-0 ml-1.5">
+                                  <MapPin className="w-3.5 h-3.5 shrink-0 opacity-70" />
                                   <span>{item.sch.room || item.cls.room || 'CL'}</span>
                                 </div>
                               </div>
