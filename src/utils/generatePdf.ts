@@ -21,6 +21,11 @@ export const generateMonthlyReport = (
   // Calculate summary metrics
   const totalSessions = periodLogs.length;
   const totalTopics = periodLogs.reduce((acc, l) => acc + l.topicsCovered.length, 0);
+  const labCount = periodLogs.filter((l) => (l.sessionType || '').toLowerCase().includes('lab')).length;
+  const lectureCount = totalSessions - labCount;
+  const highEngagementCount = periodLogs.filter((l) => l.engagementLevel === 'High').length;
+  const highEngagementPct = totalSessions > 0 ? Math.round((highEngagementCount / totalSessions) * 100) : 0;
+  const estimatedHours = (totalSessions * 1.5).toFixed(1).replace('.0', '');
 
   // Header Banner / Title
   doc.setFontSize(16);
@@ -45,9 +50,14 @@ export const generateMonthlyReport = (
   doc.setFont('helvetica', 'normal');
   doc.text(`${monthName}  •  ${totalSessions} Sessions Logged  •  ${totalTopics} Topics Completed`, 28, 35);
 
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Analytics: `, 14, 40);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`~${estimatedHours} Teaching Hrs  •  ${lectureCount} Lec / ${labCount} Lab  •  ${highEngagementPct}% Optimal Student Engagement`, 32, 40);
+
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
-  doc.text(`Report Generated: ${format(new Date(), 'MMM dd, yyyy • h:mm a')}${profile?.employeeId ? ` • ID: ${profile.employeeId}` : ''}`, 14, 40);
+  doc.text(`Report Generated: ${format(new Date(), 'MMM dd, yyyy • h:mm a')}${profile?.employeeId ? ` • ID: ${profile.employeeId}` : ''}`, 14, 46);
 
   // Table Data Preparation
   const tableData = periodLogs
@@ -62,7 +72,7 @@ export const generateMonthlyReport = (
     ]);
 
   autoTable(doc, {
-    startY: 45,
+    startY: 50,
     head: [['Date', 'Course & Section', 'Type', 'Topics & Syllabus Accomplished', 'Student Engagement', 'Reminders & Next Steps']],
     body: tableData.length > 0 ? tableData : [['—', 'No session logs recorded for this period.', '—', '—', '—', '—']],
     theme: 'grid',
