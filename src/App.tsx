@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DailyTimetable } from './components/DailyTimetable';
 import { PostClassUpdateModal } from './components/PostClassUpdateModal';
 import { AddClassModal } from './components/AddClassModal';
@@ -995,9 +995,9 @@ function AppContent() {
     setIsAuthModalOpen(true);
   };
 
-  const handleAccountsUpdated = () => {
+  const handleAccountsUpdated = useCallback(() => {
     setAllUsers(getStoredUsers());
-  };
+  }, []);
 
   const pendingCount = allUsers.filter(u => u.status === 'pending').length;
 

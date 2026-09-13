@@ -63,16 +63,12 @@ export const AuthModal: FC<AuthModalProps> = ({
     return formatUsername(regLastName || 'lastname', regFirstName || 'firstname');
   }, [regLastName, regFirstName]);
 
-  // Synchronize with Cloud Firestore whenever the auth screen opens
+  // Synchronize with Cloud Firestore once when the auth screen opens
   useEffect(() => {
     if (isOpen) {
-      syncUsersFromCloud()
-        .then(() => {
-          if (onAccountsUpdated) onAccountsUpdated();
-        })
-        .catch(err => console.debug('Auth modal cloud sync deferred:', err));
+      syncUsersFromCloud().catch(err => console.debug('Auth modal cloud sync deferred:', err));
     }
-  }, [isOpen, onAccountsUpdated]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

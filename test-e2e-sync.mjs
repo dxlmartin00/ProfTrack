@@ -24,7 +24,7 @@ async function runTest() {
   });
   const phonePage = await phoneContext.newPage();
   phonePage.on('console', msg => {
-    if (msg.type() === 'error') console.log(`  [Phone Console Error]:`, msg.text());
+    console.log(`  [Phone Console ${msg.type()}]:`, msg.text());
   });
 
   await phonePage.goto('http://localhost:5173/');
