@@ -63,9 +63,9 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
   // Target domain for mobile QR code scan (If on localhost, default to the production web app so phone can open it!)
   const [targetDomain, setTargetDomain] = useState(() => {
     if (isLocalhost) {
-      return 'https://proftrack-pwa.vercel.app';
+      return 'https://teaching-log-e1c57.web.app';
     }
-    return window.location.origin || 'https://proftrack-pwa.vercel.app';
+    return window.location.origin || 'https://teaching-log-e1c57.web.app';
   });
 
   const [showDomainEdit, setShowDomainEdit] = useState(false);
@@ -405,7 +405,7 @@ export const DataTransferModal: FC<DataTransferModalProps> = ({
                         type="text"
                         value={targetDomain}
                         onChange={(e) => setTargetDomain(e.target.value)}
-                        placeholder="https://proftrack-pwa.vercel.app"
+                        placeholder="https://teaching-log-e1c57.web.app"
                         className="w-full h-7 rounded border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 text-xs font-mono text-zinc-900 dark:text-zinc-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-zinc-950 dark:focus-visible:ring-zinc-400"
                       />
                     ) : (
