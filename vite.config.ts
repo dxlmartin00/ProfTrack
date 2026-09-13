@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'manifest.json'],
+      includeAssets: ['favicon.svg', 'manifest.json', 'icon-192.png', 'icon-512.png', 'sw-notifications.js'],
       manifest: {
         name: 'ProfTrack - Academic Timetable & Syllabus',
         short_name: 'ProfTrack',
@@ -23,6 +23,18 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
             src: '/favicon.svg',
             sizes: '192x192 512x512',
             type: 'image/svg+xml',
@@ -31,6 +43,7 @@ export default defineConfig({
         ]
       },
       workbox: {
+        importScripts: ['/sw-notifications.js'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff2,ttf}'],
         runtimeCaching: [

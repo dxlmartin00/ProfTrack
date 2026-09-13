@@ -20,10 +20,6 @@ import {
   subscribeToAccountSync,
   DEFAULT_INSTRUCTOR_PROFILE
 } from './services/db';
-import { 
-  requestNotificationPermission, 
-  sendLocalNotification 
-} from './services/pwa';
 import { decompressPayload, unpackTransferPayload } from './utils/codec';
 import { getCourseProgressDetails } from './utils/courseProgress';
 import { AuthModal } from './components/AuthModal';
@@ -32,6 +28,8 @@ import { AdminAccountManagementView } from './components/AdminAccountManagementV
 import { CalendarView } from './components/CalendarView';
 import { AccessibilityModal } from './components/AccessibilityModal';
 import { KeyboardShortcutsModal } from './components/KeyboardShortcutsModal';
+import { NotificationModal } from './components/NotificationModal';
+import { checkScheduledClassReminders } from './services/notificationService';
 import { ToastProvider, useToast } from './context/ToastContext';
 import { 
   getStoredTheme, 
@@ -432,6 +430,7 @@ function AppContent() {
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => getStoredTheme());
   const [a11ySettings, setA11ySettings] = useState<AccessibilitySettings>(() => getStoredA11y());
   const [isA11yModalOpen, setIsA11yModalOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Apply Theme & Accessibility configuration to document root
@@ -919,16 +918,41 @@ function AppContent() {
     }
   };
 
-  // Web Push Permission & Test Trigger
-  const handleToggleNotifications = async () => {
-    const granted = await requestNotificationPermission('inst1');
-    if (granted || (typeof Notification !== 'undefined' && Notification.permission === 'granted')) {
-      setNotificationGranted(true);
-      sendLocalNotification('ProfTrack • Class Session Ending', {
-        body: 'Your class session has ended. Tap here to log topics covered and student engagement.',
-        tag: 'class-end-reminder'
+  // Automated background class schedule reminder monitor
+  useEffect(() => {
+    if (!classes || classes.length === 0) return;
+
+    // Check on mount or when classes/logs update
+    checkScheduledClassReminders(classes, logs, (title, body) => {
+      showToast(`${title}: ${body}`, 'info', 5000);
+    });
+
+    // Check every 30 seconds
+    const interval = setInterval(() => {
+      checkScheduledClassReminders(classes, logs, (title, body) => {
+        showToast(`${title}: ${body}`, 'info', 5000);
       });
-    }
+    }, 30000);
+
+    // Also check when tab/window gains visibility
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkScheduledClassReminders(classes, logs, (title, body) => {
+          showToast(`${title}: ${body}`, 'info', 5000);
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [classes, logs, showToast]);
+
+  // Open Notifications & Reminders Center
+  const handleToggleNotifications = () => {
+    setIsNotificationModalOpen(true);
   };
 
   // Auth & Multi-tenant Action Handlers
@@ -1097,19 +1121,25 @@ function AppContent() {
               <Keyboard className="h-4 w-4" />
             </button>
 
-            {/* Notification Bell / Test Trigger button */}
+            {/* Notification Bell / Center Trigger button */}
             <button
               type="button"
               onClick={handleToggleNotifications}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-lg border text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 ${
+              className={`relative inline-flex h-9 w-9 items-center justify-center rounded-lg border text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 ${
                 notificationGranted
-                  ? 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                  ? 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200'
                   : 'border-zinc-950 bg-zinc-950 text-white shadow-2xs hover:bg-zinc-800'
               }`}
-              aria-label={notificationGranted ? 'Web Push Active' : 'Enable Web Push Reminders'}
-              title={notificationGranted ? 'Web Push Active' : 'Enable Web Push Reminders'}
+              aria-label={notificationGranted ? 'Notifications Active (Click to Manage)' : 'Enable Class Reminders & Notifications'}
+              title={notificationGranted ? 'Notifications Active (Click to Manage)' : 'Enable Class Reminders & Notifications'}
             >
               <Bell className="h-4 w-4" />
+              {notificationGranted && (
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+              )}
             </button>
 
             {/* Refresh / Reload App Button */}
@@ -1495,15 +1525,18 @@ function AppContent() {
 
                   <button
                     type="button"
-                    onClick={handleToggleNotifications}
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsNotificationModalOpen(true);
+                    }}
                     className="w-full flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-100 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
-                      <span>Class Push Reminders</span>
+                      <span>Class Reminders & Notifications</span>
                     </div>
-                    <span className="text-[11px] font-semibold text-zinc-600 dark:text-zinc-300">
-                      {notificationGranted ? 'Enabled' : 'Disabled'}
+                    <span className={`text-[11px] font-semibold ${notificationGranted ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                      {notificationGranted ? 'Active' : 'Setup'}
                     </span>
                   </button>
 
@@ -1883,6 +1916,14 @@ function AppContent() {
       <KeyboardShortcutsModal
         isOpen={isShortcutsModalOpen}
         onClose={() => setIsShortcutsModalOpen(false)}
+      />
+
+      {/* Class Schedule Notifications & Reminders Modal */}
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        classes={classes}
+        onPermissionChanged={(granted) => setNotificationGranted(granted)}
       />
 
     </div>
