@@ -6,7 +6,8 @@ import {
   resetUserPin, 
   deleteUser, 
   getUserDataCounts,
-  syncUsersFromCloud
+  syncUsersFromCloud,
+  subscribeToUsersCloud
 } from '../services/auth';
 import type { UserAccount, AccountStatus } from '../services/auth';
 import { 
@@ -42,7 +43,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
   onAccountsUpdated
 }) => {
   const [users, setUsers] = useState<UserAccount[]>(() => usersList || getStoredUsers());
-  const [filterTab, setFilterTab] = useState<'pending' | 'approved' | 'all'>('pending');
+  const [filterTab, setFilterTab] = useState<'pending' | 'approved' | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -54,7 +55,7 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
     }
   }, [usersList]);
 
-  // Synchronize live across tabs and on account registration/modification events
+  // Synchronize live across tabs, windows, and Cloud Firestore real-time snapshot
   useEffect(() => {
     const handleSync = () => {
       const updated = getStoredUsers();
@@ -62,9 +63,18 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
     };
     window.addEventListener('proftrack_accounts_updated', handleSync);
     window.addEventListener('storage', handleSync);
+
+    // Active real-time subscription to Cloud Firestore 'users' collection
+    const unsubscribeCloud = subscribeToUsersCloud((remoteUsers) => {
+      if (remoteUsers && remoteUsers.length > 0) {
+        setUsers(remoteUsers);
+      }
+    });
+
     return () => {
       window.removeEventListener('proftrack_accounts_updated', handleSync);
       window.removeEventListener('storage', handleSync);
+      unsubscribeCloud();
     };
   }, []);
 
@@ -93,8 +103,8 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
     }
   };
 
-  const handleStatusChange = (userId: string, newStatus: AccountStatus, name: string) => {
-    const res = updateUserStatus(userId, newStatus, currentUser.id);
+  const handleStatusChange = async (userId: string, newStatus: AccountStatus, name: string) => {
+    const res = await updateUserStatus(userId, newStatus, currentUser.id);
     if (res.success) {
       refreshUsers();
       setActionNotice({ type: 'success', message: `Updated ${name} status to "${newStatus.toUpperCase()}".` });
@@ -105,11 +115,11 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
     }
   };
 
-  const handleResetPin = (userId: string, name: string) => {
+  const handleResetPin = async (userId: string, name: string) => {
     const confirm = window.confirm(`Reset PIN for ${name} to default "1234"?`);
     if (!confirm) return;
 
-    const res = resetUserPin(userId, '1234', currentUser.id);
+    const res = await resetUserPin(userId, '1234', currentUser.id);
     if (res.success) {
       refreshUsers();
       setActionNotice({ type: 'success', message: `Reset PIN for ${name} to "1234".` });
@@ -120,13 +130,13 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
     }
   };
 
-  const handleDelete = (userId: string, name: string) => {
+  const handleDelete = async (userId: string, name: string) => {
     const confirm = window.confirm(
       `Are you sure you want to permanently delete the instructor account for ${name}?\n\nThis will also remove their isolated timetable and lesson data.`
     );
     if (!confirm) return;
 
-    const res = deleteUser(userId, currentUser.id);
+    const res = await deleteUser(userId, currentUser.id);
     if (res.success) {
       refreshUsers();
       setActionNotice({ type: 'success', message: `Instructor account for ${name} was permanently deleted.` });
@@ -142,7 +152,20 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
   const totalInstructors = users.filter(u => u.role === 'instructor').length;
 
   const filteredUsers = useMemo(() => {
+    const hasSearch = Boolean(searchQuery.trim());
+    const q = searchQuery.toLowerCase().trim();
+
     return users.filter(u => {
+      // If user is actively searching, search across ALL accounts regardless of tab!
+      if (hasSearch) {
+        return (
+          u.username.toLowerCase().includes(q) ||
+          u.fullName.toLowerCase().includes(q) ||
+          u.department.toLowerCase().includes(q) ||
+          u.status.toLowerCase().includes(q)
+        );
+      }
+
       // Filter out admin from list unless viewing all
       if (filterTab !== 'all' && u.role === 'admin') return false;
 
@@ -150,15 +173,6 @@ export const AdminAccountManagementView: FC<AdminAccountManagementViewProps> = (
       if (filterTab === 'pending' && u.status !== 'pending') return false;
       if (filterTab === 'approved' && u.status !== 'approved') return false;
 
-      // Search filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          u.username.toLowerCase().includes(q) ||
-          u.fullName.toLowerCase().includes(q) ||
-          u.department.toLowerCase().includes(q)
-        );
-      }
       return true;
     });
   }, [users, filterTab, searchQuery]);

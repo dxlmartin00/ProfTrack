@@ -173,19 +173,38 @@ export function mergeUsersRegistry(localUsers: UserAccount[], incomingUsers: Use
 }
 
 /**
- * Manually triggers a sync from Cloud Firestore to pull newly registered accounts.
+ * Bidirectionally synchronizes user accounts between local storage and Cloud Firestore.
+ * 1. Pushes any local accounts created on this device that are missing in the cloud.
+ * 2. Pulls all cloud registered accounts down to local storage.
  */
 export async function syncUsersFromCloud(): Promise<UserAccount[]> {
   try {
     const cloudUsers = await fetchUsersFromCloud();
-    if (cloudUsers && cloudUsers.length > 0) {
-      const currentStored = getStoredUsers();
-      const merged = mergeUsersRegistry(currentStored, cloudUsers);
-      saveStoredUsers(merged);
-      return merged;
+    const currentStored = getStoredUsers();
+
+    // 1. Two-way push: Any instructor account stored locally on this device that is NOT in Cloud Firestore
+    // (e.g. accounts created while offline or before cloud database setup) gets pushed to Firestore now!
+    for (const localUser of currentStored) {
+      if (localUser.id === DEFAULT_ADMIN_ACCOUNT.id) continue;
+      
+      const inCloud = cloudUsers.find(cu => cu.id === localUser.id || cu.username === localUser.username);
+      if (!inCloud) {
+        console.info(`[ProfTrack Sync] Pushing offline local account "${localUser.username}" to Cloud Firestore...`);
+        try {
+          await pushUserToCloud(localUser);
+          cloudUsers.push(localUser);
+        } catch (pushErr) {
+          console.warn(`Failed to push local user ${localUser.username} to cloud:`, pushErr);
+        }
+      }
     }
+
+    // 2. Two-way pull: Merge all cloud accounts with local accounts
+    const merged = mergeUsersRegistry(currentStored, cloudUsers);
+    saveStoredUsers(merged);
+    return merged;
   } catch (err) {
-    console.debug('Manual cloud users sync deferred:', err);
+    console.debug('Bidirectional cloud users sync deferred:', err);
   }
   return getStoredUsers();
 }
@@ -268,13 +287,6 @@ export function initializeAuth(): {
     currentUser = users.find(u => u.id === activeUserId && u.status === 'approved') || null;
   }
 
-  // If initial run or no session, default to Dan Martin (Instructor) so timetable displays immediately
-  if (!currentUser && !localStorage.getItem('proftrack_auth_initialized_flag_v2')) {
-    currentUser = DAN_MARTIN_ACCOUNT;
-    localStorage.setItem(CURRENT_USER_SESSION_KEY, DAN_MARTIN_ACCOUNT.id);
-    localStorage.setItem('proftrack_auth_initialized_flag_v2', 'true');
-  }
-
   // Background Cloud Sync to pull any newly registered users from other devices
   syncUsersFromCloud().catch(err => console.debug('Initial cloud users fetch deferred:', err));
 
@@ -312,9 +324,9 @@ export async function authenticateUser(
   let users = getStoredUsers();
   let user = users.find(u => u.username === normalizedUsername);
   
-  // If not found in local storage, check Cloud Firestore before failing!
-  // This enables accounts registered on a phone to log in on a computer seamlessly.
-  if (!user) {
+  // If not found in local storage OR if locally marked as pending, check Cloud Firestore!
+  // This enables accounts registered on a phone or approved by an admin to sync instantly.
+  if (!user || user.status === 'pending') {
     try {
       const cloudUser = await fetchUserByUsernameFromCloud(normalizedUsername);
       if (cloudUser) {
@@ -402,13 +414,13 @@ export async function authenticateUser(
 /**
  * Registers a new instructor account with status "pending" and salted SHA-256 hash.
  */
-export function registerInstructor(data: {
+export async function registerInstructor(data: {
   firstName: string;
   lastName: string;
   department?: string;
   institution?: string;
   pin?: string;
-}): { success: boolean; user?: UserAccount; error?: string } {
+}): Promise<{ success: boolean; user?: UserAccount; error?: string }> {
   const users = getStoredUsers();
   const cleanFirstName = sanitizeString(data.firstName, 40);
   const cleanLastName = sanitizeString(data.lastName, 40);
@@ -454,8 +466,12 @@ export function registerInstructor(data: {
   const updatedUsers = [...users, newUser];
   saveStoredUsers(updatedUsers);
 
-  // Sync newly registered user to Cloud Firestore in background
-  pushUserToCloud(newUser).catch(err => console.debug('Cloud user registration sync deferred:', err));
+  // Sync newly registered user to Cloud Firestore
+  try {
+    await pushUserToCloud(newUser);
+  } catch (err) {
+    console.debug('Cloud user registration sync deferred:', err);
+  }
 
   return { success: true, user: newUser };
 }
@@ -494,11 +510,11 @@ export function verifyAdminSession(callerId?: string): boolean {
 /**
  * Admin action: Approve, Reject, or set Pending status for an instructor account.
  */
-export function updateUserStatus(
+export async function updateUserStatus(
   userId: string, 
   status: AccountStatus,
   callerId?: string
-): { success: boolean; error?: string } {
+): Promise<{ success: boolean; error?: string }> {
   if (!verifyAdminSession(callerId)) {
     console.warn('Unauthorized administrative action rejected.');
     return { success: false, error: 'Unauthorized: Administrator permission required.' };
@@ -519,7 +535,11 @@ export function updateUserStatus(
   saveStoredUsers(users);
 
   // Sync status update to Cloud Firestore
-  updateUserStatusInCloud(userId, status).catch(err => console.debug('Cloud user status sync deferred:', err));
+  try {
+    await updateUserStatusInCloud(userId, status);
+  } catch (err) {
+    console.debug('Cloud user status sync deferred:', err);
+  }
 
   return { success: true };
 }
@@ -527,11 +547,11 @@ export function updateUserStatus(
 /**
  * Admin action: Reset instructor PIN (defaults back to "1234").
  */
-export function resetUserPin(
+export async function resetUserPin(
   userId: string, 
   newPin = '1234',
   callerId?: string
-): { success: boolean; error?: string } {
+): Promise<{ success: boolean; error?: string }> {
   if (!verifyAdminSession(callerId)) {
     console.warn('Unauthorized administrative action rejected.');
     return { success: false, error: 'Unauthorized: Administrator permission required.' };
@@ -552,7 +572,11 @@ export function resetUserPin(
   saveStoredUsers(users);
 
   // Sync PIN reset to Cloud Firestore
-  resetUserPinInCloud(userId, newSalt, pinHash).catch(err => console.debug('Cloud PIN reset sync deferred:', err));
+  try {
+    await resetUserPinInCloud(userId, newSalt, pinHash);
+  } catch (err) {
+    console.debug('Cloud PIN reset sync deferred:', err);
+  }
 
   return { success: true };
 }
@@ -560,10 +584,10 @@ export function resetUserPin(
 /**
  * Admin action: Delete instructor account and clean isolated storage.
  */
-export function deleteUser(
+export async function deleteUser(
   userId: string,
   callerId?: string
-): { success: boolean; error?: string } {
+): Promise<{ success: boolean; error?: string }> {
   if (!verifyAdminSession(callerId)) {
     console.warn('Unauthorized administrative action rejected.');
     return { success: false, error: 'Unauthorized: Administrator permission required.' };
@@ -582,7 +606,11 @@ export function deleteUser(
   saveStoredUsers(updated);
 
   // Sync deletion to Cloud Firestore
-  deleteUserFromCloud(userId).catch(err => console.debug('Cloud user deletion sync deferred:', err));
+  try {
+    await deleteUserFromCloud(userId);
+  } catch (err) {
+    console.debug('Cloud user deletion sync deferred:', err);
+  }
 
   // If Dan Martin was explicitly deleted, remember tombstone so initializeAuth does not re-create him
   if (target.username === DAN_MARTIN_ACCOUNT.username) {

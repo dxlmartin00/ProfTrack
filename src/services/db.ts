@@ -66,7 +66,7 @@ export const DEFAULT_INSTRUCTOR_PROFILE: InstructorProfile = {
 };
 
 // Timeout helper to prevent hanging when offline or unconfigured
-const withTimeout = <T>(promise: Promise<T>, timeoutMs = 1800): Promise<T> => {
+const withTimeout = <T>(promise: Promise<T>, timeoutMs = 8000): Promise<T> => {
   return Promise.race([
     promise,
     new Promise<T>((_, reject) => 
@@ -315,10 +315,10 @@ export const updateUserStatusInCloud = async (userId: string, status: AccountSta
   if (!db) return false;
   try {
     const userDocRef = doc(db, 'users', userId);
-    await withTimeout(updateDoc(userDocRef, {
+    await withTimeout(setDoc(userDocRef, {
       status,
       cloudSyncedAt: serverTimestamp(),
-    }));
+    }, { merge: true }));
     return true;
   } catch (err) {
     console.warn('Update user status in cloud deferred:', err);
@@ -333,11 +333,11 @@ export const resetUserPinInCloud = async (userId: string, salt: string, pinHash:
   if (!db) return false;
   try {
     const userDocRef = doc(db, 'users', userId);
-    await withTimeout(updateDoc(userDocRef, {
+    await withTimeout(setDoc(userDocRef, {
       salt,
       pinHash,
       cloudSyncedAt: serverTimestamp(),
-    }));
+    }, { merge: true }));
     return true;
   } catch (err) {
     console.warn('Reset user PIN in cloud deferred:', err);

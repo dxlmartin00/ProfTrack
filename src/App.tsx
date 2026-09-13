@@ -46,6 +46,7 @@ import {
   logoutUser, 
   getStoredUsers, 
   mergeUsersRegistry,
+  saveStoredUsers,
   DAN_MARTIN_ACCOUNT
 } from './services/auth';
 import type { UserAccount } from './services/auth';
@@ -463,7 +464,7 @@ function AppContent() {
       if (cloudUsers && cloudUsers.length > 0) {
         const local = getStoredUsers();
         const merged = mergeUsersRegistry(local, cloudUsers);
-        localStorage.setItem('proftrack_users_registry', JSON.stringify(merged));
+        saveStoredUsers(merged);
         setAllUsers(merged);
       }
     });

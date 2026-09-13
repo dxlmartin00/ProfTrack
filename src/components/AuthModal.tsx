@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { FC, FormEvent } from 'react';
 import { 
   authenticateUser, 
   registerInstructor, 
-  formatUsername
+  formatUsername,
+  syncUsersFromCloud
 } from '../services/auth';
 import type { UserAccount } from '../services/auth';
 import { 
@@ -61,6 +62,17 @@ export const AuthModal: FC<AuthModalProps> = ({
     if (!regLastName && !regFirstName) return '<lastname>.<firstname>';
     return formatUsername(regLastName || 'lastname', regFirstName || 'firstname');
   }, [regLastName, regFirstName]);
+
+  // Synchronize with Cloud Firestore whenever the auth screen opens
+  useEffect(() => {
+    if (isOpen) {
+      syncUsersFromCloud()
+        .then(() => {
+          if (onAccountsUpdated) onAccountsUpdated();
+        })
+        .catch(err => console.debug('Auth modal cloud sync deferred:', err));
+    }
+  }, [isOpen, onAccountsUpdated]);
 
   if (!isOpen) return null;
 
@@ -306,6 +318,35 @@ export const AuthModal: FC<AuthModalProps> = ({
                   </>
                 )}
               </button>
+
+              {/* Quick Demo Access */}
+              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 text-center space-y-2">
+                <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium">Quick Demo Access:</span>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUsername('martin.dan');
+                      setPin('1234');
+                      setSignInError(null);
+                    }}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer border border-zinc-200 dark:border-zinc-700"
+                  >
+                    Prof. Dan Martin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUsername('admin.admin');
+                      setPin('0000');
+                      setSignInError(null);
+                    }}
+                    className="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 cursor-pointer border border-zinc-200 dark:border-zinc-700"
+                  >
+                    System Admin
+                  </button>
+                </div>
+              </div>
             </form>
           ) : (
             /* Registration Form */

@@ -24,6 +24,8 @@ dist-ssr
 *.sw?
 
 .vercel
+.firebase
 .env
+.env.production
 .env.local
 .env.*.local

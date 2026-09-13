@@ -6,7 +6,8 @@ import {
   resetUserPin, 
   deleteUser, 
   getUserDataCounts,
-  syncUsersFromCloud
+  syncUsersFromCloud,
+  subscribeToUsersCloud
 } from '../services/auth';
 import type { UserAccount, AccountStatus } from '../services/auth';
 import { 
@@ -40,7 +41,7 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
   callerId
 }) => {
   const [users, setUsers] = useState<UserAccount[]>(() => getStoredUsers());
-  const [filterTab, setFilterTab] = useState<'pending' | 'approved' | 'all'>('pending');
+  const [filterTab, setFilterTab] = useState<'pending' | 'approved' | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -53,6 +54,13 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
       }).catch(err => {
         console.warn('Sync cloud users on modal open:', err);
       });
+
+      const unsub = subscribeToUsersCloud((remoteUsers) => {
+        if (remoteUsers && remoteUsers.length > 0) {
+          setUsers(remoteUsers);
+        }
+      });
+      return () => unsub();
     }
   }, [isOpen]);
 
@@ -83,8 +91,8 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
     }
   };
 
-  const handleStatusChange = (userId: string, newStatus: AccountStatus, name: string) => {
-    const res = updateUserStatus(userId, newStatus, callerId);
+  const handleStatusChange = async (userId: string, newStatus: AccountStatus, name: string) => {
+    const res = await updateUserStatus(userId, newStatus, callerId);
     if (res.success) {
       refreshUsers();
       setActionNotice({ type: 'success', message: `Updated ${name} status to "${newStatus.toUpperCase()}".` });
@@ -95,9 +103,9 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
     }
   };
 
-  const handleResetPin = (userId: string, name: string) => {
+  const handleResetPin = async (userId: string, name: string) => {
     if (window.confirm(`Reset PIN for ${name} back to default "1234"?`)) {
-      const res = resetUserPin(userId, '1234', callerId);
+      const res = await resetUserPin(userId, '1234', callerId);
       if (res.success) {
         refreshUsers();
         setActionNotice({ type: 'success', message: `Successfully reset PIN for ${name} to "1234".` });
@@ -109,9 +117,9 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
     }
   };
 
-  const handleDelete = (userId: string, name: string) => {
+  const handleDelete = async (userId: string, name: string) => {
     if (window.confirm(`Are you sure you want to permanently delete account ${name}? Their isolated courses and logs will also be removed.`)) {
-      const res = deleteUser(userId, callerId);
+      const res = await deleteUser(userId, callerId);
       if (res.success) {
         refreshUsers();
         setActionNotice({ type: 'success', message: `Account ${name} deleted.` });
@@ -127,20 +135,24 @@ export const AdminDashboardModal: FC<AdminDashboardModalProps> = ({
   const approvedCount = users.filter(u => u.status === 'approved').length;
 
   const filteredUsers = useMemo(() => {
+    const hasSearch = Boolean(searchQuery.trim());
+    const q = searchQuery.toLowerCase().trim();
+
     return users.filter(u => {
+      // If user is actively searching, match across ALL accounts regardless of tab!
+      if (hasSearch) {
+        return (
+          u.username.toLowerCase().includes(q) ||
+          u.fullName.toLowerCase().includes(q) ||
+          u.department.toLowerCase().includes(q) ||
+          u.status.toLowerCase().includes(q)
+        );
+      }
+
       // Tab filter
       if (filterTab === 'pending' && u.status !== 'pending') return false;
       if (filterTab === 'approved' && u.status !== 'approved') return false;
 
-      // Search filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        return (
-          u.username.toLowerCase().includes(q) ||
-          u.fullName.toLowerCase().includes(q) ||
-          u.department.toLowerCase().includes(q)
-        );
-      }
       return true;
     });
   }, [users, filterTab, searchQuery]);
