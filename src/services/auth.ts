@@ -472,7 +472,7 @@ export async function registerInstructor(data: {
     pinHash,
     firstName: cleanFirstName,
     lastName: cleanLastName,
-    fullName: `Prof. ${cleanFirstName} ${cleanLastName}`,
+    fullName: `${cleanFirstName} ${cleanLastName}`,
     department: cleanDept,
     institution: cleanInst,
     role: 'instructor',
