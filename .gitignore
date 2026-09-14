@@ -29,3 +29,6 @@ dist-ssr
 .env.production
 .env.local
 .env.*.local
+
+# PROJECT_MEMORY.md
+PROJECT_MEMORY.md
